@@ -79,3 +79,30 @@ export const partners: PartnerItem[] = [
   { name: "Partner C", href: "#" },
 ];
 
+export type ContactInfo = {
+  orgName: string;
+  address: string;
+  phone: string;
+  email: string;
+  webmasterEmail: string;
+};
+
+export type PolicyLink = {
+  label: string;
+  href: string;
+};
+
+export const contactInfo: ContactInfo = {
+  orgName: "INC",
+  address: "서울특별시 (주소 확정 필요)",
+  phone: "02-0000-0000",
+  email: "contact@example.org",
+  webmasterEmail: "webmaster@example.org",
+};
+
+export const policyLinks: PolicyLink[] = [
+  { label: "개인정보처리방침", href: "/policy/privacy" },
+  { label: "저작권정책", href: "/policy/copyright" },
+  { label: "이메일무단수집거부", href: "/policy/email" },
+  { label: "오시는 길", href: "/contact" },
+];
