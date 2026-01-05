@@ -1,7 +1,17 @@
 import Hero from "@/components/home/Hero";
 import QuickLinks from "@/components/home/QuickLinks";
 import LatestSection from "@/components/home/LatestSection";
-import { quickLinks, latestNotices, latestResources, latestEvent } from "@/lib/homeData";
+import Highlights from "@/components/home/Highlights";
+import Partners from "@/components/home/Partners";
+
+import {
+  quickLinks,
+  latestNotices,
+  latestResources,
+  latestEvent,
+  highlights,
+  partners,
+} from "@/lib/homeData";
 
 export default function HomePage() {
   return (
@@ -9,6 +19,8 @@ export default function HomePage() {
       <Hero />
       <QuickLinks items={quickLinks} />
       <LatestSection notices={latestNotices} resources={latestResources} event={latestEvent} />
+      <Highlights items={highlights} />
+      <Partners items={partners} />
     </>
   );
 }
