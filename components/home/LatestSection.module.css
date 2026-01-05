@@ -1,0 +1,154 @@
+.section {
+  padding: 26px 16px 44px;
+  background: rgba(0, 0, 0, 1);
+}
+
+.inner {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.header {
+  margin-bottom: 14px;
+}
+
+.heading {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.subheading {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.block {
+  grid-column: span 6;
+  padding: 14px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.blockHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.blockTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.more {
+  font-size: 13px;
+  text-decoration: none;
+  color: rgba(47, 104, 255, 0.95);
+}
+
+.more:hover {
+  text-decoration: underline;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.listItem {
+  border-radius: 10px;
+}
+
+.itemLink {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 10px;
+  border-radius: 10px;
+  text-decoration: none;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.itemLink:hover {
+  background: rgba(0, 0, 0, 0.5);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.itemTitle {
+  color: rgba(255, 255, 255, 0.88);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.itemDate {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  flex: 0 0 auto;
+}
+
+.event {
+  grid-column: span 12;
+  padding: 14px 14px;
+  border-radius: 14px;
+  background: radial-gradient(800px 260px at 20% 0%, rgba(47, 104, 255, 0.18), rgba(255, 255, 255, 0.04));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.eventLabel {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.eventTitle {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 16px;
+  font-weight: 900;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.eventTitle:hover {
+  text-decoration: underline;
+}
+
+.eventMeta {
+  margin-top: 6px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.eventHint {
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+@media (max-width: 900px) {
+  .block {
+    grid-column: span 12;
+  }
+}
