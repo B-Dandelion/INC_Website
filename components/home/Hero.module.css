@@ -1,8 +1,12 @@
 .hero {
   padding: 56px 16px 28px;
-  background: radial-gradient(1200px 500px at 50% 0%, rgba(0, 82, 255, 0.18), rgba(0, 0, 0, 0) 55%),
-    linear-gradient(180deg, rgba(10, 14, 20, 1) 0%, rgba(0, 0, 0, 1) 100%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: radial-gradient(
+      1200px 500px at 50% 0%,
+      color-mix(in srgb, var(--primary, #2f68ff) 18%, transparent),
+      transparent 55%
+    ),
+    linear-gradient(180deg, var(--background) 0%, var(--surface, #ffffff) 100%);
+  border-bottom: 1px solid var(--border);
 }
 
 .inner {
@@ -15,21 +19,21 @@
   margin: 0 0 10px;
   font-size: 14px;
   letter-spacing: 0.08em;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--muted);
 }
 
 .title {
   margin: 0;
   font-size: 42px;
   font-weight: 800;
-  color: #2f68ff;
+  color: var(--primary, #2f68ff);
 }
 
 .subtitle {
   margin: 12px auto 0;
   max-width: 780px;
   line-height: 1.6;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--muted);
 }
 
 .actions {
@@ -54,13 +58,13 @@
 
 .primaryBtn {
   color: white;
-  background: #2f68ff;
+  background: var(--primary, #2f68ff);
 }
 
 .secondaryBtn {
-  color: rgba(255, 255, 255, 0.9);
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--foreground);
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--border);
 }
 
 .primaryBtn:hover {
@@ -68,5 +72,5 @@
 }
 
 .secondaryBtn:hover {
-  background: rgba(255, 255, 255, 0.12);
+  filter: brightness(0.98);
 }

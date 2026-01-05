@@ -1,6 +1,6 @@
 .section {
   padding: 26px 16px 18px;
-  background: rgba(0, 0, 0, 1);
+  background: var(--background);
 }
 
 .inner {
@@ -12,7 +12,7 @@
   margin: 0 0 14px;
   font-size: 18px;
   font-weight: 800;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--foreground);
 }
 
 .grid {
@@ -26,25 +26,24 @@
   padding: 14px 14px;
   border-radius: 14px;
   text-decoration: none;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: var(--surface);
+  border: 1px solid var(--border);
 }
 
 .card:hover {
-  background: rgba(255, 255, 255, 0.09);
-  border-color: rgba(255, 255, 255, 0.14);
+  filter: brightness(0.99);
 }
 
 .cardTitle {
   font-weight: 800;
-  color: rgba(255, 255, 255, 0.92);
+  color: var(--foreground);
 }
 
 .cardDesc {
   margin-top: 6px;
   font-size: 13px;
   line-height: 1.5;
-  color: rgba(255, 255, 255, 0.68);
+  color: var(--muted);
 }
 
 @media (max-width: 900px) {

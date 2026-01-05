@@ -1,6 +1,6 @@
 .section {
   padding: 26px 16px 44px;
-  background: rgba(0, 0, 0, 1);
+  background: var(--background);
 }
 
 .inner {
@@ -16,13 +16,13 @@
   margin: 0;
   font-size: 18px;
   font-weight: 800;
-  color: rgba(255, 255, 255, 0.92);
+  color: var(--foreground);
 }
 
 .subheading {
   margin: 6px 0 0;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.65);
+  color: var(--muted);
 }
 
 .grid {
@@ -36,8 +36,8 @@
   height: 84px;
   border-radius: 14px;
   text-decoration: none;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: var(--surface);
+  border: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -45,8 +45,7 @@
 }
 
 .logoCard:hover {
-  background: rgba(255, 255, 255, 0.09);
-  border-color: rgba(255, 255, 255, 0.14);
+  filter: brightness(0.99);
 }
 
 .logoImg {
@@ -65,11 +64,12 @@
 .logoFallback {
   font-weight: 900;
   letter-spacing: 0.06em;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--foreground);
+  opacity: 0.85;
   padding: 8px 12px;
   border-radius: 10px;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--surface-2, #eef2ff);
+  border: 1px solid var(--border);
 }
 
 @media (max-width: 900px) {
