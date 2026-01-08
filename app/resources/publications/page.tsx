@@ -1,10 +1,25 @@
+import Link from "next/link";
 import PageShell from "@/components/PageShell";
+import ResourceList from "@/components/resources/ResourceList";
+import { resourcesData } from "@/lib/resourcesData";
 
-export default function ResourcesPage() {
+export default function PublicationsPage() {
+  const { atm, heartbeat } = resourcesData.publications;
+
   return (
     <PageShell
-      title="자료실"
-      description="보고서, 발간물, 참고 자료를 제공합니다. 현재는 데모용 템플릿입니다."
-    />
+      title="Publications"
+      description="ATM, Heartbeat of Atoms 발간 자료 아카이브"
+    >
+      <p>
+        <Link href="/resources">← 자료실로</Link>
+      </p>
+
+      <h3>ATM</h3>
+      <ResourceList items={atm} />
+
+      <h3 style={{ marginTop: 18 }}>Heartbeat of Atoms</h3>
+      <ResourceList items={heartbeat} />
+    </PageShell>
   );
 }

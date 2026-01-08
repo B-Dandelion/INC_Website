@@ -1,10 +1,19 @@
+import Link from "next/link";
 import PageShell from "@/components/PageShell";
+import ResourceList from "@/components/resources/ResourceList";
+import { resourcesData } from "@/lib/resourcesData";
 
-export default function ResourcesPage() {
+export default function EventsPage() {
   return (
     <PageShell
-      title="자료실"
-      description="보고서, 발간물, 참고 자료를 제공합니다. 현재는 데모용 템플릿입니다."
-    />
+      title="Other Events"
+      description="기타 행사 자료 모음"
+    >
+      <p>
+        <Link href="/resources">← 자료실로</Link>
+      </p>
+
+      <ResourceList items={resourcesData.events} />
+    </PageShell>
   );
 }
