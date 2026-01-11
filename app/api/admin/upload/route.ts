@@ -45,7 +45,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "file is required" }, { status: 400 });
     }
 
-    // 1차 테스트용(통과하면 파일이 서버에 도착한 것)
+    // 1) 서버 업로드 테스트 (1차 테스트) 
 
     if (process.env.UPLOAD_STAGE === "1") {
         return NextResponse.json({
