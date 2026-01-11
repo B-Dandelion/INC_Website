@@ -1,24 +1,30 @@
-import Link from "next/link";
-import styles from "./ResourceList.module.css";
+"use client";
 
-export type ResourceListItem = {
+import { useEffect, useMemo, useState } from "react";
+import styles from "./ResourceList.module.css";
+import { createClient } from "@supabase/supabase-js";
+
+type ResourceItem = {
   id: number | string;
   title: string;
   kind: string;
-  href?: string;          // optional
-  downloadHref?: string;  // optional
-  date?: string;
   note?: string;
-  locked?: boolean;
+  date?: string;
+  visibility?: "public" | "member" | "admin";
+  canView?: boolean;
+  canDownload?: boolean;
 };
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+);
 
 function kindLabel(kind: string) {
   switch (kind) {
     case "pdf": return "PDF";
     case "image": return "IMG";
     case "video": return "VIDEO";
-    case "post": return "POST";
-    case "slide": return "SLIDE";
     case "doc": return "DOC";
     case "zip": return "ZIP";
     default: return "LINK";
@@ -26,13 +32,74 @@ function kindLabel(kind: string) {
 }
 
 export default function ResourceList({
-  items,
+  items: initialItems,
   emptyText = "자료 준비중",
 }: {
-  items: ResourceListItem[];
+  items: ResourceItem[];
   emptyText?: string;
 }) {
-  if (!items || items.length === 0) {
+  const [items, setItems] = useState<ResourceItem[]>(initialItems ?? []);
+  const [loading, setLoading] = useState(false);
+
+  async function getToken() {
+    const { data } = await supabase.auth.getSession();
+    return data.session?.access_token ?? null;
+  }
+
+  // 로그인 상태에 따라 "보일 수 있는 목록"을 API에서 다시 받아옴
+  useEffect(() => {
+    let alive = true;
+
+    (async () => {
+      setLoading(true);
+      try {
+        const token = await getToken();
+        const res = await fetch("/api/resources/list", {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        const out = await res.json().catch(() => ({}));
+        if (!alive) return;
+
+        if (res.ok && out?.items) setItems(out.items);
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+
+    return () => { alive = false; };
+  }, []);
+
+  async function openResource(id: number | string, mode: "view" | "download") {
+    const token = await getToken();
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (token) headers.Authorization = `Bearer ${token}`;
+
+    const res = await fetch("/api/resources/url", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ resourceId: Number(id), mode }),
+    });
+
+    const out = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      alert(out?.error || `실패: ${res.status}`);
+      return;
+    }
+    const url = out?.url;
+    if (!url) {
+      alert("url 발급 실패");
+      return;
+    }
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+
+  const hasItems = useMemo(() => items && items.length > 0, [items]);
+
+  if (loading && !hasItems) {
+    return <div className={styles.empty}>불러오는 중…</div>;
+  }
+
+  if (!hasItems) {
     return <div className={styles.empty}>{emptyText}</div>;
   }
 
@@ -42,25 +109,24 @@ export default function ResourceList({
         <li key={it.id} className={styles.item}>
           <span className={styles.kind}>{kindLabel(it.kind)}</span>
 
-          {it.href ? (
-            it.href.startsWith("http") ? (
-              <a className={styles.title} href={it.href} target="_blank" rel="noreferrer">
-                {it.title}
-              </a>
-            ) : (
-              <Link className={styles.title} href={it.href}>
-                {it.title}
-              </Link>
-            )
-          ) : (
-            <span className={styles.title}>{it.title}</span>
-          )}
+          <button
+            type="button"
+            className={styles.title}
+            onClick={() => openResource(it.id, "view")}
+            title="열기"
+          >
+            {it.title}
+          </button>
 
-          {it.downloadHref ? (
+          {it.canDownload ? (
             <div className={styles.actions}>
-              <a className={styles.download} href={it.downloadHref} target="_blank" rel="noreferrer">
+              <button
+                type="button"
+                className={styles.download}
+                onClick={() => openResource(it.id, "download")}
+              >
                 다운로드
-              </a>
+              </button>
             </div>
           ) : null}
 
