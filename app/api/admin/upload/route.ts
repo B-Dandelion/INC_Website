@@ -23,11 +23,47 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!, // 서버 전용
 );
 
+function supabaseFromAuthHeader(authHeader: string) {
+  return createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_ANON_KEY!, {
+    global: { headers: { Authorization: authHeader } },
+  });
+}
+
 function safeName(name: string) {
   return name.replace(/[^\w.\-]+/g, "_");
 }
 
 export async function POST(req: Request) {
+    
+    // 1) 로그인 토큰 확인
+    const authHeader = req.headers.get("authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+        return NextResponse.json({ error: "missing auth token" }, { status: 401 });
+    }
+    
+    // 2) 토큰이 진짜인지 확인
+    const supabaseAuth = supabaseFromAuthHeader(authHeader);
+    const { data: userData, error: userErr } = await supabaseAuth.auth.getUser();
+    const user = userData?.user;
+    if (userErr || !user) {
+        return NextResponse.json({ error: "invalid token" }, { status: 401 });
+    }
+
+    // 3) profiles에서 admin/approved 확인
+    const { data: profile, error: profErr } = await supabaseAdmin
+    .from("profiles")
+    .select("role, approved")
+    .eq("id", user.id)
+    .single();
+
+    if (profErr || !profile) {
+        return NextResponse.json({ error: "profile not found" }, { status: 403 });
+    }
+
+    if (profile.role !== "admin" || profile.approved !== true) {
+        return NextResponse.json({ error: "forbidden" }, { status: 403 });
+    }
+
   try {
     const form = await req.formData();
 

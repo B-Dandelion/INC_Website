@@ -1,6 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+);
 
 export default function AdminUploadPage() {
   const [msg, setMsg] = useState("");
@@ -12,10 +18,15 @@ export default function AdminUploadPage() {
     setJson(null);
 
     const fd = new FormData(e.currentTarget);
+    
+    // 여기서 토큰 가져오기
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
 
     const res = await fetch("/api/admin/upload", {
       method: "POST",
       body: fd,
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
 
     const data = await res.json().catch(() => ({}));
@@ -36,9 +47,9 @@ export default function AdminUploadPage() {
 
           <label>
             Board Slug
-            <select name="boardSlug" defaultValue="heartbeat-of-atoms">
-              <option value="heartbeat-of-atoms">heartbeat-of-atoms</option>
+            <select name="boardSlug" defaultValue="atm">
               <option value="atm">atm</option>
+              <option value="heartbeat-of-atoms">heartbeat-of-atoms</option>
             </select>
           </label>
 
