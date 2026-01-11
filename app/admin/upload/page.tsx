@@ -3,73 +3,151 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
 );
 
-type UploadVisibility = "public" | "member" | "admin";
-
 export default function AdminUploadPage() {
-    const [msg, setMsg] = useState("");
-    const [json, setJson] = useState<any>(null);
-    const [email, setEmail] = useState<string | null>(null);
+  const router = useRouter();
 
-    useEffect(() => {
-        supabase.auth.getSession().then(({ data }) => {
-            setEmail(data.session?.user?.email ?? null);
-        });
+  const [checking, setChecking] = useState(true);
+  const [allowed, setAllowed] = useState(false);
 
-        const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-            setEmail(session?.user?.email ?? null);
-        });
+  const [msg, setMsg] = useState("");
+  const [json, setJson] = useState<any>(null);
+  const [email, setEmail] = useState<string | null>(null);
 
-        return () => data.subscription.unsubscribe();
-    }, []);
+  useEffect(() => {
+    let alive = true;
 
-    async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-        e.preventDefault();
+    const run = async () => {
+      try {
+        setChecking(true);
 
-        const formEl = e.currentTarget;
-        if (!(formEl instanceof HTMLFormElement)) {
-            setMsg("실패: 폼 요소를 찾을 수 없음");
-            return;
+        const { data, error } = await supabase.auth.getUser();
+        if (!alive) return;
+
+        const user = error ? null : data.user;
+        if (!user) {
+          router.replace("/login?next=%2Fadmin%2Fupload");
+          return;
         }
 
-        setMsg("업로드 중...");
-        setJson(null);
+        setEmail(user.email ?? null);
 
-        const { data } = await supabase.auth.getSession();
-        const token = data.session?.access_token;
+        const { data: profile, error: profErr } = await supabase
+          .from("profiles")
+          .select("role, approved")
+          .eq("id", user.id)
+          .single();
 
-        if (!token) {
-            setMsg("실패: 로그인 필요");
-            return;
+        if (!alive) return;
+
+        if (profErr || !profile) {
+          router.replace("/");
+          return;
         }
 
-        const fd = new FormData(formEl);
+        if (profile.role !== "admin" || profile.approved !== true) {
+          router.replace("/");
+          return;
+        }
 
-        const res = await fetch("/api/admin/upload", {
-            method: "POST",
-            body: fd,
-            headers: { Authorization: `Bearer ${token}` },
-        });
+        setAllowed(true);
+      } catch (err: any) {
+        if (!alive) return;
+        if (err?.name === "AbortError") return;
+        router.replace("/");
+      } finally {
+        if (alive) setChecking(false);
+      }
+    };
 
-        const out = await res.json().catch(() => ({}));
-        setJson(out);
-        setMsg(res.ok ? "성공" : `실패: ${res.status}`);
+    run();
+
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      const u = session?.user ?? null;
+      setEmail(u?.email ?? null);
+
+      // 로그아웃/세션 변경 시 즉시 잠그고 다시 검사
+      setAllowed(false);
+      setChecking(true);
+      run();
+    });
+
+    return () => {
+      alive = false;
+      sub.subscription.unsubscribe();
+    };
+  }, [router]);
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    const formEl = e.currentTarget;
+    if (!(formEl instanceof HTMLFormElement)) {
+      setMsg("실패: 폼 요소를 찾을 수 없음");
+      return;
     }
-    const inputClass =
-        "mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400";
-    const labelClass = "text-sm font-medium text-slate-700";
-    const selectClass =
-        "mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400";
-    const helperClass = "mt-1 text-xs text-slate-500";
 
+    setMsg("업로드 중...");
+    setJson(null);
 
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+
+    if (!token) {
+      setMsg("실패: 로그인 필요");
+      return;
+    }
+
+    const fd = new FormData(formEl);
+
+    const res = await fetch("/api/admin/upload", {
+      method: "POST",
+      body: fd,
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const out = await res.json().catch(() => ({}));
+    setJson(out);
+    setMsg(res.ok ? "성공" : `실패: ${res.status}`);
+  }
+
+  const inputClass =
+    "mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400";
+  const labelClass = "text-sm font-medium text-slate-700";
+  const selectClass =
+    "mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400";
+  const helperClass = "mt-1 text-xs text-slate-500";
+
+  // 권한 확인 중에는 폼을 보여주지 않음
+  if (checking) {
     return (
+      <main className="min-h-[calc(100vh-120px)] bg-gradient-to-b from-blue-50 to-white px-4 py-10">
+        <div className="mx-auto w-full max-w-3xl">
+          <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+            <div className="flex items-center gap-3">
+              <Image src="/inc_logo.png" alt="INC" width={120} height={40} priority />
+              <div>
+                <h1 className="text-xl font-semibold text-slate-900">자료 업로드</h1>
+                <p className="text-sm text-slate-600">권한 확인 중...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // allowed가 false면 이미 router.replace로 쫓아냈어야 하는 상태
+  if (!allowed) return null;
+
+  return (
     <main className="min-h-[calc(100vh-120px)] bg-gradient-to-b from-blue-50 to-white px-4 py-10">
       <div className="mx-auto w-full max-w-3xl">
         <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
@@ -88,7 +166,7 @@ export default function AdminUploadPage() {
               {email ? (
                 <div>
                   <div className="font-medium text-slate-900">{email}</div>
-                  <div className="text-xs text-slate-500">로그인됨</div>
+                  <div className="text-xs text-slate-500">관리자 로그인됨</div>
                 </div>
               ) : (
                 <Link
@@ -130,7 +208,7 @@ export default function AdminUploadPage() {
                       <option value="admin">admin</option>
                     </select>
                   </label>
-                  <p className={helperClass}>member/admin은 오늘은 잠금 표시까지만 권장.</p>
+                  <p className={helperClass}>member/admin은 지금은 잠금 표시까지만 권장.</p>
                 </div>
 
                 <div>
@@ -175,7 +253,6 @@ export default function AdminUploadPage() {
                 <button
                   type="submit"
                   className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50"
-                  disabled={!email}
                 >
                   Upload
                 </button>

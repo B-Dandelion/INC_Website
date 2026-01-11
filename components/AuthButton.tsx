@@ -92,6 +92,36 @@ export default function AuthButton() {
     };
   }, []);
 
+  useEffect(() => {
+    let alive = true;
+
+    (async () => {
+      if (!user) {
+        if (alive) setIsAdmin(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      if (!alive) return;
+
+      if (error) {
+        setIsAdmin(false);
+        return;
+      }
+
+      setIsAdmin(data?.role === "admin");
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, [user]);
+
   async function signOut() {
     setLoading(true);
     try {
