@@ -1,4 +1,4 @@
-// app/api/upload/route.ts
+// app/api/admin/upload/route.ts
 import { NextResponse } from "next/server";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { createClient } from "@supabase/supabase-js";
@@ -45,6 +45,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "file is required" }, { status: 400 });
     }
 
+    if (process.env.UPLOAD_STAGE === "1") {
+        return NextResponse.json({
+            ok: true,
+            stage: 1,
+            received: {
+                title,
+                boardSlug,
+                visibility,
+                kind,
+                name: file.name,
+                type: file.type,
+                size: file.size,
+            },
+        });
+    }
+    
     // 1) boards.id 찾기
     const { data: board, error: boardErr } = await supabaseAdmin
       .from("boards")
