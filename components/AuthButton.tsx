@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient, type User } from "@supabase/supabase-js";
 import { LogIn, LogOut, Shield } from "lucide-react";
@@ -13,36 +13,77 @@ const supabase = createClient(
 
 export default function AuthButton() {
   const [user, setUser] = useState<User | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
-  
+
   const router = useRouter();
   const pathname = usePathname();
+  const detailsRef = useRef<HTMLDetailsElement>(null);
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const loginHref = useMemo(
+    () => `/login?next=${encodeURIComponent(pathname || "/")}`,
+    [pathname],
+  );
+
+  const displayName = useMemo(() => {
+    const email = user?.email ?? "";
+    if (email.includes("@")) return email.split("@")[0];
+    return user?.user_metadata?.name || "account";
+  }, [user]);
+
+  function closeMenu() {
+    detailsRef.current?.removeAttribute("open");
+  }
+
+  async function fetchAndSetRole(u: User | null) {
+    if (!u) {
+      setIsAdmin(false);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", u.id)
+      .single();
+
+    if (error) {
+      setIsAdmin(false);
+      return;
+    }
+
+    setIsAdmin(data?.role === "admin");
+  }
 
   useEffect(() => {
     let alive = true;
 
-    (async () => {
+    const sync = async () => {
+      setLoading(true);
       try {
         const { data, error } = await supabase.auth.getUser();
         if (!alive) return;
 
-        if (error) setUser(null);
-        else setUser(data.user ?? null);
+        const nextUser = error ? null : (data.user ?? null);
+        setUser(nextUser);
+        await fetchAndSetRole(nextUser);
       } catch (err: any) {
         if (!alive) return;
         if (err?.name === "AbortError") return;
         setUser(null);
+        setIsAdmin(false);
       } finally {
         if (alive) setLoading(false);
       }
-    })();
+    };
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
+    sync();
+
+    const { data: sub } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const nextUser = session?.user ?? null;
+      setUser(nextUser);
+      await fetchAndSetRole(nextUser);
+      if (alive) setLoading(false);
     });
 
     return () => {
@@ -51,13 +92,13 @@ export default function AuthButton() {
     };
   }, []);
 
-  const loginHref = `/login?next=${encodeURIComponent(pathname || "/")}`;
-
   async function signOut() {
     setLoading(true);
     try {
       await supabase.auth.signOut();
       setUser(null);
+      setIsAdmin(false);
+      closeMenu();
       router.push("/");
       router.refresh();
     } finally {
@@ -87,25 +128,38 @@ export default function AuthButton() {
       </Link>
     );
   }
-  
-  const displayName =
-  (user?.email ? user.email.split("@")[0] : "") ||
-  user?.user_metadata?.name ||
-  "account";
 
   return (
     <div className="inline-flex items-center gap-2">
-      <Shield className="w-4 h-4 text-blue-600" />
-      <span className="text-sm text-gray-700 max-w-[140px] truncate">
-        {displayName}
-      </span>
-      <button
-        onClick={signOut}
-        className="inline-flex items-center gap-2 px-3 py-2 rounded-full border border-gray-200 hover:bg-gray-50"
-      >
-        <LogOut className="w-4 h-4" />
-        로그아웃
-      </button>
+      <details ref={detailsRef} className="relative">
+        <summary className="inline-flex items-center gap-2 px-3 py-2 rounded-full border border-gray-200 hover:bg-gray-50 cursor-pointer select-none [&::-webkit-details-marker]:hidden">
+          <Shield className="w-4 h-4 text-blue-600" />
+          <span className="text-sm text-gray-700 max-w-[140px] truncate">
+            {displayName}
+          </span>
+          <span className="text-gray-400 text-xs">▾</span>
+        </summary>
+
+        <div className="absolute right-0 mt-2 w-48 rounded-xl border border-gray-200 bg-white shadow-lg overflow-hidden z-50">
+          {isAdmin && (
+            <Link
+              href="/admin/upload"
+              onClick={closeMenu}
+              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            >
+              자료 업로드
+            </Link>
+          )}
+
+          <button
+            onClick={signOut}
+            className="w-full text-left inline-flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+          >
+            <LogOut className="w-4 h-4" />
+            로그아웃
+          </button>
+        </div>
+      </details>
     </div>
   );
 }
