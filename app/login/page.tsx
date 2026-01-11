@@ -43,6 +43,22 @@ export default function LoginPage() {
       return;
     }
 
+    const { data: userData } = await supabase.auth.getUser();
+    const uid = userData.user?.id;
+
+    if (uid) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("approved")
+        .eq("id", uid)
+        .single();
+
+      if (!profile?.approved) {
+        router.replace("/pending");
+        return;
+      }
+    }
+
     router.replace(next);
     router.refresh();
   }

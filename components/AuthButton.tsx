@@ -11,9 +11,12 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
 );
 
+type ProfileRow = { role: string | null; approved: boolean | null };
+
 export default function AuthButton() {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [approved, setApproved] = useState<boolean | null>(null); // null=모름(로딩/미조회)
   const [loading, setLoading] = useState(true);
 
   const router = useRouter();
@@ -35,24 +38,28 @@ export default function AuthButton() {
     detailsRef.current?.removeAttribute("open");
   }
 
-  async function fetchAndSetRole(u: User | null) {
+  async function fetchAndSetProfile(u: User | null) {
     if (!u) {
       setIsAdmin(false);
+      setApproved(null);
       return;
     }
 
     const { data, error } = await supabase
       .from("profiles")
-      .select("role")
+      .select("role, approved")
       .eq("id", u.id)
       .single();
 
-    if (error) {
+    if (error || !data) {
       setIsAdmin(false);
+      setApproved(null);
       return;
     }
 
-    setIsAdmin(data?.role === "admin");
+    const p = data as ProfileRow;
+    setIsAdmin(p.role === "admin");
+    setApproved(Boolean(p.approved));
   }
 
   useEffect(() => {
@@ -66,12 +73,13 @@ export default function AuthButton() {
 
         const nextUser = error ? null : (data.user ?? null);
         setUser(nextUser);
-        await fetchAndSetRole(nextUser);
+        await fetchAndSetProfile(nextUser);
       } catch (err: any) {
         if (!alive) return;
         if (err?.name === "AbortError") return;
         setUser(null);
         setIsAdmin(false);
+        setApproved(null);
       } finally {
         if (alive) setLoading(false);
       }
@@ -82,7 +90,7 @@ export default function AuthButton() {
     const { data: sub } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const nextUser = session?.user ?? null;
       setUser(nextUser);
-      await fetchAndSetRole(nextUser);
+      await fetchAndSetProfile(nextUser);
       if (alive) setLoading(false);
     });
 
@@ -92,42 +100,13 @@ export default function AuthButton() {
     };
   }, []);
 
-  useEffect(() => {
-    let alive = true;
-
-    (async () => {
-      if (!user) {
-        if (alive) setIsAdmin(false);
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
-
-      if (!alive) return;
-
-      if (error) {
-        setIsAdmin(false);
-        return;
-      }
-
-      setIsAdmin(data?.role === "admin");
-    })();
-
-    return () => {
-      alive = false;
-    };
-  }, [user]);
-
   async function signOut() {
     setLoading(true);
     try {
       await supabase.auth.signOut();
       setUser(null);
       setIsAdmin(false);
+      setApproved(null);
       closeMenu();
       router.push("/");
       router.refresh();
@@ -159,6 +138,9 @@ export default function AuthButton() {
     );
   }
 
+  // 로그인은 됐는데 승인 대기인 상태
+  const isPending = approved === false;
+
   return (
     <div className="inline-flex items-center gap-2">
       <details ref={detailsRef} className="relative">
@@ -167,11 +149,28 @@ export default function AuthButton() {
           <span className="text-sm text-gray-700 max-w-[140px] truncate">
             {displayName}
           </span>
+
+          {isPending && (
+            <span className="ml-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs text-amber-700 ring-1 ring-amber-200">
+              승인대기
+            </span>
+          )}
+
           <span className="text-gray-400 text-xs">▾</span>
         </summary>
 
-        <div className="absolute right-0 mt-2 w-48 rounded-xl border border-gray-200 bg-white shadow-lg overflow-hidden z-50">
-          {isAdmin && (
+        <div className="absolute right-0 mt-2 w-52 rounded-xl border border-gray-200 bg-white shadow-lg overflow-hidden z-50">
+          {isPending && (
+            <Link
+              href="/pending"
+              onClick={closeMenu}
+              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            >
+              승인 대기 안내
+            </Link>
+          )}
+
+          {!isPending && isAdmin && (
             <Link
               href="/admin/upload"
               onClick={closeMenu}
