@@ -22,6 +22,10 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  const sp = useSearchParams();
+  const signupHref = `/signup?next=${encodeURIComponent(next)}`;
+
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErrorMsg(null);
@@ -97,7 +101,15 @@ export default function LoginPage() {
               >
                 {loading ? "Signing in..." : "Sign in"}
               </button>
-
+              <div className="mt-4 flex items-center justify-between text-sm">
+                <span className="text-slate-600">계정이 없으신가요?</span>
+                <Link
+                  href={signupHref}
+                  className="font-semibold text-blue-600 hover:text-blue-700"
+                >
+                  회원가입
+                </Link>
+              </div>
               <div className="mt-2 flex items-center justify-between text-sm text-gray-600">
                 <Link href={next} className="hover:text-blue-600">
                   돌아가기
