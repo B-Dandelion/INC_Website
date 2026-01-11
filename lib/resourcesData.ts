@@ -1,12 +1,17 @@
 // lib/resourcesData.ts
+import { drivePreview, driveDownload } from "./drive";
+
+const ATM_VOL1_ID = "1CNuU6L9I-6W0MGdMoKnfS9beYtpwuvuR";
+
 export type ResourceKind = "pdf" | "image" | "post" | "slide" | "doc" | "zip" | "link";
 
 export type ResourceItem = {
   id: string;
   title: string;
-  kind: ResourceKind;
-  href: string;      // 구글드라이브/노션/파일서버 링크 등
-  date?: string;     // "2026-01-08" 같은 형태 추천
+  kind: "pdf" | "image" | "post" | "slide" | "doc" | "zip" | "link";
+  href: string;              // 보기 링크(preview 권장)
+  downloadHref?: string;     // 다운로드 링크(uc?export=download)
+  date?: string;
   note?: string;
 };
 
@@ -27,8 +32,10 @@ export const resourcesData = {
         id: "hb-001",
         title: "Heartbeat of Atoms No.1 (PDF)",
         kind: "pdf",
-        href: "#",
-        note: "발간물 PDF 업로드 예정",
+        href: drivePreview(ATM_VOL1_ID),
+        downloadHref: driveDownload(ATM_VOL1_ID),
+        date: "2026-01-08",
+        note: "발간물 PDF",
       },
     ] satisfies ResourceItem[],
   },

@@ -41,6 +41,14 @@ export default function ResourceList({
               {it.title}
             </Link>
           )}
+          
+          {it.downloadHref ? (
+            <div className={styles.actions}>
+              <a className={styles.download} href={it.downloadHref} target="_blank" rel="noreferrer">
+                다운로드
+                </a>
+                </div>
+              ) : null}
 
           {(it.date || it.note) && (
             <div className={styles.meta}>

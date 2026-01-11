@@ -56,3 +56,24 @@
   border: 1px dashed var(--border);
   color: var(--muted);
 }
+
+.actions {
+  margin-top: 8px;
+}
+
+.download {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  text-decoration: none;
+  color: var(--foreground);
+  font-size: 13px;
+  font-weight: 800;
+  opacity: 0.9;
+}
+
+.download:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
