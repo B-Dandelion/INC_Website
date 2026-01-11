@@ -1,3 +1,5 @@
+import ResourceList, { type ResourceListItem } from "@/components/resources/ResourceList";
+import { fetchPublicResources } from "@/lib/resourcesDb";
 import Link from "next/link";
 import PageShell from "@/components/PageShell";
 import styles from "./resources.module.css";
@@ -11,24 +13,28 @@ const cards = [
   { href: "/resources/events", title: "기타 행사", desc: "행사별 자료 모음" },
 ];
 
-export default function ResourcesPage() {
-  return (
-    <PageShell
-      title="Resources"
-      description="웹 업로드 대상 자료를 카테고리별로 정리합니다."
-    >
-      <div className={styles.grid}>
-        {cards.map((c) => (
-          <Link key={c.href} href={c.href} className={styles.card}>
-            <div className={styles.cardTitle}>{c.title}</div>
-            <div className={styles.cardDesc}>{c.desc}</div>
-          </Link>
-        ))}
-      </div>
+function toItem(r: any) {
+  const base = process.env.R2_PUBLIC_BASE_URL;
+  const href = base && r.r2_key ? `${base}/${r.r2_key}` : undefined;
 
-      <div className={styles.notice}>
-        ⚠️ 이력서/개인 사진은 공개 업로드 전에 반드시 범위(공개/내부)를 확정해야 합니다.
-      </div>
+  return {
+    id: r.id,
+    title: r.title,
+    kind: r.kind,
+    href,
+    downloadHref: href,
+    date: r.published_at ?? undefined,
+    note: r.note ?? undefined,
+  };
+}
+
+export default async function ResourcesPage() {
+  const rows = await fetchPublicResources(20);
+  const items = rows.map(toItem);
+
+  return (
+    <PageShell title="자료실" description="발간물 및 자료를 제공합니다.">
+      <ResourceList items={items} emptyText="자료 준비중" />
     </PageShell>
   );
 }

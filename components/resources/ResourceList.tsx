@@ -1,11 +1,22 @@
 import Link from "next/link";
 import styles from "./ResourceList.module.css";
-import type { ResourceItem } from "@/lib/resourcesData";
 
-function kindLabel(kind: ResourceItem["kind"]) {
+export type ResourceListItem = {
+  id: number | string;
+  title: string;
+  kind: string;
+  href?: string;          // optional
+  downloadHref?: string;  // optional
+  date?: string;
+  note?: string;
+  locked?: boolean;
+};
+
+function kindLabel(kind: string) {
   switch (kind) {
     case "pdf": return "PDF";
     case "image": return "IMG";
+    case "video": return "VIDEO";
     case "post": return "POST";
     case "slide": return "SLIDE";
     case "doc": return "DOC";
@@ -18,7 +29,7 @@ export default function ResourceList({
   items,
   emptyText = "자료 준비중",
 }: {
-  items: ResourceItem[];
+  items: ResourceListItem[];
   emptyText?: string;
 }) {
   if (!items || items.length === 0) {
@@ -31,24 +42,27 @@ export default function ResourceList({
         <li key={it.id} className={styles.item}>
           <span className={styles.kind}>{kindLabel(it.kind)}</span>
 
-          {/* 외부 링크/파일 링크가 많을 거라 새 탭 권장 */}
-          {it.href?.startsWith("http") ? (
-            <a className={styles.title} href={it.href} target="_blank" rel="noreferrer">
-              {it.title}
-            </a>
+          {it.href ? (
+            it.href.startsWith("http") ? (
+              <a className={styles.title} href={it.href} target="_blank" rel="noreferrer">
+                {it.title}
+              </a>
+            ) : (
+              <Link className={styles.title} href={it.href}>
+                {it.title}
+              </Link>
+            )
           ) : (
-            <Link className={styles.title} href={it.href || "#"}>
-              {it.title}
-            </Link>
+            <span className={styles.title}>{it.title}</span>
           )}
-          
+
           {it.downloadHref ? (
             <div className={styles.actions}>
               <a className={styles.download} href={it.downloadHref} target="_blank" rel="noreferrer">
                 다운로드
-                </a>
-                </div>
-              ) : null}
+              </a>
+            </div>
+          ) : null}
 
           {(it.date || it.note) && (
             <div className={styles.meta}>
