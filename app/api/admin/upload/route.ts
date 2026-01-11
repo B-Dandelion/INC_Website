@@ -45,6 +45,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "file is required" }, { status: 400 });
     }
 
+    // 1차 테스트용(통과하면 파일이 서버에 도착한 것)
+
     if (process.env.UPLOAD_STAGE === "1") {
         return NextResponse.json({
             ok: true,
@@ -60,7 +62,7 @@ export async function POST(req: Request) {
             },
         });
     }
-    
+
     // 1) boards.id 찾기
     const { data: board, error: boardErr } = await supabaseAdmin
       .from("boards")
@@ -87,6 +89,20 @@ export async function POST(req: Request) {
         ContentType: file.type || "application/octet-stream",
       }),
     );
+
+    // 2) R2 업로드 테스트 (2차 테스트)
+
+    if (process.env.UPLOAD_STAGE === "2") {
+        const publicUrl =
+        visibility === "public" ? `${process.env.R2_PUBLIC_BASE_URL}/${key}` : null;
+        return NextResponse.json({
+            ok: true,
+            stage: 2,
+            key,
+            bucket,
+            publicUrl,
+        });
+    }
 
     // 3) DB에 메타데이터 저장
     const { data: inserted, error: insErr } = await supabaseAdmin
