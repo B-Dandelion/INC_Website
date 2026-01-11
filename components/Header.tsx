@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { Search } from "lucide-react";
+import AuthButton from "@/components/AuthButton";
 
 export default function Header() {
   const [lang, setLang] = useState<"KOR" | "ENG">("KOR");
@@ -23,21 +24,20 @@ export default function Header() {
             />
           </Link>
 
-          <div className="flex items-center gap-2 md:hidden">
+          <div className="flex items-center gap-3 md:hidden">
+            <AuthButton />
             <button
               onClick={() => setLang("KOR")}
-              className={`text-sm ${
-                lang === "KOR" ? "font-bold text-blue-600" : "text-gray-600"
-              }`}
+              className={`text-sm ${lang === "KOR" ? "font-bold text-blue-600" : "text-gray-600"
+                }`}
             >
               KOR
             </button>
             <span className="text-gray-400">|</span>
             <button
               onClick={() => setLang("ENG")}
-              className={`text-sm ${
-                lang === "ENG" ? "font-bold text-blue-600" : "text-gray-600"
-              }`}
+              className={`text-sm ${lang === "ENG" ? "font-bold text-blue-600" : "text-gray-600"
+                }`}
             >
               ENG
             </button>
@@ -48,18 +48,6 @@ export default function Header() {
           <Link href="/about" className="hover:text-blue-600">
             INC 소개
           </Link>
-          <Link href="/committee" className="hover:text-blue-600">
-            자문위원회
-          </Link>
-          <Link href="/people" className="hover:text-blue-600">
-            연구진
-          </Link>
-          <Link href="/partners" className="hover:text-blue-600">
-            협력기관
-          </Link>
-          <Link href="/global" className="hover:text-blue-600">
-            국제교류
-          </Link>
           <Link href="/resources" className="hover:text-blue-600">
             자료실
           </Link>
@@ -68,6 +56,9 @@ export default function Header() {
           </Link>
           <Link href="/forum" className="hover:text-blue-600">
             참여마당
+          </Link>
+          <Link href="/contact" className="hover:text-blue-600">
+            문의
           </Link>
         </nav>
 
@@ -84,22 +75,21 @@ export default function Header() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setLang("KOR")}
-              className={`text-sm ${
-                lang === "KOR" ? "font-bold text-blue-600" : "text-gray-600"
-              }`}
+              className={`text-sm ${lang === "KOR" ? "font-bold text-blue-600" : "text-gray-600"
+                }`}
             >
               KOR
             </button>
             <span className="text-gray-400">|</span>
             <button
               onClick={() => setLang("ENG")}
-              className={`text-sm ${
-                lang === "ENG" ? "font-bold text-blue-600" : "text-gray-600"
-              }`}
+              className={`text-sm ${lang === "ENG" ? "font-bold text-blue-600" : "text-gray-600"
+                }`}
             >
               ENG
             </button>
           </div>
+          <AuthButton />
         </div>
       </div>
     </header>
