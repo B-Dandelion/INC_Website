@@ -1,18 +1,22 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import styles from "./ResourceList.module.css";
 import { createClient } from "@supabase/supabase-js";
 
-type ResourceItem = {
+export type ResourceItem = {
   id: number | string;
   title: string;
   kind: string;
   note?: string;
-  date?: string;
-  visibility?: "public" | "member" | "admin";
-  canView?: boolean;
+  date: string;
+  visibility: "public" | "member" | "admin";
+  canView: boolean;
   canDownload?: boolean;
+
+  // (선택) 다운로드/표시 확장 대비해서 넣어두면 나중에 덜 깨짐
+  r2_key?: string | null;
+  boards?: { slug: string }[] | null;
 };
 
 const supabase = createClient(
@@ -32,71 +36,48 @@ function kindLabel(kind: string) {
 }
 
 export default function ResourceList({
-  items: initialItems,
+  items,
   emptyText = "자료 준비중",
 }: {
   items: ResourceItem[];
   emptyText?: string;
 }) {
-  const [items, setItems] = useState<ResourceItem[]>(initialItems ?? []);
-  const [loading, setLoading] = useState(false);
+  // 표시 전용: props items만 사용
+  const hasItems = useMemo(() => Array.isArray(items) && items.length > 0, [items]);
+  const [busyId, setBusyId] = useState<number | string | null>(null);
 
   async function getToken() {
     const { data } = await supabase.auth.getSession();
     return data.session?.access_token ?? null;
   }
 
-  // 로그인 상태에 따라 "보일 수 있는 목록"을 API에서 다시 받아옴
-  useEffect(() => {
-    let alive = true;
-
-    (async () => {
-      setLoading(true);
-      try {
-        const token = await getToken();
-        const res = await fetch("/api/resources/list", {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
-        const out = await res.json().catch(() => ({}));
-        if (!alive) return;
-
-        if (res.ok && out?.items) setItems(out.items);
-      } finally {
-        if (alive) setLoading(false);
-      }
-    })();
-
-    return () => { alive = false; };
-  }, []);
-
   async function openResource(id: number | string, mode: "view" | "download") {
-    const token = await getToken();
-    const headers: Record<string, string> = { "Content-Type": "application/json" };
-    if (token) headers.Authorization = `Bearer ${token}`;
+    try {
+      setBusyId(id);
+      const token = await getToken();
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers.Authorization = `Bearer ${token}`;
 
-    const res = await fetch("/api/resources/url", {
-      method: "POST",
-      headers,
-      body: JSON.stringify({ resourceId: Number(id), mode }),
-    });
+      const res = await fetch("/api/resources/url", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ resourceId: Number(id), mode }),
+      });
 
-    const out = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      alert(out?.error || `실패: ${res.status}`);
-      return;
+      const out = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert(out?.error || `실패: ${res.status}`);
+        return;
+      }
+      const url = out?.url;
+      if (!url) {
+        alert("url 발급 실패");
+        return;
+      }
+      window.open(url, "_blank", "noopener,noreferrer");
+    } finally {
+      setBusyId(null);
     }
-    const url = out?.url;
-    if (!url) {
-      alert("url 발급 실패");
-      return;
-    }
-    window.open(url, "_blank", "noopener,noreferrer");
-  }
-
-  const hasItems = useMemo(() => items && items.length > 0, [items]);
-
-  if (loading && !hasItems) {
-    return <div className={styles.empty}>불러오는 중…</div>;
   }
 
   if (!hasItems) {
@@ -104,40 +85,96 @@ export default function ResourceList({
   }
 
   return (
-    <ul className={styles.list}>
-      {items.map((it) => (
-        <li key={it.id} className={styles.item}>
-          <span className={styles.kind}>{kindLabel(it.kind)}</span>
+    <div className={styles.wrap}>
+      {/* 데스크톱: 게시판(테이블) */}
+      <div className={styles.tableWrap}>
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th className={styles.colKind}>종류</th>
+              <th className={styles.colTitle}>제목</th>
+              <th className={styles.colDate}>게시일</th>
+              <th className={styles.colNote}>비고</th>
+              <th className={styles.colActions}>다운로드</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((it) => (
+              <tr key={it.id} className={styles.row}>
+                <td className={styles.kindCell}>{kindLabel(it.kind)}</td>
 
-          <button
-            type="button"
-            className={styles.title}
-            onClick={() => openResource(it.id, "view")}
-            title="열기"
-          >
-            {it.title}
-          </button>
+                <td className={styles.titleCell}>
+                  <button
+                    type="button"
+                    className={styles.titleBtn}
+                    onClick={() => openResource(it.id, "view")}
+                    disabled={busyId === it.id}
+                    title="열기"
+                  >
+                    {it.title}
+                  </button>
+                </td>
 
-          {it.canDownload ? (
-            <div className={styles.actions}>
-              <button
-                type="button"
-                className={styles.download}
-                onClick={() => openResource(it.id, "download")}
-              >
-                다운로드
-              </button>
+                <td className={styles.dateCell}>{it.date}</td>
+                <td className={styles.noteCell}>{it.note ?? "-"}</td>
+
+                <td className={styles.actionsCell}>
+                  {it.canDownload ? (
+                    <button
+                      type="button"
+                      className={styles.downloadBtn}
+                      onClick={() => openResource(it.id, "download")}
+                      disabled={busyId === it.id}
+                    >
+                      다운로드
+                    </button>
+                  ) : (
+                    <span className={styles.noDownload}>-</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* 모바일: 카드 리스트 */}
+      <ul className={styles.mobileList}>
+        {items.map((it) => (
+          <li key={it.id} className={styles.mobileItem}>
+            <div className={styles.mobileTop}>
+              <span className={styles.mobileKind}>{kindLabel(it.kind)}</span>
+              <span className={styles.mobileDate}>{it.date}</span>
             </div>
-          ) : null}
 
-          {(it.date || it.note) && (
-            <div className={styles.meta}>
-              {it.date && <span className={styles.date}>{it.date}</span>}
-              {it.note && <span className={styles.note}>{it.note}</span>}
+            <button
+              type="button"
+              className={styles.mobileTitle}
+              onClick={() => openResource(it.id, "view")}
+              disabled={busyId === it.id}
+            >
+              {it.title}
+            </button>
+
+            {it.note ? <div className={styles.mobileNote}>{it.note}</div> : null}
+
+            <div className={styles.mobileActions}>
+              {it.canDownload ? (
+                <button
+                  type="button"
+                  className={styles.mobileDownload}
+                  onClick={() => openResource(it.id, "download")}
+                  disabled={busyId === it.id}
+                >
+                  다운로드
+                </button>
+              ) : (
+                <span className={styles.noDownload}>다운로드 불가</span>
+              )}
             </div>
-          )}
-        </li>
-      ))}
-    </ul>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

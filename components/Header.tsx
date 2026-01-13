@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Search } from "lucide-react";
 import AuthButton from "@/components/AuthButton";
-import { RESOURCE_CATEGORIES } from "@/lib/resourceCategories";
+import { RESOURCE_BOARDS } from "@/lib/resourceBoards";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 
@@ -38,13 +38,11 @@ export default function Header() {
     return () => document.removeEventListener("mousedown", onDocClick);
   }, []);
 
-  const resourceLinks = useMemo(() => {
-    return RESOURCE_CATEGORIES.map((cat) => ({
-      label: cat,
-      href: `/resources?cat=${encodeURIComponent(cat)}`,
-    }));
-  }, []);
-
+  const resourceLinks = useMemo(
+    () => RESOURCE_BOARDS.map((b) => ({ label: b.label, href: `/resources?cat=${b.slug}` })),
+    [],
+  );
+  
   return (
     <header className="sticky top-0 z-20 border-b border-gray-200 bg-white">
       <div className="max-w-7xl mx-auto px-6 py-3 flex flex-col md:flex-row md:items-center justify-between gap-3">
@@ -66,18 +64,16 @@ export default function Header() {
 
             <button
               onClick={() => setLang("KOR")}
-              className={`text-sm ${
-                lang === "KOR" ? "font-bold text-blue-600" : "text-gray-600"
-              }`}
+              className={`text-sm ${lang === "KOR" ? "font-bold text-blue-600" : "text-gray-600"
+                }`}
             >
               KOR
             </button>
             <span className="text-gray-400">|</span>
             <button
               onClick={() => setLang("ENG")}
-              className={`text-sm ${
-                lang === "ENG" ? "font-bold text-blue-600" : "text-gray-600"
-              }`}
+              className={`text-sm ${lang === "ENG" ? "font-bold text-blue-600" : "text-gray-600"
+                }`}
             >
               ENG
             </button>
@@ -145,18 +141,16 @@ export default function Header() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setLang("KOR")}
-              className={`text-sm ${
-                lang === "KOR" ? "font-bold text-blue-600" : "text-gray-600"
-              }`}
+              className={`text-sm ${lang === "KOR" ? "font-bold text-blue-600" : "text-gray-600"
+                }`}
             >
               KOR
             </button>
             <span className="text-gray-400">|</span>
             <button
               onClick={() => setLang("ENG")}
-              className={`text-sm ${
-                lang === "ENG" ? "font-bold text-blue-600" : "text-gray-600"
-              }`}
+              className={`text-sm ${lang === "ENG" ? "font-bold text-blue-600" : "text-gray-600"
+                }`}
             >
               ENG
             </button>
