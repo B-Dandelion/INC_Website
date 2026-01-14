@@ -1,6 +1,5 @@
-/* ResourceList.module.css */
+/* components/resources/ResourceList.module.css */
 
-/* 공통 */
 .empty {
   padding: 12px;
   border-radius: 12px;
@@ -8,75 +7,141 @@
   color: var(--muted);
 }
 
-.wrap {
+.boardWrap {
   width: 100%;
 }
 
-/* =========================
-   데스크톱: 게시판(테이블)
-   ========================= */
-
-.tableWrap {
-  width: 100%;
+/* 데스크톱 게시판 */
+.boardTableWrap {
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 16px;
   overflow: hidden;
   background: rgba(255, 255, 255, 0.02);
 }
 
-.table {
+.boardTable {
   width: 100%;
   border-collapse: collapse;
 }
 
-.table thead th {
+.boardTable thead th {
   text-align: left;
-  font-size: 12px;
-  font-weight: 900;
-  letter-spacing: 0.06em;
-  color: var(--muted);
   padding: 12px 14px;
-  background: rgba(255, 255, 255, 0.03);
+  font-size: 13px;
+  font-weight: 950;
+  color: rgba(30, 41, 59, 0.85);
+  background: rgba(37, 99, 235, 0.06);
   border-bottom: 1px solid var(--border);
 }
 
-.row td {
-  padding: 12px 14px;
+.boardRow td {
+  padding: 14px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  vertical-align: middle;
+  vertical-align: top;
 }
 
-.row:last-child td {
+.boardRow:hover td {
+  background: rgba(37, 99, 235, 0.04);
+}
+
+.boardRow:last-child td {
   border-bottom: none;
 }
 
-.colKind { width: 72px; }
-.colDate { width: 120px; }
-.colActions { width: 120px; }
-.colNote { width: 220px; }
-
-.kindCell {
-  font-size: 12px;
-  font-weight: 900;
-  letter-spacing: 0.06em;
-  opacity: 0.8;
+.colNo {
+  width: 80px;
 }
 
-.titleCell { max-width: 0; } /* ellipsis 위해 */
+.colDate {
+  width: 140px;
+}
 
-.titleBtn {
-  display: inline-block;
-  max-width: 100%;
-  text-align: left;
-  background: transparent;
-  border: 0;
-  padding: 0;
-  color: var(--foreground);
-  font-weight: 900;
-  cursor: pointer;
+.colDl {
+  width: 130px;
+  text-align: right;
+}
+
+.noCell {
+  color: var(--muted);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.titleCell {
+  max-width: 0; /* ellipsis */
+}
+
+.titleLine {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.fileMeta {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.fileName {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  max-width: 520px; /* 필요하면 조절 */
+}
+
+.extBadge {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  background: rgba(255, 255, 255, 1);
+  color: rgba(30, 41, 59, 0.85);
+  font-size: 11px;
+  font-weight: 950;
+  flex: 0 0 auto;
+}
+
+.catBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(37, 99, 235, 0.35);
+  background: rgba(37, 99, 235, 0.10);
+  color: rgba(37, 99, 235, 0.95);
+  font-size: 12px;
+  font-weight: 950;
+  flex: 0 0 auto;
+}
+
+.mobileBadges {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.titleBtn {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font-weight: 950;
+  color: var(--foreground);
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .titleBtn:hover {
@@ -88,53 +153,50 @@
   cursor: default;
 }
 
+.subNote {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .dateCell {
   color: var(--muted);
   font-size: 13px;
   white-space: nowrap;
 }
 
-.noteCell {
-  color: var(--muted);
-  font-size: 13px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.dlCell {
+  text-align: right;
   white-space: nowrap;
 }
 
-.actionsCell {
-  text-align: right;
-}
-
-.downloadBtn {
+.dlBtn {
   font-size: 12px;
   padding: 7px 10px;
   border-radius: 10px;
   border: 1px solid rgba(148, 163, 184, 0.55);
   color: rgba(30, 41, 59, 0.9);
   background: rgba(255, 255, 255, 1);
-  font-weight: 900;
+  font-weight: 950;
   cursor: pointer;
 }
 
-.downloadBtn:hover {
+.dlBtn:hover {
   background: rgba(248, 250, 252, 1);
 }
 
-.downloadBtn:disabled {
+.dlBtn:disabled {
   opacity: 0.6;
   cursor: default;
 }
 
-.noDownload {
+.noDl {
   color: var(--muted);
   font-size: 12px;
 }
 
-/* =========================
-   모바일: 카드 리스트
-   ========================= */
-
+/* 모바일 */
 .mobileList {
   display: none;
   list-style: none;
@@ -144,30 +206,23 @@
 }
 
 .mobileItem {
-  padding: 12px 12px;
-  border-radius: 12px;
+  padding: 12px;
+  border-radius: 14px;
   border: 1px solid var(--border);
   background: rgba(255, 255, 255, 0.02);
 }
 
 .mobileTop {
   display: flex;
-  align-items: baseline;
   justify-content: space-between;
+  align-items: center;
   gap: 10px;
   margin-bottom: 8px;
 }
 
-.mobileKind {
-  font-size: 12px;
-  font-weight: 900;
-  letter-spacing: 0.06em;
-  opacity: 0.75;
-}
-
 .mobileDate {
-  font-size: 12px;
   color: var(--muted);
+  font-size: 12px;
   white-space: nowrap;
 }
 
@@ -178,7 +233,7 @@
   border: 0;
   padding: 0;
   color: var(--foreground);
-  font-weight: 900;
+  font-weight: 950;
   cursor: pointer;
   line-height: 1.25;
 }
@@ -205,32 +260,9 @@
   justify-content: flex-end;
 }
 
-.mobileDownload {
-  font-size: 12px;
-  padding: 7px 10px;
-  border-radius: 10px;
-  border: 1px solid rgba(148, 163, 184, 0.55);
-  color: rgba(30, 41, 59, 0.9);
-  background: rgba(255, 255, 255, 1);
-  font-weight: 900;
-  cursor: pointer;
-}
-
-.mobileDownload:hover {
-  background: rgba(248, 250, 252, 1);
-}
-
-.mobileDownload:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-
-/* =========================
-   반응형 전환
-   ========================= */
-
+/* 반응형 */
 @media (max-width: 860px) {
-  .tableWrap {
+  .boardTableWrap {
     display: none;
   }
   .mobileList {

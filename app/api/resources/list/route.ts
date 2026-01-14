@@ -17,7 +17,21 @@ function supabaseFromAuthHeader(authHeader: string) {
 type Role = "member" | "admin";
 type Visibility = "public" | "member" | "admin";
 
+async function getBoardBySlug(slug: string) {
+  const s = slug.trim();
+  if (!s) return null;
+  const { data } = await supabaseAdmin
+    .from("boards")
+    .select("id, slug, title")
+    .eq("slug", s)
+    .maybeSingle<{ id: number; slug: string; title: string }>();
+  return data ?? null;
+}
+
 export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const cat = (url.searchParams.get("cat") ?? "").trim();
+
   const authHeader = req.headers.get("authorization") || "";
   let userId: string | null = null;
   let role: Role = "member";
@@ -44,44 +58,63 @@ export async function GET(req: Request) {
   const isLoggedIn = !!userId;
 
   // 2) 이 유저가 "목록에서 볼 수 있는 visibility" 결정
-  // - 비로그인: public만
-  // - 로그인 + 승인X: public만
-  // - 로그인 + 승인O: public + member (+ admin if admin)
   const allowed: Visibility[] = ["public"];
   if (isLoggedIn && approved) {
     allowed.push("member");
     if (role === "admin") allowed.push("admin");
   }
 
-  const { data, error } = await supabaseAdmin
+  // 3) cat(slug) -> board_id
+  let board = null as null | { id: number; slug: string; title: string };
+  if (cat) {
+    board = await getBoardBySlug(cat);
+    if (!board) {
+      return NextResponse.json({ ok: true, items: [], auth: { isLoggedIn, approved, role } });
+    }
+  }
+
+  // 4) resources 조회 (boards join 포함)
+  let q = supabaseAdmin
     .from("resources")
-    .select("id, title, kind, note, published_at, visibility")
-    .in("visibility", allowed)
-    .order("published_at", { ascending: false })
+    .select("id, board_id, title, kind, note, published_at, visibility, r2_key, boards:boards ( slug, title )")
+    .in("visibility", allowed);
+
+  if (board) q = q.eq("board_id", board.id); // 실제 필터 적용
+
+  const { data, error } = await q
+    .order("published_at", { ascending: false, nullsFirst: false })
+    .order("created_at", { ascending: false })
     .limit(200);
 
   if (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
 
-  const items = (data ?? []).map((r) => {
+  const items = (data ?? []).map((r: any) => {
     const vis = r.visibility as Visibility;
 
-    // public 다운로드는 "로그인"이면 가능, 비로그인은 불가
-    const canDownload =
+    // 다운로드 권한(로그인/승인/관리자) + 실제 파일키(r2_key) 둘 다 만족해야 다운로드 버튼
+    const canDownloadPerm =
       vis === "public"
         ? isLoggedIn
         : approved && (vis === "member" || (vis === "admin" && role === "admin"));
+
+    const date =
+      r.published_at ?? (r.created_at ? String(r.created_at).slice(0, 10) : "");
 
     return {
       id: r.id,
       title: r.title,
       kind: r.kind,
       note: r.note ?? undefined,
-      date: r.published_at ?? undefined,
+      // published_at 없으면 created_at 날짜로 대체(YYYY-MM-DD)
+      date,
       visibility: vis,
       canView: true,
-      canDownload,
+      canDownload: canDownloadPerm && !!r.r2_key,
+      // 카테고리 표시용
+      boardSlug: r.boards?.slug ?? "",
+      boardTitle: r.boards?.title ?? "",
     };
   });
 

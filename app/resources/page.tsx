@@ -23,6 +23,8 @@ export default async function ResourcesPage({
     boardSlug: selected?.slug ?? "",
   });
 
+  const showCategory = !selected;
+
   const items: ResourceItem[] = rows.map((r: any) => ({
     id: r.id,
     title: r.title,
@@ -32,7 +34,11 @@ export default async function ResourcesPage({
     visibility: r.visibility,
     canView: true,
     canDownload: !!r.r2_key,
+    boardSlug: r.boards?.slug ?? "",
+    boardTitle: r.boards?.title ?? "",
   }));
+
+  <ResourceList items={items} showCategory={showCategory} />
 
   return (
     <main className={styles.main}>

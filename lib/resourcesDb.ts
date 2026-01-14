@@ -3,14 +3,17 @@ import { createSupabaseServerClient } from "./supabaseServer";
 
 export type DbResource = {
   id: number;
-  board_id: number | null;
+  board_id: number;                // 이제 null 안 쓰는 방향이면 number로 고정 권장
   title: string;
   kind: string;
-  note: string | null;
-  published_at: string | null;
+  note: string;                    // null 허용 안 할 거면 text ''로 저장하게 하고 string으로
+  published_at: string;            // null 허용 안 할 거면 date 필수로
   created_at: string;
   visibility: "public" | "member" | "admin";
   r2_key: string | null;
+
+  // boards join 결과
+  boards: { slug: string; title: string } | null;
 };
 
 async function getBoardIdBySlug(slug: string) {
@@ -36,12 +39,15 @@ export async function fetchPublicResources(
 
   let q = supabase
     .from("resources")
-    .select("id, board_id, title, kind, note, published_at, visibility, r2_key, created_at")
+    .select(`
+      id, board_id, title, kind, note, published_at, visibility, r2_key, created_at,
+      boards:boards ( slug, title )
+    `)
     .eq("visibility", "public");
 
   if (boardSlug) {
     const boardId = await getBoardIdBySlug(boardSlug);
-    if (boardId == null) return []; // slug가 없으면 빈 결과
+    if (boardId == null) return [];
     q = q.eq("board_id", boardId);
   }
 

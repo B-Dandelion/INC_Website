@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import styles from "./ResourceList.module.css";
 import { createClient } from "@supabase/supabase-js";
 
@@ -14,9 +15,8 @@ export type ResourceItem = {
   canView: boolean;
   canDownload?: boolean;
 
-  // (선택) 다운로드/표시 확장 대비해서 넣어두면 나중에 덜 깨짐
-  r2_key?: string | null;
-  boards?: { slug: string }[] | null;
+  boardSlug: string;
+  boardTitle: string;
 };
 
 const supabase = createClient(
@@ -26,30 +26,109 @@ const supabase = createClient(
 
 function kindLabel(kind: string) {
   switch (kind) {
-    case "pdf": return "PDF";
-    case "image": return "IMG";
-    case "video": return "VIDEO";
-    case "doc": return "DOC";
-    case "zip": return "ZIP";
-    default: return "LINK";
+    case "pdf":
+      return "PDF";
+    case "image":
+      return "IMG";
+    case "video":
+      return "VIDEO";
+    case "doc":
+      return "DOC";
+    case "zip":
+      return "ZIP";
+    default:
+      return "LINK";
   }
 }
 
+function kindToExt(kind: string) {
+  switch ((kind || "").toLowerCase()) {
+    case "pdf": return "pdf";
+    case "image": return "img";
+    case "video": return "mp4";
+    case "doc": return "doc";
+    case "zip": return "zip";
+    default: return "";
+  }
+}
+
+function fileNameWithExt(fileName: string, kind: string) {
+  const base = (fileName || "").trim();
+  if (!base) return "";
+  if (base.includes(".")) return base; // 이미 확장자 있으면 그대로
+  const ext = kindToExt(kind);
+  return ext ? `${base}.${ext}` : base;
+}
+
+function fileExt(fileName: string) {
+  const base = (fileName || "").trim();
+  const idx = base.lastIndexOf(".");
+  if (idx <= 0 || idx === base.length - 1) return "";
+  return base.slice(idx + 1).toUpperCase();
+}
+
+function displayTitle(it: { note?: string; title: string }) {
+  const t = (it.note || "").trim();
+  return t.length ? t : it.title; // note 없으면 파일명으로 대체
+}
+
 export default function ResourceList({
-  items,
+  items: initialItems,
   emptyText = "자료 준비중",
+  showCategory,
 }: {
   items: ResourceItem[];
   emptyText?: string;
+  // 넘기면 그 값을 사용, 안 넘기면 "전체(cat 없음)"일 때만 자동 표시
+  showCategory?: boolean;
 }) {
-  // 표시 전용: props items만 사용
-  const hasItems = useMemo(() => Array.isArray(items) && items.length > 0, [items]);
+  const sp = useSearchParams();
+  const cat = (sp.get("cat") ?? "").trim();
+  const shouldShowCategory = showCategory ?? !cat;
+
+  const [items, setItems] = useState<ResourceItem[]>(initialItems ?? []);
+  const [loading, setLoading] = useState(false);
   const [busyId, setBusyId] = useState<number | string | null>(null);
+  const [authTick, setAuthTick] = useState(0);
 
   async function getToken() {
     const { data } = await supabase.auth.getSession();
     return data.session?.access_token ?? null;
   }
+
+  useEffect(() => {
+    const { data: sub } = supabase.auth.onAuthStateChange(() => {
+      setAuthTick((v) => v + 1);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  // cat 변경(또는 로그인 상태에 따른 토큰) 기준으로 목록 재조회
+  useEffect(() => {
+    setItems(initialItems ?? []);
+
+    let alive = true;
+
+    (async () => {
+      setLoading(true);
+      try {
+        const token = await getToken();
+        const qs = cat ? `?cat=${encodeURIComponent(cat)}` : "";
+        const res = await fetch(`/api/resources/list${qs}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          cache: "no-store",
+        });
+        const out = await res.json().catch(() => ({}));
+        if (!alive) return;
+
+        if (res.ok && Array.isArray(out?.items)) setItems(out.items);
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+
+    return () => { alive = false; };
+  }, [cat, authTick]);
 
   async function openResource(id: number | string, mode: "view" | "download") {
     try {
@@ -80,100 +159,123 @@ export default function ResourceList({
     }
   }
 
-  if (!hasItems) {
-    return <div className={styles.empty}>{emptyText}</div>;
-  }
+  const hasItems = useMemo(() => Array.isArray(items) && items.length > 0, [items]);
+  if (loading && !hasItems) return <div className={styles.empty}>불러오는 중…</div>;
+  if (!hasItems) return <div className={styles.empty}>{emptyText}</div>;
+
+  const total = items.length;
 
   return (
-    <div className={styles.wrap}>
-      {/* 데스크톱: 게시판(테이블) */}
-      <div className={styles.tableWrap}>
-        <table className={styles.table}>
+    <div className={styles.boardWrap}>
+      <div className={styles.boardTableWrap}>
+        <table className={styles.boardTable}>
           <thead>
             <tr>
-              <th className={styles.colKind}>종류</th>
+              <th className={styles.colNo}>번호</th>
               <th className={styles.colTitle}>제목</th>
-              <th className={styles.colDate}>게시일</th>
-              <th className={styles.colNote}>비고</th>
-              <th className={styles.colActions}>다운로드</th>
+              <th className={styles.colDate}>등록일</th>
+              <th className={styles.colDl}>다운로드</th>
             </tr>
           </thead>
           <tbody>
-            {items.map((it) => (
-              <tr key={it.id} className={styles.row}>
-                <td className={styles.kindCell}>{kindLabel(it.kind)}</td>
+            {items.map((it, idx) => {
+              const no = total - idx;
+              const disabled = busyId === it.id;
 
-                <td className={styles.titleCell}>
-                  <button
-                    type="button"
-                    className={styles.titleBtn}
-                    onClick={() => openResource(it.id, "view")}
-                    disabled={busyId === it.id}
-                    title="열기"
-                  >
-                    {it.title}
-                  </button>
-                </td>
+              return (
+                <tr key={it.id} className={styles.boardRow}>
+                  <td className={styles.noCell}>{no}</td>
 
-                <td className={styles.dateCell}>{it.date}</td>
-                <td className={styles.noteCell}>{it.note ?? "-"}</td>
+                  <td className={styles.titleCell}>
+                    <div className={styles.titleLine}>
+                      {shouldShowCategory && it.boardTitle ? (
+                        <span className={styles.catBadge}>{it.boardTitle}</span>
+                      ) : null}
 
-                <td className={styles.actionsCell}>
-                  {it.canDownload ? (
-                    <button
-                      type="button"
-                      className={styles.downloadBtn}
-                      onClick={() => openResource(it.id, "download")}
-                      disabled={busyId === it.id}
-                    >
-                      다운로드
-                    </button>
-                  ) : (
-                    <span className={styles.noDownload}>-</span>
-                  )}
-                </td>
-              </tr>
-            ))}
+                      <button
+                        type="button"
+                        className={styles.titleBtn}
+                        onClick={() => openResource(it.id, "view")}
+                        disabled={disabled}
+                      >
+                        {displayTitle(it)}
+                      </button>
+                    </div>
+
+                    <div className={styles.fileMeta}>
+                      <span className={styles.fileName}>
+                        {fileNameWithExt(it.title, it.kind)}
+                      </span>
+                    </div>
+                  </td>
+
+                  <td className={styles.dateCell}>{it.date}</td>
+
+                  <td className={styles.dlCell}>
+                    {it.canDownload ? (
+                      <button
+                        type="button"
+                        className={styles.dlBtn}
+                        onClick={() => openResource(it.id, "download")}
+                        disabled={disabled}
+                      >
+                        다운로드
+                      </button>
+                    ) : (
+                      <span className={styles.noDl}>-</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
 
-      {/* 모바일: 카드 리스트 */}
+      {/* 모바일 */}
       <ul className={styles.mobileList}>
-        {items.map((it) => (
-          <li key={it.id} className={styles.mobileItem}>
-            <div className={styles.mobileTop}>
-              <span className={styles.mobileKind}>{kindLabel(it.kind)}</span>
-              <span className={styles.mobileDate}>{it.date}</span>
-            </div>
+        {items.map((it) => {
+          const disabled = busyId === it.id;
+          return (
+            <li key={it.id} className={styles.mobileItem}>
+              <div className={styles.mobileTop}>
+                <div className={styles.mobileBadges}>
+                  <span className={styles.kindBadge}>{kindLabel(it.kind)}</span>
+                  {shouldShowCategory && it.boardTitle ? (
+                    <span className={styles.catBadge}>{it.boardTitle}</span>
+                  ) : null}
+                </div>
+                <span className={styles.mobileDate}>{it.date}</span>
+              </div>
 
-            <button
-              type="button"
-              className={styles.mobileTitle}
-              onClick={() => openResource(it.id, "view")}
-              disabled={busyId === it.id}
-            >
-              {it.title}
-            </button>
+              <button
+                type="button"
+                className={styles.mobileTitle}
+                onClick={() => openResource(it.id, "view")}
+                disabled={disabled}
+              >
+                {it.title}
+              </button>
 
-            {it.note ? <div className={styles.mobileNote}>{it.note}</div> : null}
+              {it.note ? <div className={styles.mobileNote}>{it.note}</div> : null}
 
-            <div className={styles.mobileActions}>
-              {it.canDownload ? (
-                <button
-                  type="button"
-                  className={styles.mobileDownload}
-                  onClick={() => openResource(it.id, "download")}
-                  disabled={busyId === it.id}
-                >
-                  다운로드
-                </button>
-              ) : (
-                <span className={styles.noDownload}>다운로드 불가</span>
-              )}
-            </div>
-          </li>
-        ))}
+              <div className={styles.mobileActions}>
+                {it.canDownload ? (
+                  <button
+                    type="button"
+                    className={styles.dlBtn}
+                    onClick={() => openResource(it.id, "download")}
+                    disabled={disabled}
+                  >
+                    다운로드
+                  </button>
+                ) : (
+                  <span className={styles.noDl}>다운로드 불가</span>
+                )}
+              </div>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );

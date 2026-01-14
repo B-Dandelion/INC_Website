@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 
@@ -10,6 +10,25 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
 );
+
+type BoardOpt = { slug: string; title: string };
+type Kind = "pdf" | "image" | "video" | "doc" | "zip" | "link";
+
+function getExt(name: string) {
+  const base = (name || "").trim();
+  const i = base.lastIndexOf(".");
+  if (i <= 0 || i === base.length - 1) return "";
+  return base.slice(i + 1).toLowerCase();
+}
+
+function kindFromExt(ext: string): Kind | null {
+  if (ext === "pdf") return "pdf";
+  if (["png", "jpg", "jpeg", "webp"].includes(ext)) return "image";
+  if (["mp4"].includes(ext)) return "video";
+  if (["doc", "docx", "ppt", "pptx", "xls", "xlsx", "hwp"].includes(ext)) return "doc";
+  if (["zip"].includes(ext)) return "zip";
+  return null;
+}
 
 export default function AdminUploadPage() {
   const router = useRouter();
@@ -21,19 +40,45 @@ export default function AdminUploadPage() {
   const [json, setJson] = useState<any>(null);
   const [email, setEmail] = useState<string | null>(null);
 
+  // boards
+  const [boards, setBoards] = useState<BoardOpt[]>([]);
+  const [boardSlug, setBoardSlug] = useState<string>("");
+
+  // file/kind
+  const [pickedFileName, setPickedFileName] = useState<string>("");
+  const [autoKind, setAutoKind] = useState<Kind | "">("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const titleRef = useRef<HTMLInputElement | null>(null);
+  const fileRef = useRef<HTMLInputElement | null>(null);
+
+  const acceptAttr = useMemo(() => {
+    // 파일 선택창 필터(완전한 보안은 아니고 UX용)
+    return [
+      ".pdf",
+      ".png", ".jpg", ".jpeg", ".webp",
+      ".mp4",
+      ".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx", ".hwp",
+      ".zip",
+    ].join(",");
+  }, []);
+
+  // 0) 권한 확인: allowed true면 화면을 계속 보여주고(깜빡임 방지)
   useEffect(() => {
     let alive = true;
 
-    const run = async () => {
+    const run = async (soft = false) => {
       try {
-        setChecking(true);
+        if (!soft) setChecking(true);
 
         const { data, error } = await supabase.auth.getUser();
         if (!alive) return;
 
         const user = error ? null : data.user;
         if (!user) {
-          router.replace("/login?next=%2Fadmin%2Fupload");
+          setAllowed(false);
+          setEmail(null);
+          if (!soft) router.replace("/login?next=%2Fadmin%2Fupload");
           return;
         }
 
@@ -43,40 +88,38 @@ export default function AdminUploadPage() {
           .from("profiles")
           .select("role, approved")
           .eq("id", user.id)
-          .single();
+          .maybeSingle();
 
         if (!alive) return;
 
-        if (profErr || !profile) {
-          router.replace("/");
-          return;
-        }
+        const ok = !profErr && !!profile && profile.role === "admin" && profile.approved === true;
+        setAllowed(ok);
 
-        if (profile.role !== "admin" || profile.approved !== true) {
-          router.replace("/");
-          return;
-        }
-
-        setAllowed(true);
-      } catch (err: any) {
+        if (!ok && !soft) router.replace("/");
+      } catch {
         if (!alive) return;
-        if (err?.name === "AbortError") return;
-        router.replace("/");
+        setAllowed(false);
+        if (!soft) router.replace("/");
       } finally {
-        if (alive) setChecking(false);
+        if (!alive) return;
+        if (!soft) setChecking(false);
       }
     };
 
-    run();
+    run(false);
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       const u = session?.user ?? null;
       setEmail(u?.email ?? null);
 
-      // 로그아웃/세션 변경 시 즉시 잠그고 다시 검사
-      setAllowed(false);
-      setChecking(true);
-      run();
+      if (event === "SIGNED_OUT") {
+        setAllowed(false);
+        router.replace("/login?next=%2Fadmin%2Fupload");
+        return;
+      }
+
+      // TOKEN_REFRESHED 같은 이벤트로 페이지가 깜빡이지 않게 "soft" 재검사
+      run(true);
     });
 
     return () => {
@@ -85,37 +128,117 @@ export default function AdminUploadPage() {
     };
   }, [router]);
 
+  // 1) boards 목록 로드 (allowed 이후)
+  useEffect(() => {
+    if (!allowed) return;
+    let alive = true;
+
+    (async () => {
+      try {
+        // 네가 만든 경로가 다르면 여기만 바꿔
+        const res = await fetch("/api/boards/list", { cache: "no-store" });
+        const out = await res.json().catch(() => ({}));
+        if (!alive) return;
+
+        if (!res.ok || !out?.boards) return;
+
+        const list: BoardOpt[] = out.boards;
+        setBoards(list);
+
+        // 기본값 세팅
+        const first = list?.[0]?.slug ?? "";
+        setBoardSlug((prev) => prev || (list.some(b => b.slug === "atm") ? "atm" : first));
+      } catch {
+        // 무시: boards 없으면 선택 불가로 남겨둠
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, [allowed]);
+
+  function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0] ?? null;
+    setJson(null);
+
+    if (!file) {
+      setPickedFileName("");
+      setAutoKind("");
+      return;
+    }
+
+    const ext = getExt(file.name);
+    const k = kindFromExt(ext);
+
+    if (!k) {
+      setMsg(`허용되지 않는 파일 형식입니다: .${ext || "(확장자없음)"}`);
+      setPickedFileName("");
+      setAutoKind("");
+      // input 초기화
+      if (fileRef.current) fileRef.current.value = "";
+      return;
+    }
+
+    setPickedFileName(file.name);
+    setAutoKind(k);
+    setMsg("");
+
+    // 제목이 비어 있으면 파일명(확장자 제거)로 자동 채움(원치 않으면 삭제)
+    const t = titleRef.current;
+    if (t && !t.value.trim()) {
+      const base = file.name.replace(/\.[^/.]+$/, "");
+      t.value = base;
+    }
+  }
+
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    const formEl = e.currentTarget;
-    if (!(formEl instanceof HTMLFormElement)) {
-      setMsg("실패: 폼 요소를 찾을 수 없음");
+    if (!autoKind) {
+      setMsg("실패: 파일을 선택해 주세요(허용 확장자만 가능).");
+      return;
+    }
+    if (!boardSlug) {
+      setMsg("실패: 게시판을 선택해 주세요.");
       return;
     }
 
+    const formEl = e.currentTarget;
+    setSubmitting(true);
     setMsg("업로드 중...");
     setJson(null);
 
-    const { data } = await supabase.auth.getSession();
-    const token = data.session?.access_token;
+    try {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
 
-    if (!token) {
-      setMsg("실패: 로그인 필요");
-      return;
+      if (!token) {
+        setMsg("실패: 로그인 필요");
+        return;
+      }
+
+      const fd = new FormData(formEl);
+
+      // 자동 결정값 강제 주입 (disabled 필드는 FormData에 안 들어가므로)
+      fd.set("boardSlug", boardSlug);
+      fd.set("kind", autoKind);
+
+      // 서버에서 원본 파일명을 저장하고 싶으면 같이 보내두자(서버가 받게 만들면 됨)
+      if (pickedFileName) fd.set("originalFilename", pickedFileName);
+
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        body: fd,
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const out = await res.json().catch(() => ({}));
+      setJson(out);
+      setMsg(res.ok ? "성공" : `실패: ${res.status} ${out?.error ? `(${out.error})` : ""}`);
+    } finally {
+      setSubmitting(false);
     }
-
-    const fd = new FormData(formEl);
-
-    const res = await fetch("/api/admin/upload", {
-      method: "POST",
-      body: fd,
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    const out = await res.json().catch(() => ({}));
-    setJson(out);
-    setMsg(res.ok ? "성공" : `실패: ${res.status}`);
   }
 
   const inputClass =
@@ -125,8 +248,8 @@ export default function AdminUploadPage() {
     "mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400";
   const helperClass = "mt-1 text-xs text-slate-500";
 
-  // 권한 확인 중에는 폼을 보여주지 않음
-  if (checking) {
+  // 권한 확인 중: allowed가 아직 false일 때만 로딩 화면(깜빡임 최소화)
+  if (checking && !allowed) {
     return (
       <main className="min-h-[calc(100vh-120px)] bg-gradient-to-b from-blue-50 to-white px-4 py-10">
         <div className="mx-auto w-full max-w-3xl">
@@ -144,7 +267,6 @@ export default function AdminUploadPage() {
     );
   }
 
-  // allowed가 false면 이미 router.replace로 쫓아냈어야 하는 상태
   if (!allowed) return null;
 
   return (
@@ -184,67 +306,95 @@ export default function AdminUploadPage() {
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <label className={labelClass}>
-                    Title
-                    <input name="title" required className={inputClass} />
+                    문서 제목
+                    <input ref={titleRef} name="title" required className={inputClass} />
                   </label>
                 </div>
 
                 <div>
                   <label className={labelClass}>
-                    Board Slug
-                    <select name="boardSlug" defaultValue="atm" className={selectClass}>
-                      <option value="atm">atm</option>
-                      <option value="heartbeat-of-atoms">heartbeat-of-atoms</option>
+                    게시판
+                    <select
+                      name="boardSlug"
+                      value={boardSlug}
+                      onChange={(e) => setBoardSlug(e.target.value)}
+                      className={selectClass}
+                      disabled={boards.length === 0}
+                    >
+                      {boards.length === 0 ? (
+                        <option value="">게시판 불러오는 중…</option>
+                      ) : (
+                        boards.map((b) => (
+                          <option key={b.slug} value={b.slug}>
+                            {b.title} ({b.slug})
+                          </option>
+                        ))
+                      )}
                     </select>
                   </label>
                 </div>
 
                 <div>
                   <label className={labelClass}>
-                    Visibility
+                    공개 범위
                     <select name="visibility" defaultValue="public" className={selectClass}>
                       <option value="public">public</option>
                       <option value="member">member</option>
                       <option value="admin">admin</option>
                     </select>
                   </label>
-                  <p className={helperClass}>member/admin은 지금은 잠금 표시까지만 권장.</p>
+                  <p className={helperClass}>member/admin은 잠금 표시/권한 정책 붙이기 전까진 주의.</p>
                 </div>
 
                 <div>
                   <label className={labelClass}>
-                    Kind
-                    <select name="kind" defaultValue="pdf" className={selectClass}>
-                      <option value="pdf">pdf</option>
-                      <option value="image">image</option>
-                      <option value="video">video</option>
-                      <option value="doc">doc</option>
-                      <option value="zip">zip</option>
-                      <option value="link">link</option>
-                    </select>
+                    파일 종류(자동)
+                    <input
+                      className={inputClass}
+                      value={autoKind || "파일 선택 필요"}
+                      readOnly
+                    />
+                    {/* 서버로 보내기 */}
+                    <input type="hidden" name="kind" value={autoKind} />
                   </label>
+                  <p className={helperClass}>
+                    허용: pdf / 이미지(png,jpg,webp) / mp4 / 문서(docx,pptx,xlsx,hwp 등) / zip
+                  </p>
                 </div>
 
                 <div>
                   <label className={labelClass}>
-                    Published At
-                    <input name="publishedAt" placeholder="2026-01-08" className={inputClass} />
+                    게시일
+                    <input name="publishedAt" type="date" className={inputClass} />
                   </label>
-                  <p className={helperClass}>YYYY-MM-DD 형식</p>
+                  <p className={helperClass}>달력 선택(YYYY-MM-DD 자동)</p>
                 </div>
 
                 <div>
                   <label className={labelClass}>
-                    Note
+                    비고(선택)
                     <input name="note" className={inputClass} />
                   </label>
                 </div>
 
                 <div className="md:col-span-2">
                   <label className={labelClass}>
-                    File
-                    <input name="file" type="file" required className={inputClass} />
+                    파일
+                    <input
+                      ref={fileRef}
+                      name="file"
+                      type="file"
+                      required
+                      accept={acceptAttr}
+                      onChange={onFileChange}
+                      className={inputClass}
+                    />
                   </label>
+                  {pickedFileName ? (
+                    <p className={helperClass}>선택됨: {pickedFileName}</p>
+                  ) : (
+                    <p className={helperClass}>파일을 선택하면 종류가 자동으로 결정됩니다.</p>
+                  )}
                 </div>
               </div>
 
@@ -252,9 +402,10 @@ export default function AdminUploadPage() {
                 <div className="text-sm text-slate-700">{msg}</div>
                 <button
                   type="submit"
+                  disabled={submitting || !autoKind || !boardSlug}
                   className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50"
                 >
-                  Upload
+                  {submitting ? "업로드 중…" : "Upload"}
                 </button>
               </div>
             </form>
@@ -275,7 +426,7 @@ export default function AdminUploadPage() {
         </div>
 
         <div className="mt-6 text-xs text-slate-500">
-          업로드가 성공하면 R2에 저장되고, resources 테이블에 r2_key와 메타데이터가 생성되어야 합니다.
+          업로드 성공 시: R2 저장 + resources 테이블에 r2_key/메타데이터 생성.
         </div>
       </div>
     </main>
