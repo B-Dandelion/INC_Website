@@ -77,8 +77,8 @@ export async function GET(req: Request) {
   let q = supabaseAdmin
     .from("resources")
     .select("id, board_id, title, kind, note, published_at, visibility, r2_key, boards:boards ( slug, title )")
-    .in("visibility", allowed);
-
+    .in("visibility", allowed)
+    .is("deleted_at", null);
   if (board) q = q.eq("board_id", board.id); // 실제 필터 적용
 
   const { data, error } = await q

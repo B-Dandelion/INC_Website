@@ -7,16 +7,25 @@ import { createClient } from "@supabase/supabase-js";
 
 export type ResourceItem = {
   id: number | string;
-  title: string;
+  title: string;         // 기존: 파일명/내부 title
   kind: string;
   note?: string;
-  date: string;
+  date: string;          // YYYY-MM-DD
   visibility: "public" | "member" | "admin";
   canView: boolean;
   canDownload?: boolean;
 
   boardSlug: string;
   boardTitle: string;
+
+  // ✅ 가능하면 API에서 내려줘서 이걸로 표시(확장자 추정 필요 없음)
+  originalFilename?: string | null;
+};
+
+type ListAuth = {
+  isLoggedIn: boolean;
+  approved: boolean;
+  role: "member" | "admin";
 };
 
 const supabase = createClient(
@@ -25,51 +34,40 @@ const supabase = createClient(
 );
 
 function kindLabel(kind: string) {
-  switch (kind) {
-    case "pdf":
-      return "PDF";
-    case "image":
-      return "IMG";
-    case "video":
-      return "VIDEO";
-    case "doc":
-      return "DOC";
-    case "zip":
-      return "ZIP";
-    default:
-      return "LINK";
-  }
-}
-
-function kindToExt(kind: string) {
   switch ((kind || "").toLowerCase()) {
-    case "pdf": return "pdf";
-    case "image": return "img";
-    case "video": return "mp4";
-    case "doc": return "doc";
-    case "zip": return "zip";
-    default: return "";
+    case "pdf": return "PDF";
+    case "image": return "IMG";
+    case "video": return "VIDEO";
+    case "doc": return "DOC";
+    case "zip": return "ZIP";
+    default: return "LINK";
   }
-}
-
-function fileNameWithExt(fileName: string, kind: string) {
-  const base = (fileName || "").trim();
-  if (!base) return "";
-  if (base.includes(".")) return base; // 이미 확장자 있으면 그대로
-  const ext = kindToExt(kind);
-  return ext ? `${base}.${ext}` : base;
-}
-
-function fileExt(fileName: string) {
-  const base = (fileName || "").trim();
-  const idx = base.lastIndexOf(".");
-  if (idx <= 0 || idx === base.length - 1) return "";
-  return base.slice(idx + 1).toUpperCase();
 }
 
 function displayTitle(it: { note?: string; title: string }) {
   const t = (it.note || "").trim();
-  return t.length ? t : it.title; // note 없으면 파일명으로 대체
+  return t.length ? t : it.title;
+}
+
+function fileNameWithExt(it: ResourceItem) {
+  // ✅ 1순위: DB에 저장된 원본 파일명(확장자 포함)
+  const original = (it.originalFilename ?? "").trim();
+  if (original) return original;
+
+  // ✅ 2순위: title에 이미 확장자가 있으면 그대로
+  const base = (it.title || "").trim();
+  if (!base) return "";
+  if (base.includes(".")) return base;
+
+  // ✅ 3순위: kind로 최소한의 fallback (정확도 떨어짐)
+  const k = (it.kind || "").toLowerCase();
+  const ext =
+    k === "pdf" ? "pdf" :
+    k === "image" ? "img" :
+    k === "video" ? "mp4" :
+    k === "doc" ? "doc" :
+    k === "zip" ? "zip" : "";
+  return ext ? `${base}.${ext}` : base;
 }
 
 export default function ResourceList({
@@ -79,7 +77,6 @@ export default function ResourceList({
 }: {
   items: ResourceItem[];
   emptyText?: string;
-  // 넘기면 그 값을 사용, 안 넘기면 "전체(cat 없음)"일 때만 자동 표시
   showCategory?: boolean;
 }) {
   const sp = useSearchParams();
@@ -89,46 +86,65 @@ export default function ResourceList({
   const [items, setItems] = useState<ResourceItem[]>(initialItems ?? []);
   const [loading, setLoading] = useState(false);
   const [busyId, setBusyId] = useState<number | string | null>(null);
-  const [authTick, setAuthTick] = useState(0);
+
+  const [auth, setAuth] = useState<ListAuth>({
+    isLoggedIn: false,
+    approved: false,
+    role: "member",
+  });
+
+  const canDelete = auth.approved && auth.role === "admin";
 
   async function getToken() {
     const { data } = await supabase.auth.getSession();
     return data.session?.access_token ?? null;
   }
 
-  useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange(() => {
-      setAuthTick((v) => v + 1);
-    });
-    return () => sub.subscription.unsubscribe();
-  }, []);
+  async function refreshList(signal?: AbortSignal) {
+    setLoading(true);
+    try {
+      const token = await getToken();
+      const qs = cat ? `?cat=${encodeURIComponent(cat)}` : "";
+      const res = await fetch(`/api/resources/list${qs}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        cache: "no-store",
+        next: { revalidate: 0 },
+        signal,
+      });
 
-  // cat 변경(또는 로그인 상태에 따른 토큰) 기준으로 목록 재조회
+      const out = await res.json().catch(() => ({}));
+      if (!res.ok) return;
+
+      if (out?.auth) setAuth(out.auth as ListAuth);
+      if (Array.isArray(out?.items)) setItems(out.items as ResourceItem[]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // ✅ initialItems 동기화 (페이지가 서버에서 내려주는 값이 바뀌면 반영)
   useEffect(() => {
     setItems(initialItems ?? []);
+  }, [initialItems]);
 
-    let alive = true;
+  // ✅ cat 변경 시 목록 재조회
+  useEffect(() => {
+    const ac = new AbortController();
+    refreshList(ac.signal);
+    return () => ac.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cat]);
 
-    (async () => {
-      setLoading(true);
-      try {
-        const token = await getToken();
-        const qs = cat ? `?cat=${encodeURIComponent(cat)}` : "";
-        const res = await fetch(`/api/resources/list${qs}`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-          cache: "no-store",
-        });
-        const out = await res.json().catch(() => ({}));
-        if (!alive) return;
-
-        if (res.ok && Array.isArray(out?.items)) setItems(out.items);
-      } finally {
-        if (alive) setLoading(false);
-      }
-    })();
-
-    return () => { alive = false; };
-  }, [cat, authTick]);
+  // ✅ 로그인/로그아웃 등 auth 상태 변화 시 재조회
+  useEffect(() => {
+    const { data: sub } = supabase.auth.onAuthStateChange(() => {
+      // cat은 유지, 목록만 갱신
+      const ac = new AbortController();
+      refreshList(ac.signal);
+    });
+    return () => sub.subscription.unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function openResource(id: number | string, mode: "view" | "download") {
     try {
@@ -159,7 +175,42 @@ export default function ResourceList({
     }
   }
 
+  async function deleteResource(id: number | string) {
+    if (!canDelete) return;
+    if (!confirm("이 자료를 삭제(숨김) 처리할까요?")) return;
+
+    try {
+      setBusyId(id);
+      const token = await getToken();
+      if (!token) {
+        alert("관리자 로그인 필요");
+        return;
+      }
+
+      const res = await fetch("/api/admin/resources/delete", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ resourceId: Number(id) }),
+      });
+
+      const out = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert(out?.error || `삭제 실패: ${res.status}`);
+        return;
+      }
+
+      // 소프트 삭제: UI에서 즉시 제거
+      setItems((prev) => prev.filter((x) => x.id !== id));
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   const hasItems = useMemo(() => Array.isArray(items) && items.length > 0, [items]);
+
   if (loading && !hasItems) return <div className={styles.empty}>불러오는 중…</div>;
   if (!hasItems) return <div className={styles.empty}>{emptyText}</div>;
 
@@ -174,7 +225,7 @@ export default function ResourceList({
               <th className={styles.colNo}>번호</th>
               <th className={styles.colTitle}>제목</th>
               <th className={styles.colDate}>등록일</th>
-              <th className={styles.colDl}>다운로드</th>
+              <th className={styles.colDl}>관리</th>
             </tr>
           </thead>
           <tbody>
@@ -197,33 +248,45 @@ export default function ResourceList({
                         className={styles.titleBtn}
                         onClick={() => openResource(it.id, "view")}
                         disabled={disabled}
+                        title="열기"
                       >
                         {displayTitle(it)}
                       </button>
                     </div>
 
                     <div className={styles.fileMeta}>
-                      <span className={styles.fileName}>
-                        {fileNameWithExt(it.title, it.kind)}
-                      </span>
+                      <span className={styles.fileName}>{fileNameWithExt(it)}</span>
                     </div>
                   </td>
 
                   <td className={styles.dateCell}>{it.date}</td>
 
                   <td className={styles.dlCell}>
-                    {it.canDownload ? (
-                      <button
-                        type="button"
-                        className={styles.dlBtn}
-                        onClick={() => openResource(it.id, "download")}
-                        disabled={disabled}
-                      >
-                        다운로드
-                      </button>
-                    ) : (
-                      <span className={styles.noDl}>-</span>
-                    )}
+                    <div className={styles.rowActions}>
+                      {it.canDownload ? (
+                        <button
+                          type="button"
+                          className={styles.dlBtn}
+                          onClick={() => openResource(it.id, "download")}
+                          disabled={disabled}
+                        >
+                          다운로드
+                        </button>
+                      ) : (
+                        <span className={styles.noDl}>-</span>
+                      )}
+
+                      {canDelete ? (
+                        <button
+                          type="button"
+                          className={styles.delBtn}
+                          onClick={() => deleteResource(it.id)}
+                          disabled={disabled}
+                        >
+                          삭제
+                        </button>
+                      ) : null}
+                    </div>
                   </td>
                 </tr>
               );
@@ -254,8 +317,12 @@ export default function ResourceList({
                 onClick={() => openResource(it.id, "view")}
                 disabled={disabled}
               >
-                {it.title}
+                {displayTitle(it)}
               </button>
+
+              <div className={styles.mobileFileMeta}>
+                <span className={styles.fileName}>{fileNameWithExt(it)}</span>
+              </div>
 
               {it.note ? <div className={styles.mobileNote}>{it.note}</div> : null}
 
@@ -272,6 +339,17 @@ export default function ResourceList({
                 ) : (
                   <span className={styles.noDl}>다운로드 불가</span>
                 )}
+
+                {canDelete ? (
+                  <button
+                    type="button"
+                    className={styles.delBtn}
+                    onClick={() => deleteResource(it.id)}
+                    disabled={disabled}
+                  >
+                    삭제
+                  </button>
+                ) : null}
               </div>
             </li>
           );

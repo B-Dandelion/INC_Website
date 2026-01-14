@@ -269,3 +269,24 @@
     display: grid;
   }
 }
+
+.rowActions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.delBtn {
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(239, 68, 68, 0.7);
+  background: rgba(255, 255, 255, 1);
+  color: rgba(185, 28, 28, 0.95);
+  font-weight: 800;
+}
+
+.delBtn:hover {
+  background: rgba(254, 242, 242, 1);
+}
