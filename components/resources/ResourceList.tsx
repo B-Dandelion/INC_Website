@@ -7,10 +7,10 @@ import { createClient } from "@supabase/supabase-js";
 
 export type ResourceItem = {
   id: number | string;
-  title: string;         // 기존: 파일명/내부 title
+  title: string;
+  displayname?: string | null;
   kind: string;
-  note?: string;
-  date: string;          // YYYY-MM-DD
+  date: string;
   visibility: "public" | "member" | "admin";
   canView: boolean;
   canDownload?: boolean;
@@ -18,7 +18,6 @@ export type ResourceItem = {
   boardSlug: string;
   boardTitle: string;
 
-  // ✅ 가능하면 API에서 내려줘서 이걸로 표시(확장자 추정 필요 없음)
   originalFilename?: string | null;
 };
 
@@ -35,38 +34,47 @@ const supabase = createClient(
 
 function kindLabel(kind: string) {
   switch ((kind || "").toLowerCase()) {
-    case "pdf": return "PDF";
-    case "image": return "IMG";
-    case "video": return "VIDEO";
-    case "doc": return "DOC";
-    case "zip": return "ZIP";
-    default: return "LINK";
+    case "pdf":
+      return "PDF";
+    case "image":
+      return "IMG";
+    case "video":
+      return "VIDEO";
+    case "doc":
+      return "DOC";
+    case "zip":
+      return "ZIP";
+    default:
+      return "LINK";
   }
 }
 
-function displayTitle(it: { note?: string; title: string }) {
-  const t = (it.note || "").trim();
-  return t.length ? t : it.title;
+function displayTitle(it: { displayname?: string | null; title: string }) {
+  const dn = (it.displayname || "").trim();
+  return dn.length ? dn : it.title;
 }
 
 function fileNameWithExt(it: ResourceItem) {
-  // ✅ 1순위: DB에 저장된 원본 파일명(확장자 포함)
   const original = (it.originalFilename ?? "").trim();
   if (original) return original;
 
-  // ✅ 2순위: title에 이미 확장자가 있으면 그대로
   const base = (it.title || "").trim();
   if (!base) return "";
   if (base.includes(".")) return base;
 
-  // ✅ 3순위: kind로 최소한의 fallback (정확도 떨어짐)
   const k = (it.kind || "").toLowerCase();
   const ext =
-    k === "pdf" ? "pdf" :
-    k === "image" ? "img" :
-    k === "video" ? "mp4" :
-    k === "doc" ? "doc" :
-    k === "zip" ? "zip" : "";
+    k === "pdf"
+      ? "pdf"
+      : k === "image"
+        ? "img"
+        : k === "video"
+          ? "mp4"
+          : k === "doc"
+            ? "doc"
+            : k === "zip"
+              ? "zip"
+              : "";
   return ext ? `${base}.${ext}` : base;
 }
 
@@ -93,7 +101,15 @@ export default function ResourceList({
     role: "member",
   });
 
-  const canDelete = auth.approved && auth.role === "admin";
+  const isAdmin = auth.approved && auth.role === "admin";
+
+  const [editing, setEditing] = useState<ResourceItem | null>(null);
+  const [editDisplayname, setEditDisplayname] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
+
+  // replace 기능이면 이것도 “항상” 여기
+  const [replaceFile, setReplaceFile] = useState<File | null>(null);
+  const [replaceBusy, setReplaceBusy] = useState(false);
 
   async function getToken() {
     const { data } = await supabase.auth.getSession();
@@ -122,12 +138,10 @@ export default function ResourceList({
     }
   }
 
-  // ✅ initialItems 동기화 (페이지가 서버에서 내려주는 값이 바뀌면 반영)
   useEffect(() => {
     setItems(initialItems ?? []);
   }, [initialItems]);
 
-  // ✅ cat 변경 시 목록 재조회
   useEffect(() => {
     const ac = new AbortController();
     refreshList(ac.signal);
@@ -135,16 +149,82 @@ export default function ResourceList({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cat]);
 
-  // ✅ 로그인/로그아웃 등 auth 상태 변화 시 재조회
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange(() => {
-      // cat은 유지, 목록만 갱신
       const ac = new AbortController();
       refreshList(ac.signal);
     });
     return () => sub.subscription.unsubscribe();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const hasItems = useMemo(() => Array.isArray(items) && items.length > 0, [items]);
+  if (loading && !hasItems) return <div className={styles.empty}>불러오는 중…</div>;
+  if (!hasItems) return <div className={styles.empty}>{emptyText}</div>;
+
+  function openEdit(it: ResourceItem) {
+    if (!isAdmin) return;
+    setEditing(it);
+    setEditDisplayname((it.displayname ?? "").trim());
+  }
+
+  function closeEdit() {
+    setEditing(null);
+    setEditDisplayname("");
+    setEditSaving(false);
+  }
+
+  async function saveEdit() {
+    if (!editing) return;
+    if (!isAdmin) return;
+
+    const dn = editDisplayname.trim();
+    const prevDn = (editing.displayname ?? "").trim();
+    if (dn === prevDn) {
+      closeEdit();
+      return;
+    }
+
+    try {
+      setEditSaving(true);
+      setBusyId(editing.id);
+
+      const token = await getToken();
+      if (!token) {
+        alert("관리자 로그인 필요");
+        return;
+      }
+
+      const res = await fetch("/api/admin/resources/update", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          resourceId: Number(editing.id),
+          displayname: dn.length ? dn : null,
+        }),
+      });
+
+      const out = await res.json().catch(() => ({}));
+      if (!res.ok || !out?.ok) {
+        alert(out?.error || `수정 실패: ${res.status}`);
+        return;
+      }
+
+      setItems((prev) =>
+        prev.map((x) =>
+          x.id === editing.id ? { ...x, displayname: dn.length ? dn : null } : x,
+        ),
+      );
+
+      closeEdit();
+    } finally {
+      setEditSaving(false);
+      setBusyId(null);
+    }
+  }
 
   async function openResource(id: number | string, mode: "view" | "download") {
     try {
@@ -176,7 +256,7 @@ export default function ResourceList({
   }
 
   async function deleteResource(id: number | string) {
-    if (!canDelete) return;
+    if (!isAdmin) return;
     if (!confirm("이 자료를 삭제(숨김) 처리할까요?")) return;
 
     try {
@@ -197,24 +277,75 @@ export default function ResourceList({
       });
 
       const out = await res.json().catch(() => ({}));
-      if (!res.ok) {
+      if (!res.ok || !out?.ok) {
         alert(out?.error || `삭제 실패: ${res.status}`);
         return;
       }
 
-      // 소프트 삭제: UI에서 즉시 제거
       setItems((prev) => prev.filter((x) => x.id !== id));
     } finally {
       setBusyId(null);
     }
   }
 
-  const hasItems = useMemo(() => Array.isArray(items) && items.length > 0, [items]);
-
-  if (loading && !hasItems) return <div className={styles.empty}>불러오는 중…</div>;
-  if (!hasItems) return <div className={styles.empty}>{emptyText}</div>;
-
   const total = items.length;
+
+  function resetReplace() {
+    setReplaceFile(null);
+    setReplaceBusy(false);
+  }
+
+  async function replaceResourceFile() {
+    if (!editing) return;
+    if (!isAdmin) return;
+
+    if (!replaceFile) {
+      alert("교체할 파일을 선택하세요.");
+      return;
+    }
+
+    if (!confirm("파일을 교체할까요? (기존 파일은 DB에서 연결이 끊기며, 되돌리려면 다시 교체해야 합니다)")) {
+      return;
+    }
+
+    try {
+      setReplaceBusy(true);
+      setBusyId(editing.id);
+
+      const token = await getToken();
+      if (!token) {
+        alert("관리자 로그인 필요");
+        return;
+      }
+
+      const fd = new FormData();
+      fd.append("resourceId", String(editing.id));
+      fd.append("file", replaceFile);
+
+      const res = await fetch("/api/admin/resources/replace", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: fd,
+      });
+
+      const out = await res.json().catch(() => ({}));
+      if (!res.ok || !out?.ok) {
+        alert(out?.error || `파일 교체 실패: ${res.status}`);
+        return;
+      }
+
+      const newOriginal = String(out?.resource?.original_filename ?? "");
+      setItems((prev) =>
+        prev.map((x) => (x.id === editing.id ? { ...x, originalFilename: newOriginal || x.originalFilename } : x)),
+      );
+
+      resetReplace();
+      alert("파일이 교체되었습니다.");
+    } finally {
+      setReplaceBusy(false);
+      setBusyId(null);
+    }
+  }
 
   return (
     <div className={styles.boardWrap}>
@@ -231,7 +362,7 @@ export default function ResourceList({
           <tbody>
             {items.map((it, idx) => {
               const no = total - idx;
-              const disabled = busyId === it.id;
+              const disabled = busyId === it.id || editSaving;
 
               return (
                 <tr key={it.id} className={styles.boardRow}>
@@ -276,7 +407,18 @@ export default function ResourceList({
                         <span className={styles.noDl}>-</span>
                       )}
 
-                      {canDelete ? (
+                      {isAdmin ? (
+                        <button
+                          type="button"
+                          className={styles.editBtn}
+                          onClick={() => openEdit(it)}
+                          disabled={disabled}
+                        >
+                          수정
+                        </button>
+                      ) : null}
+
+                      {isAdmin ? (
                         <button
                           type="button"
                           className={styles.delBtn}
@@ -295,10 +437,10 @@ export default function ResourceList({
         </table>
       </div>
 
-      {/* 모바일 */}
       <ul className={styles.mobileList}>
         {items.map((it) => {
-          const disabled = busyId === it.id;
+          const disabled = busyId === it.id || editSaving;
+
           return (
             <li key={it.id} className={styles.mobileItem}>
               <div className={styles.mobileTop}>
@@ -324,8 +466,6 @@ export default function ResourceList({
                 <span className={styles.fileName}>{fileNameWithExt(it)}</span>
               </div>
 
-              {it.note ? <div className={styles.mobileNote}>{it.note}</div> : null}
-
               <div className={styles.mobileActions}>
                 {it.canDownload ? (
                   <button
@@ -340,7 +480,18 @@ export default function ResourceList({
                   <span className={styles.noDl}>다운로드 불가</span>
                 )}
 
-                {canDelete ? (
+                {isAdmin ? (
+                  <button
+                    type="button"
+                    className={styles.editBtn}
+                    onClick={() => openEdit(it)}
+                    disabled={disabled}
+                  >
+                    수정
+                  </button>
+                ) : null}
+
+                {isAdmin ? (
                   <button
                     type="button"
                     className={styles.delBtn}
@@ -355,6 +506,92 @@ export default function ResourceList({
           );
         })}
       </ul>
+
+      {editing ? (
+        <div className={styles.modalOverlay} onClick={closeEdit}>
+          <div className={styles.modalPanel} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <div className={styles.modalTitle}>자료 수정</div>
+              <button className={styles.modalClose} onClick={closeEdit} type="button">
+                ×
+              </button>
+            </div>
+
+            <div className={styles.modalBody}>
+              <div className={styles.modalHint}>표시 제목만 수정됩니다.</div>
+
+              <label className={styles.field}>
+                <div className={styles.fieldLabel}>표시 제목</div>
+                <input
+                  value={editDisplayname}
+                  onChange={(e) => setEditDisplayname(e.target.value)}
+                  className={styles.fieldInput}
+                  placeholder="예) 2025년 9월 발간물"
+                  disabled={editSaving}
+                />
+                <div className={styles.fieldHelp}>
+                  비워두면 표시 제목은 내부 title로 대체됩니다.
+                </div>
+              </label>
+              <div className={styles.field}>
+                <div className={styles.fieldLabel}>파일</div>
+                <div className={styles.fileRow}>
+                  <div className={styles.fileNameText}>
+                    {fileNameWithExt(editing)}
+                  </div>
+                </div>
+
+                <div className={styles.replaceRow}>
+                  <input
+                    type="file"
+                    className={styles.fileInput}
+                    onChange={(e) => setReplaceFile(e.target.files?.[0] ?? null)}
+                    disabled={replaceBusy || editSaving}
+                  />
+
+                  <button
+                    type="button"
+                    className={styles.replaceBtn}
+                    onClick={replaceResourceFile}
+                    disabled={!replaceFile || replaceBusy || editSaving}
+                  >
+                    {replaceBusy ? "교체 중…" : "파일 교체"}
+                  </button>
+                </div>
+
+                {replaceFile ? (
+                  <div className={styles.fieldHelp}>
+                    선택됨: {replaceFile.name} ({Math.round(replaceFile.size / 1024)} KB)
+                  </div>
+                ) : (
+                  <div className={styles.fieldHelp}>
+                    같은 종류(kind)의 파일만 교체할 수 있습니다. (예: pdf는 pdf로만)
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className={styles.modalFooter}>
+              <button
+                type="button"
+                className={styles.modalCancel}
+                onClick={closeEdit}
+                disabled={editSaving}
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                className={styles.modalSave}
+                onClick={saveEdit}
+                disabled={editSaving}
+              >
+                {editSaving ? "저장 중…" : "저장"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -1,3 +1,4 @@
+// app/api/resources/list/route.ts
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
@@ -17,27 +18,35 @@ function supabaseFromAuthHeader(authHeader: string) {
 type Role = "member" | "admin";
 type Visibility = "public" | "member" | "admin";
 
+type BoardRow = { id: number; slug: string; title: string };
+
 async function getBoardBySlug(slug: string) {
   const s = slug.trim();
   if (!s) return null;
-  const { data } = await supabaseAdmin
+
+  const { data, error } = await supabaseAdmin
     .from("boards")
     .select("id, slug, title")
     .eq("slug", s)
-    .maybeSingle<{ id: number; slug: string; title: string }>();
+    .maybeSingle<BoardRow>();
+
+  if (error) return null;
   return data ?? null;
 }
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
+
+  // 프론트는 cat, 혹시 다른 곳에서 boardSlug로 보내도 먹게
   const cat = (url.searchParams.get("cat") ?? "").trim();
+  const boardSlug = (url.searchParams.get("boardSlug") ?? "").trim();
+  const slug = cat || boardSlug;
 
   const authHeader = req.headers.get("authorization") || "";
   let userId: string | null = null;
   let role: Role = "member";
   let approved = false;
 
-  // 1) 토큰이 있으면 유저/프로필 확인
   if (authHeader.startsWith("Bearer ")) {
     const supabaseAuth = supabaseFromAuthHeader(authHeader);
     const { data: userData } = await supabaseAuth.auth.getUser();
@@ -57,29 +66,46 @@ export async function GET(req: Request) {
 
   const isLoggedIn = !!userId;
 
-  // 2) 이 유저가 "목록에서 볼 수 있는 visibility" 결정
   const allowed: Visibility[] = ["public"];
   if (isLoggedIn && approved) {
     allowed.push("member");
     if (role === "admin") allowed.push("admin");
   }
 
-  // 3) cat(slug) -> board_id
-  let board = null as null | { id: number; slug: string; title: string };
-  if (cat) {
-    board = await getBoardBySlug(cat);
+  // slug -> board_id
+  let board: BoardRow | null = null;
+  if (slug) {
+    board = await getBoardBySlug(slug);
     if (!board) {
-      return NextResponse.json({ ok: true, items: [], auth: { isLoggedIn, approved, role } });
+      return NextResponse.json({
+        ok: true,
+        auth: { isLoggedIn, approved, role },
+        items: [],
+      });
     }
   }
 
-  // 4) resources 조회 (boards join 포함)
   let q = supabaseAdmin
     .from("resources")
-    .select("id, board_id, title, kind, note, published_at, visibility, r2_key, boards:boards ( slug, title )")
+    .select(
+      `
+      id,
+      board_id,
+      title,
+      kind,
+      displayname,
+      published_at,
+      created_at,
+      visibility,
+      r2_key,
+      original_filename,
+      boards:boards ( slug, title )
+    `,
+    )
     .in("visibility", allowed)
     .is("deleted_at", null);
-  if (board) q = q.eq("board_id", board.id); // 실제 필터 적용
+
+  if (board) q = q.eq("board_id", board.id);
 
   const { data, error } = await q
     .order("published_at", { ascending: false, nullsFirst: false })
@@ -93,7 +119,6 @@ export async function GET(req: Request) {
   const items = (data ?? []).map((r: any) => {
     const vis = r.visibility as Visibility;
 
-    // 다운로드 권한(로그인/승인/관리자) + 실제 파일키(r2_key) 둘 다 만족해야 다운로드 버튼
     const canDownloadPerm =
       vis === "public"
         ? isLoggedIn
@@ -106,15 +131,16 @@ export async function GET(req: Request) {
       id: r.id,
       title: r.title,
       kind: r.kind,
-      note: r.note ?? undefined,
-      // published_at 없으면 created_at 날짜로 대체(YYYY-MM-DD)
+      displayname: r.displayname ?? undefined,
       date,
       visibility: vis,
       canView: true,
       canDownload: canDownloadPerm && !!r.r2_key,
-      // 카테고리 표시용
+
       boardSlug: r.boards?.slug ?? "",
       boardTitle: r.boards?.title ?? "",
+
+      originalFilename: r.original_filename ?? null,
     };
   });
 

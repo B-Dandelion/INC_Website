@@ -80,12 +80,17 @@ export async function POST(req: Request) {
 
   try {
     const form = await req.formData();
+    
+    function isYmd(s: string) {
+      return /^\d{4}-\d{2}-\d{2}$/.test(s);
+    }
 
     // 필드들 (너가 admin 업로드 폼에서 같이 보내면 됨)
     const title = String(form.get("title") || "");
     const boardSlug = String(form.get("boardSlug") || "heartbeat-of-atoms");
     const visibility = String(form.get("visibility") || "public") as "public" | "member" | "admin"
-    const note = String(form.get("note") || "");
+    const displaynameRaw = String(form.get("displayname") || "");
+    const displayname = displaynameRaw.trim();
     const publishedAt = String(form.get("publishedAt") || ""); // "2026-01-08" 같은 형태
 
     const file = form.get("file");
@@ -160,6 +165,7 @@ export async function POST(req: Request) {
     }
 
     const todayYmd = () => new Date().toISOString().slice(0, 10);
+    const published_at = isYmd(publishedAt) ? publishedAt : todayYmd();
 
     // 3) DB에 메타데이터 저장
     const { data: inserted, error: insErr } = await supabaseAdmin
@@ -168,8 +174,8 @@ export async function POST(req: Request) {
         board_id: board.id,
         title,
         kind,
-        published_at: (publishedAt || todayYmd()), // publishedAt 비면 오늘 날짜로
-        note: note || null,
+        published_at, // publishedAt 비면 오늘 날짜로
+        displayname: displayname ? displayname : null,
         visibility,
         r2_key: key,
         mime: file.type || null,
