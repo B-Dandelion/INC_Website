@@ -39,8 +39,8 @@ export async function GET(req: Request) {
 
   // 프론트는 cat, 혹시 다른 곳에서 boardSlug로 보내도 먹게
   const cat = (url.searchParams.get("cat") ?? "").trim();
+
   const boardSlug = (url.searchParams.get("boardSlug") ?? "").trim();
-  const slug = cat || boardSlug;
 
   const authHeader = req.headers.get("authorization") || "";
   let userId: string | null = null;
@@ -74,8 +74,8 @@ export async function GET(req: Request) {
 
   // slug -> board_id
   let board: BoardRow | null = null;
-  if (slug) {
-    board = await getBoardBySlug(slug);
+  if (cat) {
+    board = await getBoardBySlug(cat);
     if (!board) {
       return NextResponse.json({
         ok: true,
@@ -88,19 +88,19 @@ export async function GET(req: Request) {
   let q = supabaseAdmin
     .from("resources")
     .select(
-      `
-      id,
-      board_id,
-      title,
-      kind,
-      displayname,
-      published_at,
-      created_at,
-      visibility,
-      r2_key,
-      original_filename,
-      boards:boards ( slug, title )
-    `,
+      [
+        "id",
+        "board_id",
+        "title",
+        "displayname",
+        "kind",
+        "published_at",
+        "created_at",
+        "visibility",
+        "r2_key",
+        "original_filename",
+        "boards:boards ( slug, title )",
+      ].join(", "),
     )
     .in("visibility", allowed)
     .is("deleted_at", null);
@@ -136,10 +136,8 @@ export async function GET(req: Request) {
       visibility: vis,
       canView: true,
       canDownload: canDownloadPerm && !!r.r2_key,
-
       boardSlug: r.boards?.slug ?? "",
       boardTitle: r.boards?.title ?? "",
-
       originalFilename: r.original_filename ?? null,
     };
   });

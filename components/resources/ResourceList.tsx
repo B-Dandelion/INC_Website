@@ -54,28 +54,8 @@ function displayTitle(it: { displayname?: string | null; title: string }) {
   return dn.length ? dn : it.title;
 }
 
-function fileNameWithExt(it: ResourceItem) {
-  const original = (it.originalFilename ?? "").trim();
-  if (original) return original;
-
-  const base = (it.title || "").trim();
-  if (!base) return "";
-  if (base.includes(".")) return base;
-
-  const k = (it.kind || "").toLowerCase();
-  const ext =
-    k === "pdf"
-      ? "pdf"
-      : k === "image"
-        ? "img"
-        : k === "video"
-          ? "mp4"
-          : k === "doc"
-            ? "doc"
-            : k === "zip"
-              ? "zip"
-              : "";
-  return ext ? `${base}.${ext}` : base;
+function fileName(it: ResourceItem) {
+  return String(it.originalFilename ?? "").trim();
 }
 
 export default function ResourceList({
@@ -118,6 +98,7 @@ export default function ResourceList({
 
   async function refreshList(signal?: AbortSignal) {
     setLoading(true);
+
     try {
       const token = await getToken();
       const qs = cat ? `?cat=${encodeURIComponent(cat)}` : "";
@@ -133,8 +114,16 @@ export default function ResourceList({
 
       if (out?.auth) setAuth(out.auth as ListAuth);
       if (Array.isArray(out?.items)) setItems(out.items as ResourceItem[]);
+    } catch (e: any) {
+      // 핵심: abort는 정상 흐름
+      if (e?.name === "AbortError") return;
+      // 환경에 따라 DOMException code=20으로도 옴
+      if (e?.code === 20) return;
+
+      console.error(e);
     } finally {
-      setLoading(false);
+      // abort된 경우 setState로 또 흔들리는 거 방지
+      if (!signal?.aborted) setLoading(false);
     }
   }
 
@@ -386,7 +375,7 @@ export default function ResourceList({
                     </div>
 
                     <div className={styles.fileMeta}>
-                      <span className={styles.fileName}>{fileNameWithExt(it)}</span>
+                      <span className={styles.fileName}>{fileName(it)}</span>
                     </div>
                   </td>
 
@@ -463,7 +452,7 @@ export default function ResourceList({
               </button>
 
               <div className={styles.mobileFileMeta}>
-                <span className={styles.fileName}>{fileNameWithExt(it)}</span>
+                <span className={styles.fileName}>{fileName(it)}</span>
               </div>
 
               <div className={styles.mobileActions}>
@@ -537,7 +526,7 @@ export default function ResourceList({
                 <div className={styles.fieldLabel}>파일</div>
                 <div className={styles.fileRow}>
                   <div className={styles.fileNameText}>
-                    {fileNameWithExt(editing)}
+                    {fileName(editing)}
                   </div>
                 </div>
 

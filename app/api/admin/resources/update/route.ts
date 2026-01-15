@@ -1,3 +1,4 @@
+// app/api/admin/resources/update/route.ts
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
@@ -42,12 +43,15 @@ export async function POST(req: Request) {
   // 3) 입력
   const body = await req.json().catch(() => ({}));
   const resourceId = Number(body?.resourceId);
+  const displayRaw = String(body?.displayname ?? "");
+
+  if (!Number.isFinite(resourceId) || resourceId <= 0) {
+    return NextResponse.json({ ok: false, error: "invalid resourceId" }, { status: 400 });
+  }
 
   // displayname: string | null 허용
-  const raw = body?.displayname;
-  const displayname =
-    raw === null || raw === undefined ? null : String(raw).trim();
-  const displaynameOrNull = displayname && displayname.length ? displayname : null;
+  const display = displayRaw.trim();
+  const displayOrNull = display.length ? display : null;
 
   if (!Number.isFinite(resourceId) || resourceId <= 0) {
     return NextResponse.json({ ok: false, error: "invalid resourceId" }, { status: 400 });
@@ -57,7 +61,7 @@ export async function POST(req: Request) {
   const { data: updated, error: upErr } = await supabaseAdmin
     .from("resources")
     .update({
-      displayname: displaynameOrNull,
+      displayname: displayOrNull,
       updated_at: new Date().toISOString(),
     })
     .eq("id", resourceId)

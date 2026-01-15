@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
+import { useMe } from "../../hooks/useMe";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -32,13 +33,10 @@ function kindFromExt(ext: string): Kind | null {
 
 export default function AdminUploadPage() {
   const router = useRouter();
-
-  const [checking, setChecking] = useState(true);
-  const [allowed, setAllowed] = useState(false);
+  const { me, loading, isAdmin } = useMe();
 
   const [msg, setMsg] = useState("");
   const [json, setJson] = useState<any>(null);
-  const [email, setEmail] = useState<string | null>(null);
 
   // boards
   const [boards, setBoards] = useState<BoardOpt[]>([]);
@@ -53,7 +51,6 @@ export default function AdminUploadPage() {
   const fileRef = useRef<HTMLInputElement | null>(null);
 
   const acceptAttr = useMemo(() => {
-    // 파일 선택창 필터(완전한 보안은 아니고 UX용)
     return [
       ".pdf",
       ".png", ".jpg", ".jpeg", ".webp",
@@ -63,100 +60,46 @@ export default function AdminUploadPage() {
     ].join(",");
   }, []);
 
-  // 0) 권한 확인: allowed true면 화면을 계속 보여주고(깜빡임 방지)
+  // 권한/로그인 상태에 따른 이동 (profiles 조회 제거)
   useEffect(() => {
-    let alive = true;
+    if (loading) return;
 
-    const run = async (soft = false) => {
-      try {
-        if (!soft) setChecking(true);
+    if (!me?.isLoggedIn) {
+      router.replace("/login?next=%2Fadmin%2Fupload");
+      return;
+    }
+    if (!isAdmin) {
+      router.replace("/");
+      return;
+    }
+  }, [loading, me?.isLoggedIn, isAdmin, router]);
 
-        const { data, error } = await supabase.auth.getUser();
-        if (!alive) return;
-
-        const user = error ? null : data.user;
-        if (!user) {
-          setAllowed(false);
-          setEmail(null);
-          if (!soft) router.replace("/login?next=%2Fadmin%2Fupload");
-          return;
-        }
-
-        setEmail(user.email ?? null);
-
-        const { data: profile, error: profErr } = await supabase
-          .from("profiles")
-          .select("role, approved")
-          .eq("id", user.id)
-          .maybeSingle();
-
-        if (!alive) return;
-
-        const ok = !profErr && !!profile && profile.role === "admin" && profile.approved === true;
-        setAllowed(ok);
-
-        if (!ok && !soft) router.replace("/");
-      } catch {
-        if (!alive) return;
-        setAllowed(false);
-        if (!soft) router.replace("/");
-      } finally {
-        if (!alive) return;
-        if (!soft) setChecking(false);
-      }
-    };
-
-    run(false);
-
-    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      const u = session?.user ?? null;
-      setEmail(u?.email ?? null);
-
-      if (event === "SIGNED_OUT") {
-        setAllowed(false);
-        router.replace("/login?next=%2Fadmin%2Fupload");
-        return;
-      }
-
-      // TOKEN_REFRESHED 같은 이벤트로 페이지가 깜빡이지 않게 "soft" 재검사
-      run(true);
-    });
-
-    return () => {
-      alive = false;
-      sub.subscription.unsubscribe();
-    };
-  }, [router]);
-
-  // 1) boards 목록 로드 (allowed 이후)
+  // boards 목록 로드 (관리자 확정 이후)
   useEffect(() => {
-    if (!allowed) return;
+    if (!isAdmin) return;
     let alive = true;
 
     (async () => {
       try {
-        // 네가 만든 경로가 다르면 여기만 바꿔
         const res = await fetch("/api/boards/list", { cache: "no-store" });
         const out = await res.json().catch(() => ({}));
         if (!alive) return;
-
         if (!res.ok || !out?.boards) return;
 
         const list: BoardOpt[] = out.boards;
         setBoards(list);
 
-        // 기본값 세팅
         const first = list?.[0]?.slug ?? "";
-        setBoardSlug((prev) => prev || (list.some(b => b.slug === "atm") ? "atm" : first));
+        setBoardSlug((prev) => prev || (list.some((b) => b.slug === "atm") ? "atm" : first));
       } catch {
-        // 무시: boards 없으면 선택 불가로 남겨둠
+        // ignore
       }
     })();
 
     return () => {
       alive = false;
     };
-  }, [allowed]);
+  }, [isAdmin]);
 
   function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0] ?? null;
@@ -175,7 +118,6 @@ export default function AdminUploadPage() {
       setMsg(`허용되지 않는 파일 형식입니다: .${ext || "(확장자없음)"}`);
       setPickedFileName("");
       setAutoKind("");
-      // input 초기화
       if (fileRef.current) fileRef.current.value = "";
       return;
     }
@@ -184,7 +126,6 @@ export default function AdminUploadPage() {
     setAutoKind(k);
     setMsg("");
 
-    // 제목이 비어 있으면 파일명(확장자 제거)로 자동 채움(원치 않으면 삭제)
     const t = titleRef.current;
     if (t && !t.value.trim()) {
       const base = file.name.replace(/\.[^/.]+$/, "");
@@ -220,12 +161,9 @@ export default function AdminUploadPage() {
 
       const fd = new FormData(formEl);
 
-      // 자동 결정값 강제 주입 (disabled 필드는 FormData에 안 들어가므로)
+      // 선택/자동 결정값 강제 주입
       fd.set("boardSlug", boardSlug);
       fd.set("kind", autoKind);
-
-      // 서버에서 원본 파일명을 저장하고 싶으면 같이 보내두자(서버가 받게 만들면 됨)
-      if (pickedFileName) fd.set("originalFilename", pickedFileName);
 
       const res = await fetch("/api/admin/upload", {
         method: "POST",
@@ -248,8 +186,8 @@ export default function AdminUploadPage() {
     "mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400";
   const helperClass = "mt-1 text-xs text-slate-500";
 
-  // 권한 확인 중: allowed가 아직 false일 때만 로딩 화면(깜빡임 최소화)
-  if (checking && !allowed) {
+  // 처음 진입 로딩만 스켈레톤
+  if (loading && !me) {
     return (
       <main className="min-h-[calc(100vh-120px)] bg-gradient-to-b from-blue-50 to-white px-4 py-10">
         <div className="mx-auto w-full max-w-3xl">
@@ -267,7 +205,10 @@ export default function AdminUploadPage() {
     );
   }
 
-  if (!allowed) return null;
+  // 권한 없으면 useEffect에서 리다이렉트 중
+  if (!isAdmin) return null;
+
+  const email = me?.user?.email ?? null;
 
   return (
     <main className="min-h-[calc(100vh-120px)] bg-gradient-to-b from-blue-50 to-white px-4 py-10">
@@ -306,7 +247,7 @@ export default function AdminUploadPage() {
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <label className={labelClass}>
-                    문서 제목
+                    문서 제목(내부 title)
                     <input ref={titleRef} name="title" required className={inputClass} />
                   </label>
                 </div>
@@ -343,18 +284,13 @@ export default function AdminUploadPage() {
                       <option value="admin">admin</option>
                     </select>
                   </label>
-                  <p className={helperClass}>member/admin은 잠금 표시/권한 정책 붙이기 전까진 주의.</p>
+                  <p className={helperClass}>member/admin은 권한 정책 확정 전까진 주의.</p>
                 </div>
 
                 <div>
                   <label className={labelClass}>
                     파일 종류(자동)
-                    <input
-                      className={inputClass}
-                      value={autoKind || "파일 선택 필요"}
-                      readOnly
-                    />
-                    {/* 서버로 보내기 */}
+                    <input className={inputClass} value={autoKind || "파일 선택 필요"} readOnly />
                     <input type="hidden" name="kind" value={autoKind} />
                   </label>
                   <p className={helperClass}>
@@ -372,9 +308,10 @@ export default function AdminUploadPage() {
 
                 <div>
                   <label className={labelClass}>
-                    비고(선택)
-                    <input name="note" className={inputClass} />
+                    표시 제목(displayname, 선택)
+                    <input name="displayname" className={inputClass} />
                   </label>
+                  <p className={helperClass}>비워두면 리스트에서 내부 title이 표시됨.</p>
                 </div>
 
                 <div className="md:col-span-2">
