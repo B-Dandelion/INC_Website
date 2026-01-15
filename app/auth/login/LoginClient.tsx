@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
@@ -9,162 +11,125 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
 );
 
-function safeNext(raw: string | null) {
-  if (!raw) return "/";
-  // next는 내부 경로만 허용 (오픈 리다이렉트 방지)
-  if (raw.startsWith("/")) return raw;
-  return "/";
-}
-
 export default function LoginClient() {
   const router = useRouter();
   const sp = useSearchParams();
 
-  const nextUrl = useMemo(() => safeNext(sp.get("next")), [sp]);
-
-  const [checking, setChecking] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
+  const nextPath = sp.get("next") || "/";
+  const signupHref = `/auth/signup?next=${encodeURIComponent(nextPath)}`;
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
-  // 1) 이미 로그인된 상태면 바로 next로 이동
-  useEffect(() => {
-    let alive = true;
-
-    (async () => {
-      try {
-        const { data } = await supabase.auth.getSession();
-        if (!alive) return;
-        if (data.session) {
-          router.replace(nextUrl);
-          return;
-        }
-      } finally {
-        if (alive) setChecking(false);
-      }
-    })();
-
-    return () => {
-      alive = false;
-    };
-  }, [router, nextUrl]);
-
-  // 2) 로그인/토큰갱신 등 auth 이벤트에 따라 리다이렉트
-  useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session) {
-        router.replace(nextUrl);
-      }
-    });
-
-    return () => sub.subscription.unsubscribe();
-  }, [router, nextUrl]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErrorMsg(null);
+    setLoading(true);
 
-    const em = email.trim();
-    if (!em || !password) {
-      setErrorMsg("이메일과 비밀번호를 입력하세요.");
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    setLoading(false);
+
+    if (error) {
+      setErrorMsg(error.message);
       return;
     }
 
-    try {
-      setSubmitting(true);
+    const { data: userData } = await supabase.auth.getUser();
+    const uid = userData.user?.id;
 
-      const { error } = await supabase.auth.signInWithPassword({
-        email: em,
-        password,
-      });
+    if (uid) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("approved")
+        .eq("id", uid)
+        .single();
 
-      if (error) {
-        setErrorMsg(error.message);
+      if (!profile?.approved) {
+        router.replace("/pending");
         return;
       }
-
-      // 성공 시 onAuthStateChange에서 replace 처리됨
-    } finally {
-      setSubmitting(false);
     }
-  }
 
-  if (checking) {
-    return (
-      <main style={{ padding: 24 }}>
-        <div>Loading…</div>
-      </main>
-    );
+    router.replace(nextPath);
+    router.refresh();
   }
 
   return (
-    <main style={{ padding: 24, maxWidth: 420, margin: "0 auto" }}>
-      <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 12 }}>Login</h1>
+    <main className="min-h-[calc(100vh-120px)] bg-gradient-to-b from-blue-50 to-white px-4 py-12">
+      <div className="mx-auto w-full max-w-md">
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+          <div className="px-8 pt-8 pb-6">
+            <div className="flex items-center justify-center">
+              <Image src="/inc_logo.png" alt="INC" width={150} height={56} priority />
+            </div>
 
-      <form onSubmit={onSubmit} style={{ display: "grid", gap: 10 }}>
-        <label style={{ display: "grid", gap: 6 }}>
-          <div style={{ fontSize: 13, opacity: 0.8 }}>Email</div>
-          <input
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            autoComplete="email"
-            inputMode="email"
-            placeholder="you@example.com"
-            style={{
-              padding: "10px 12px",
-              borderRadius: 10,
-              border: "1px solid #ddd",
-              outline: "none",
-            }}
-          />
-        </label>
+            <h1 className="mt-6 text-center text-xl font-extrabold text-gray-900">로그인</h1>
+            <p className="mt-2 text-center text-sm text-gray-600">
+              승인된 계정만 자료 업로드 및 비공개 자료 접근이 가능합니다.
+            </p>
 
-        <label style={{ display: "grid", gap: 6 }}>
-          <div style={{ fontSize: 13, opacity: 0.8 }}>Password</div>
-          <input
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            type="password"
-            autoComplete="current-password"
-            placeholder="••••••••"
-            style={{
-              padding: "10px 12px",
-              borderRadius: 10,
-              border: "1px solid #ddd",
-              outline: "none",
-            }}
-          />
-        </label>
+            <form onSubmit={onSubmit} className="mt-6 grid gap-4">
+              <label className="grid gap-1">
+                <span className="text-sm font-medium text-gray-700">Email</span>
+                <input
+                  type="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="h-11 rounded-xl border border-gray-300 px-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  required
+                />
+              </label>
 
-        {errorMsg ? (
-          <div style={{ color: "#b00020", fontSize: 13 }}>{errorMsg}</div>
-        ) : null}
+              <label className="grid gap-1">
+                <span className="text-sm font-medium text-gray-700">Password</span>
+                <input
+                  type="password"
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="h-11 rounded-xl border border-gray-300 px-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  required
+                />
+              </label>
 
-        <button
-          type="submit"
-          disabled={submitting}
-          style={{
-            marginTop: 6,
-            padding: "10px 12px",
-            borderRadius: 10,
-            border: "none",
-            fontWeight: 700,
-            cursor: submitting ? "default" : "pointer",
-            opacity: submitting ? 0.6 : 1,
-            background: "#2563eb",
-            color: "white",
-          }}
-        >
-          {submitting ? "Signing in…" : "Sign in"}
-        </button>
+              {errorMsg && (
+                <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                  {errorMsg}
+                </div>
+              )}
 
-        <div style={{ fontSize: 12, opacity: 0.7, marginTop: 6 }}>
-          로그인 성공 시 이동: <code>{nextUrl}</code>
+              <button
+                type="submit"
+                disabled={loading}
+                className="mt-1 h-11 rounded-xl bg-blue-600 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+              >
+                {loading ? "Signing in..." : "Sign in"}
+              </button>
+
+              <div className="mt-4 flex items-center justify-between text-sm">
+                <span className="text-slate-600">계정이 없으신가요?</span>
+                <Link href={signupHref} className="font-semibold text-blue-600 hover:text-blue-700">
+                  회원가입
+                </Link>
+              </div>
+
+              <div className="mt-2 flex items-center justify-between text-sm text-gray-600">
+                <Link href={nextPath} className="hover:text-blue-600">
+                  돌아가기
+                </Link>
+              </div>
+            </form>
+          </div>
+
+          <div className="rounded-b-2xl border-t border-gray-200 bg-gray-50 px-8 py-4 text-xs text-gray-600">
+            관리자 계정으로 로그인하면 상단 메뉴에서 관리자 기능(예: 업로드)로 이동할 수 있게 확장 가능합니다.
+          </div>
         </div>
-      </form>
+      </div>
     </main>
   );
 }
