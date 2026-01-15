@@ -1,10 +1,33 @@
 import Link from "next/link";
 import PageShell from "@/components/PageShell";
-import ResourceList from "@/components/resources/ResourceList";
+import ResourceList, { type ResourceItem } from "@/components/resources/ResourceList";
 import { resourcesData } from "@/lib/resourcesData";
 
+function toResourceItems(raw: any[], boardTitle: string, boardSlug: string): ResourceItem[] {
+  return raw.map((x: any) => ({
+    id: x.id,
+    title: x.title,
+    displayname: x.note ?? x.displayname ?? null,
+    kind: x.kind,
+    href: x.href,
+
+    date: x.date ?? "2025-01-01",
+    visibility: x.visibility ?? "public",
+    canView: true,
+    canDownload: false,
+
+    boardSlug,
+    boardTitle,
+    originalFilename: x.originalFilename ?? "",
+  }));
+}
+
 export default function AwardsPage() {
-  const { essayKr, essayEn, photos } = resourcesData.awards;
+  const { essayKr: essayKrRaw, essayEn: essayEnRaw, photos: photosRaw } = resourcesData.awards;
+
+  const essayKr = toResourceItems(essayKrRaw, "수상작", "awards");
+  const essayEn = toResourceItems(essayEnRaw, "수상작", "awards");
+  const photos = toResourceItems(photosRaw, "수상작", "awards");
 
   return (
     <PageShell

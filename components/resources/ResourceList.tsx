@@ -19,6 +19,7 @@ export type ResourceItem = {
   boardTitle: string;
 
   originalFilename?: string | null;
+  href?: string; // 링크/포스트용
 };
 
 type ListAuth = {
@@ -215,9 +216,15 @@ export default function ResourceList({
     }
   }
 
-  async function openResource(id: number | string, mode: "view" | "download") {
+  async function openResource(it: ResourceItem, mode: "view" | "download") {
+    // 정적 링크/포스트는 API 안 타고 바로 오픈
+    if (it.href) {
+      window.open(it.href, "_blank", "noopener,noreferrer");
+      return;
+    }
+
     try {
-      setBusyId(id);
+      setBusyId(it.id);
       const token = await getToken();
       const headers: Record<string, string> = { "Content-Type": "application/json" };
       if (token) headers.Authorization = `Bearer ${token}`;
@@ -225,7 +232,7 @@ export default function ResourceList({
       const res = await fetch("/api/resources/url", {
         method: "POST",
         headers,
-        body: JSON.stringify({ resourceId: Number(id), mode }),
+        body: JSON.stringify({ resourceId: Number(it.id), mode }),
       });
 
       const out = await res.json().catch(() => ({}));
@@ -366,17 +373,18 @@ export default function ResourceList({
                       <button
                         type="button"
                         className={styles.titleBtn}
-                        onClick={() => openResource(it.id, "view")}
+                        onClick={() => openResource(it, "view")}
                         disabled={disabled}
                         title="열기"
                       >
                         {displayTitle(it)}
                       </button>
                     </div>
-
-                    <div className={styles.fileMeta}>
-                      <span className={styles.fileName}>{fileName(it)}</span>
-                    </div>
+                    {!it.href ? (
+                      <div className={styles.fileMeta}>
+                        <span className={styles.fileName}>{fileName(it)}</span>
+                      </div>
+                    ) : null}
                   </td>
 
                   <td className={styles.dateCell}>{it.date}</td>
@@ -387,7 +395,7 @@ export default function ResourceList({
                         <button
                           type="button"
                           className={styles.dlBtn}
-                          onClick={() => openResource(it.id, "download")}
+                          onClick={() => openResource(it, "download")}
                           disabled={disabled}
                         >
                           다운로드
@@ -445,7 +453,7 @@ export default function ResourceList({
               <button
                 type="button"
                 className={styles.mobileTitle}
-                onClick={() => openResource(it.id, "view")}
+                onClick={() => openResource(it, "view")}
                 disabled={disabled}
               >
                 {displayTitle(it)}
@@ -460,7 +468,7 @@ export default function ResourceList({
                   <button
                     type="button"
                     className={styles.dlBtn}
-                    onClick={() => openResource(it.id, "download")}
+                    onClick={() => openResource(it, "download")}
                     disabled={disabled}
                   >
                     다운로드
