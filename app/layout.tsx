@@ -8,13 +8,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ko">
       <body>
+        <SessionGuard />
         <Header />
         {children}
         <Footer policyLinks={policyLinks} orgName="INC" />
-      </body>
-      <body>
-        <SessionGuard />
-        {children}
       </body>
     </html>
   );
