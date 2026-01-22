@@ -3,7 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import styles from "./ResourceList.module.css";
-import { createClient } from "@supabase/supabase-js";
+import { supabaseBrowser } from "@/lib/supabase/browser";
+
+const supabase = supabaseBrowser();
 
 export type ResourceItem = {
   id: number | string;
@@ -27,11 +29,6 @@ type ListAuth = {
   approved: boolean;
   role: "member" | "admin";
 };
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-);
 
 function kindLabel(kind: string) {
   switch ((kind || "").toLowerCase()) {

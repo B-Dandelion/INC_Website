@@ -3,13 +3,11 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { createClient, type User } from "@supabase/supabase-js";
+import type { User } from "@supabase/supabase-js";
 import { LogIn, LogOut, Shield } from "lucide-react";
+import { supabaseBrowser } from "@/lib/supabase/browser";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-);
+const supabase = supabaseBrowser();
 
 type ProfileRow = { role: string | null; approved: boolean | null };
 

@@ -4,13 +4,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@supabase/supabase-js";
+import { supabaseBrowser } from "@/lib/supabase/browser";
 import { useMe } from "../../hooks/useMe";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-);
+const supabase = supabaseBrowser();
 
 type BoardOpt = { slug: string; title: string };
 type Kind = "pdf" | "image" | "video" | "doc" | "zip" | "link";
