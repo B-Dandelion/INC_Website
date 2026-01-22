@@ -53,6 +53,9 @@ export default function LoginClient() {
       }
     }
 
+    localStorage.setItem("inc_login_at", String(Date.now()));
+    localStorage.setItem("inc_last_at", String(Date.now()));
+
     router.replace(nextPath);
     router.refresh();
   }

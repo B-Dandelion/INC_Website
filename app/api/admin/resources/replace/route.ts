@@ -17,13 +17,12 @@ const s3 = new S3Client({
 
 const supabaseAdmin = createClient(
   process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-function supabaseFromAuthHeader(authHeader: string) {
-  return createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_ANON_KEY!, {
-    global: { headers: { Authorization: authHeader } },
-  });
+function getBearerToken(authHeader: string) {
+  const m = authHeader.match(/^Bearer\s+(.+)$/i);
+  return m?.[1] || null;
 }
 
 function safeName(name: string) {
@@ -44,28 +43,44 @@ function inferKindFromFileName(name: string) {
 type Visibility = "public" | "member" | "admin";
 
 export async function POST(req: Request) {
+  // 1) Bearer 토큰 파싱
   const authHeader = req.headers.get("authorization") || "";
-  if (!authHeader.startsWith("Bearer ")) {
+  const token = getBearerToken(authHeader);
+
+  if (!token) {
     return NextResponse.json({ ok: false, error: "missing auth token" }, { status: 401 });
   }
 
-  const supabaseAuth = supabaseFromAuthHeader(authHeader);
-  const { data: userData, error: userErr } = await supabaseAuth.auth.getUser();
+  // 2) 토큰으로 유저 확인 (anon key로 충분)
+  const supabaseAnon = createClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_ANON_KEY!,
+    { auth: { persistSession: false } }
+  );
+
+  const { data: userData, error: userErr } = await supabaseAnon.auth.getUser(token);
   const user = userData?.user;
+
   if (userErr || !user) {
     return NextResponse.json({ ok: false, error: "invalid token" }, { status: 401 });
   }
 
+  // 3) 관리자 권한 체크 (service role로 profiles 조회)
   const { data: profile, error: profErr } = await supabaseAdmin
     .from("profiles")
     .select("role, approved")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
 
-  if (profErr || !profile || profile.role !== "admin" || profile.approved !== true) {
+  if (profErr) {
+    return NextResponse.json({ ok: false, error: profErr.message }, { status: 500 });
+  }
+
+  if (!profile || profile.role !== "admin" || profile.approved !== true) {
     return NextResponse.json({ ok: false, error: "forbidden" }, { status: 403 });
   }
 
+  // ---- 여기부터 기존 로직 ----
   try {
     const form = await req.formData();
     const resourceIdRaw = String(form.get("resourceId") ?? "");
@@ -88,7 +103,7 @@ export async function POST(req: Request) {
       .from("resources")
       .select("id, board_id, kind, visibility, r2_key, deleted_at")
       .eq("id", resourceId)
-      .single();
+      .maybeSingle();
 
     if (rErr || !r) {
       return NextResponse.json({ ok: false, error: "resource not found" }, { status: 404 });
@@ -100,7 +115,7 @@ export async function POST(req: Request) {
     if (String(r.kind) !== inferred) {
       return NextResponse.json(
         { ok: false, error: `kind mismatch (current=${r.kind}, new=${inferred})` },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -108,7 +123,7 @@ export async function POST(req: Request) {
       .from("boards")
       .select("slug")
       .eq("id", r.board_id)
-      .single();
+      .maybeSingle();
 
     if (bErr || !board?.slug) {
       return NextResponse.json({ ok: false, error: "board not found" }, { status: 500 });
@@ -127,7 +142,7 @@ export async function POST(req: Request) {
         Key: key,
         Body: buf,
         ContentType: file.type || "application/octet-stream",
-      }),
+      })
     );
 
     const { data: updated, error: upErr } = await supabaseAdmin
@@ -141,10 +156,13 @@ export async function POST(req: Request) {
       })
       .eq("id", resourceId)
       .select("id, r2_key, original_filename, mime, size_bytes, updated_at")
-      .single();
+      .maybeSingle();
 
     if (upErr || !updated) {
-      return NextResponse.json({ ok: false, error: upErr?.message || "db update failed" }, { status: 500 });
+      return NextResponse.json(
+        { ok: false, error: upErr?.message || "db update failed" },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({

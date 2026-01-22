@@ -104,6 +104,11 @@ export default function AuthButton() {
     setLoading(true);
     try {
       await supabase.auth.signOut();
+      localStorage.removeItem("inc_login_at");
+      localStorage.removeItem("inc_last_at");
+      try {
+        new BroadcastChannel("inc-auth").postMessage({ type: "logout" });
+      } catch { }
       setUser(null);
       setIsAdmin(false);
       setApproved(null);
@@ -182,6 +187,7 @@ export default function AuthButton() {
 
           <button
             onClick={signOut}
+
             className="w-full text-left inline-flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
           >
             <LogOut className="w-4 h-4" />
