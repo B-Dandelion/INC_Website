@@ -36,7 +36,10 @@ function safeFileName(name: string) {
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null) as null | { resourceId?: number; mode?: Mode };
-  const resourceId = body?.resourceId;
+  const resourceId = Number(body?.resourceId);
+  if (!Number.isFinite(resourceId) || resourceId <= 0) {
+    return NextResponse.json({ ok: false, error: "missing resourceId" }, { status: 400 });
+  }
   const mode: Mode = body?.mode === "download" ? "download" : "view";
 
   if (!resourceId) {
@@ -46,11 +49,11 @@ export async function POST(req: Request) {
   // 1) 리소스 조회
   const { data: r, error: rErr } = await supabaseAdmin
     .from("resources")
-    .select("id, title, kind, visibility, r2_key, mime")
+    .select("id, title, kind, visibility, r2_key, mime, deleted_at")
     .eq("id", resourceId)
-    .single();
+    .maybeSingle();
 
-  if (rErr || !r) {
+  if (rErr || !r || r.deleted_at) {
     return NextResponse.json({ ok: false, error: "resource not found" }, { status: 404 });
   }
   const visibility = r.visibility as Visibility;

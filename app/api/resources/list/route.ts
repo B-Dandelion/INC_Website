@@ -3,22 +3,21 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const supabaseAdmin = createClient(
   process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
-
-function supabaseFromAuthHeader(authHeader: string) {
-  return createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_ANON_KEY!, {
-    global: { headers: { Authorization: authHeader } },
-  });
-}
 
 type Role = "member" | "admin";
 type Visibility = "public" | "member" | "admin";
-
 type BoardRow = { id: number; slug: string; title: string };
+
+function getBearerToken(authHeader: string) {
+  const m = authHeader.match(/^Bearer\s+(.+)$/i);
+  return m?.[1] || null;
+}
 
 async function getBoardBySlug(slug: string) {
   const s = slug.trim();
@@ -36,20 +35,23 @@ async function getBoardBySlug(slug: string) {
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
-
-  // 프론트는 cat, 혹시 다른 곳에서 boardSlug로 보내도 먹게
   const cat = (url.searchParams.get("cat") ?? "").trim();
 
-  const boardSlug = (url.searchParams.get("boardSlug") ?? "").trim();
-
   const authHeader = req.headers.get("authorization") || "";
+  const token = getBearerToken(authHeader);
+
   let userId: string | null = null;
   let role: Role = "member";
   let approved = false;
 
-  if (authHeader.startsWith("Bearer ")) {
-    const supabaseAuth = supabaseFromAuthHeader(authHeader);
-    const { data: userData } = await supabaseAuth.auth.getUser();
+  if (token) {
+    const supabaseAnon = createClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_ANON_KEY!,
+      { auth: { persistSession: false } }
+    );
+
+    const { data: userData } = await supabaseAnon.auth.getUser(token);
     userId = userData.user?.id ?? null;
 
     if (userId) {
@@ -57,7 +59,7 @@ export async function GET(req: Request) {
         .from("profiles")
         .select("role, approved")
         .eq("id", userId)
-        .single();
+        .maybeSingle();
 
       role = (profile?.role as Role) || "member";
       approved = profile?.approved === true;
@@ -72,16 +74,14 @@ export async function GET(req: Request) {
     if (role === "admin") allowed.push("admin");
   }
 
-  // slug -> board_id
   let board: BoardRow | null = null;
   if (cat) {
     board = await getBoardBySlug(cat);
     if (!board) {
-      return NextResponse.json({
-        ok: true,
-        auth: { isLoggedIn, approved, role },
-        items: [],
-      });
+      return NextResponse.json(
+        { ok: true, auth: { isLoggedIn, approved, role }, items: [] },
+        { headers: { "Cache-Control": "no-store", Vary: "Authorization" } }
+      );
     }
   }
 
@@ -100,7 +100,7 @@ export async function GET(req: Request) {
         "r2_key",
         "original_filename",
         "boards:boards ( slug, title )",
-      ].join(", "),
+      ].join(", ")
     )
     .in("visibility", allowed)
     .is("deleted_at", null);
@@ -113,19 +113,23 @@ export async function GET(req: Request) {
     .limit(200);
 
   if (error) {
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { ok: false, error: error.message },
+      { status: 500, headers: { "Cache-Control": "no-store", Vary: "Authorization" } }
+    );
   }
 
   const items = (data ?? []).map((r: any) => {
     const vis = r.visibility as Visibility;
 
+    // NOTE: 현재 설계는 public도 다운로드는 로그인 필요(isLoggedIn)로 되어 있음.
+    // 익명 다운로드를 허용하려면 vis==="public"일 때 true로 바꿔야 함.
     const canDownloadPerm =
       vis === "public"
         ? isLoggedIn
         : approved && (vis === "member" || (vis === "admin" && role === "admin"));
 
-    const date =
-      r.published_at ?? (r.created_at ? String(r.created_at).slice(0, 10) : "");
+    const date = r.published_at ?? (r.created_at ? String(r.created_at).slice(0, 10) : "");
 
     return {
       id: r.id,
@@ -142,9 +146,8 @@ export async function GET(req: Request) {
     };
   });
 
-  return NextResponse.json({
-    ok: true,
-    auth: { isLoggedIn, approved, role },
-    items,
-  });
+  return NextResponse.json(
+    { ok: true, auth: { isLoggedIn, approved, role }, items },
+    { headers: { "Cache-Control": "no-store", Vary: "Authorization" } }
+  );
 }
