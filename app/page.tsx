@@ -1,117 +1,106 @@
-// app/page.tsx
 import Link from "next/link";
-import styles from "./page.module.css";
+import LatestTabs from "@/components/home/LatestTabs";
 import { RESOURCE_BOARDS } from "@/lib/resourceBoards";
 import { fetchPublicResources } from "@/lib/resourcesDb";
 
-function kindLabel(kind: string) {
-  switch (kind) {
-    case "pdf": return "PDF";
-    case "image": return "IMG";
-    case "video": return "VIDEO";
-    case "doc": return "DOC";
-    case "zip": return "ZIP";
-    default: return "LINK";
-  }
-}
+export default async function HomePage() {
+  // 자료실 최신 업로드 (함수 시그니처에 맞게 조절)
+  const allResources = await fetchPublicResources();
+const latestResources = (allResources ?? []).slice(0, 5).map((r: any, idx: number) => ({
+  id: String(r.id ?? r.resource_id ?? r.slug ?? `res-${idx}`), // 너 DB에 맞춰
+  title: r.title ?? "제목 없음",
+  date: (r.date ?? r.created_at ?? "").toString().slice(0, 10),
+  href: r.id ? `/resources/${r.id}` : "/resources",
+}));
 
-export default async function Home({
-  searchParams,
-}: {
-  searchParams?: Promise<{ q?: string }> | { q?: string };
-}) {
-  const sp = searchParams ? await Promise.resolve(searchParams) : {};
-  const q = (sp.q ?? "").trim();
-
-  const latest = await fetchPublicResources({ limit: 10 });
+  // 공지사항은 아직 없으면 임시로 넣어도 됨(완성도용)
+const latestNotices = [
+  { id: "notice-1", title: "홈페이지 개편 안내", date: "2026-01-05", href: "/notices/1" },
+  { id: "notice-2", title: "국제협력 세미나 참가 신청", date: "2026-01-02", href: "/notices/2" },
+  { id: "notice-3", title: "연구자료 이용 가이드", date: "2025-12-20", href: "/notices/3" },
+];
 
   return (
-    <main className={styles.main}>
-      <div className={styles.inner}>
-        {/* Hero */}
-        <section className={styles.hero}>
-          <h1 className={styles.title}>자료실</h1>
-          <p className={styles.desc}>
-            자료를 업로드하고 열람/다운로드할 수 있습니다. 카테고리별로 빠르게 찾아보세요.
+    <main className="bg-gray-50">
+      {/* Hero */}
+      <section className="border-b border-gray-200 bg-gradient-to-b from-blue-50 to-white">
+        <div className="mx-auto max-w-7xl px-6 py-14 text-center">
+          <div className="text-xs font-bold tracking-widest text-gray-500">
+            International Nuclear Cooperation
+          </div>
+          <h1 className="mt-3 text-5xl font-black text-[#2563EB]">INC</h1>
+          <p className="mx-auto mt-4 max-w-2xl text-sm text-gray-700">
+            한국 원자력 연구 및 국제 협력 네트워크를 이끄는 INC 공식 홈페이지입니다.
           </p>
 
-          {/* 검색(일단 이동만) */}
-          <form action="/resources" method="get" className={styles.search}>
-            <input
-              name="q"
-              defaultValue={q}
-              placeholder="제목/키워드로 검색"
-              className={styles.searchInput}
-            />
-            <button type="submit" className={styles.searchBtn}>
-              검색
-            </button>
-          </form>
-
-          <div className={styles.heroActions}>
-            <Link className={styles.primaryBtn} href="/resources">
-              자료실 전체 보기
+          <div className="mt-6 flex justify-center gap-3">
+            <Link
+              href="/notices"
+              className="rounded-xl bg-[#2563EB] px-5 py-3 text-sm font-extrabold text-white hover:bg-[#1D4ED8]"
+            >
+              공지사항
+            </Link>
+            <Link
+              href="/resources"
+              className="rounded-xl border border-gray-200 bg-white px-5 py-3 text-sm font-extrabold text-gray-900 hover:border-gray-300"
+            >
+              자료실
             </Link>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* 카테고리 */}
-        <section className={styles.section}>
-          <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>카테고리</h2>
-            <span className={styles.sectionHint}>11개 항목은 모두 동일 등급입니다.</span>
-          </div>
+      <div className="mx-auto max-w-7xl px-6 py-10">
+        {/* Quick Links */}
+        <section>
+          <h2 className="text-xl font-extrabold text-gray-900">Quick Links</h2>
 
-          <div className={styles.grid}>
-            {RESOURCE_BOARDS.map((b) => (
+          <div className="mt-4 grid gap-4 md:grid-cols-3">
+            {[
+              { title: "INC 소개", desc: "기관 개요 및 비전", href: "/about" },
+              { title: "연구진", desc: "연구진 및 연구 분야", href: "/people" },
+              { title: "국제교류", desc: "국제 협력 및 교류 활동", href: "/exchange" },
+              { title: "자료실", desc: "보고서·발간물·자료", href: "/resources" },
+              { title: "공지사항", desc: "최신 공지 및 안내", href: "/notices" },
+              { title: "문의", desc: "연락처 및 문의", href: "/contact" },
+            ].map((x) => (
               <Link
-                key={b.slug}
-                href={`/resources?cat=${b.slug}`}
-                className={styles.card}
+                key={x.href}
+                href={x.href}
+                className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm hover:border-gray-300"
               >
-                <div className={styles.cardTitle}>{b.label}</div>
-                <div className={styles.cardMeta}>바로가기</div>
+                <div className="text-base font-extrabold text-gray-900">{x.title}</div>
+                <div className="mt-1 text-sm text-gray-600">{x.desc}</div>
               </Link>
             ))}
           </div>
         </section>
 
-        {/* 최근 업로드 */}
-        <section className={styles.section}>
-          <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>최근 업로드</h2>
-            <Link className={styles.moreLink} href="/resources">
-              더 보기 →
+        {/* Categories */}
+        <section className="mt-10">
+          <div className="flex items-end justify-between">
+            <h2 className="text-xl font-extrabold text-gray-900">카테고리</h2>
+            <Link href="/resources" className="text-sm font-bold text-[#2563EB] hover:underline">
+              자료실로 이동 →
             </Link>
           </div>
 
-          {latest.length === 0 ? (
-            <div className={styles.empty}>아직 등록된 자료가 없습니다.</div>
-          ) : (
-            <div className={styles.latestBox}>
-              <div className={styles.latestHead}>
-                <span>종류</span>
-                <span>제목</span>
-                <span>날짜</span>
-              </div>
-
-              {latest.map((r) => (
-                <Link
-                  key={r.id}
-                  href="/resources"
-                  className={styles.latestRow}
-                  title="자료실에서 확인"
-                >
-                  <span className={styles.badge}>{kindLabel(r.kind)}</span>
-                  <span className={styles.latestTitle}>{r.title}</span>
-                  <span className={styles.latestDate}>
-                    {(r.published_at ?? "").toString() || "-"}
-                  </span>
-                </Link>
-              ))}
-            </div>
-          )}
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {RESOURCE_BOARDS.map((b) => (
+              <Link
+                key={b.slug}
+                href={`/resources?cat=${b.slug}`}
+                className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm hover:border-gray-300"
+              >
+                <div className="text-base font-extrabold text-gray-900">{b.label}</div>
+                <div className="mt-2 text-sm font-bold text-[#2563EB]">바로가기 →</div>
+              </Link>
+            ))}
+          </div>
         </section>
+
+        {/* Latest (토글) */}
+        <LatestTabs notices={latestNotices} resources={latestResources} />
       </div>
     </main>
   );

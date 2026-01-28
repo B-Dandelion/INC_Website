@@ -11,8 +11,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <SessionGuard />
         <Header />
         {children}
-        <Footer policyLinks={policyLinks} orgName="INC" />
+        <Footer
+          policyLinks={policyLinks}
+          orgName="INC"
+          contact={{
+            addressLines: ["서울특별시", "(주소 확정 필요)"],
+            phone: "02-0000-0000",
+            email: "webmaster@example.org",
+          }}
+        />
       </body>
     </html>
   );
 }
+export const metadata = {
+  icons: {
+    icon: "/inc_mini_logo.png",
+  },
+};

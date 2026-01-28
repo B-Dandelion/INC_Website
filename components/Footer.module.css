@@ -1,60 +1,182 @@
-.footer {
-  border-top: 1px solid var(--border);
-  background: var(--surface);
-  padding: 16px 16px;
+.footer { width: 100%; }
+
+.top {
+  background: #0b1220; /* 또는 #0f172a */
+  color: #e5e7eb;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.inner {
-  max-width: 1100px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
+.logoWrap{
+  position:relative;
+  width:56px;
+  height:56px;
+  border-radius:999px;
+  overflow:hidden;
+
+  /* 파일이 흰 배경이면 이게 자연스럽게 받쳐줌 */
+  background:#ffffff;
+
+  border:1px solid rgba(255,255,255,0.18);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.25);
 }
 
-.left {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  flex-wrap: wrap;
+/* 이미지가 동그라미 안에 예쁘게 들어가게 */
+.logoImg{
+  object-fit: contain;  /* 꽉 차게 */
 }
 
-.brand {
-  font-weight: 900;
-  color: var(--foreground);
+.container{
+  max-width:1100px;
+  margin:0 auto;
+  padding:44px 16px;
+  display:grid;
+  grid-template-columns: 360px 1fr;
+  gap:32px;
 }
 
-.copy {
-  font-size: 13px;
-  color: var(--muted);
+.brandCol{ min-width:0; }
+
+/* 로고 */
+.brandRow{
+  display:flex;
+  align-items:center;
+  gap:14px;
 }
 
-.nav {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
+.logoWrap{
+  position:relative;
+  width:170px;   /* 필요하면 여기 조절 */
+  height:54px;
+  border-radius:12px;
+  background: rgba(255,255,255,0.06);
+  padding:8px 10px;
+  overflow:hidden;
 }
 
-.link {
-  font-size: 13px;
-  text-decoration: none;
-  color: var(--muted);
+.logoImg{
+  object-fit: contain; /* ✅ 자르지 말고 깔끔하게 */
 }
 
-.link:hover {
-  text-decoration: underline;
-  color: var(--foreground);
+.brandText{ min-width:0; }
+
+.brandName{
+  font-weight:800;
+  font-size:16px;
+  color:#ffffff;
+  line-height:1.1;
 }
 
-@media (max-width: 720px) {
-  .inner {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+.brandSub{
+  margin-top:2px;
+  font-size:12px;
+  color:rgba(229,231,235,0.78);
+}
 
-  .nav {
-    justify-content: flex-start;
-  }
+.contact{
+  margin-top:14px;
+  font-size:13px;
+  line-height:1.7;
+  color:rgba(229,231,235,0.82);
+}
+
+.contactLine{ margin-top:4px; }
+
+.contactEmail{
+  display:inline-block;
+  margin-top:6px;
+  color:#93c5fd;
+  text-decoration:none;
+}
+.contactEmail:hover{
+  color:#bfdbfe;
+  text-decoration:underline;
+}
+
+.cols{
+  display:grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap:28px;
+}
+
+.colTitle{
+  font-weight:800;
+  font-size:14px;
+  color:#ffffff;
+  margin-bottom:12px;
+}
+
+.colLink{
+  display:block;
+  padding:6px 0;
+  font-size:13px;
+  color:rgba(229,231,235,0.82);
+  text-decoration:none;
+}
+.colLink:hover{
+  color:#ffffff;
+}
+
+.miniText{
+  font-size:13px;
+  line-height:1.7;
+  color:rgba(229,231,235,0.78);
+}
+
+.primaryBtn{
+  display:inline-flex;
+  margin-top:12px;
+  padding:10px 14px;
+  border-radius:10px;
+  background:#2563eb; /* 브랜드 블루 */
+  color:#ffffff;
+  font-weight:800;
+  font-size:13px;
+  text-decoration:none;
+}
+.primaryBtn:hover{ background:#1d4ed8; }
+
+/* ✅ 최하단: 브랜드 블루로 확 분리 */
+.bottom{
+  background:#2563eb; /* #2563EB */
+  border-top:1px solid rgba(255,255,255,0.18);
+  color:rgba(255,255,255,0.92);
+}
+
+.containerBottom{
+  max-width:1100px;
+  margin:0 auto;
+  padding:12px 16px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.bottomLeft{ font-size:12px; }
+
+.bottomRight{
+  display:flex;
+  gap:14px;
+  flex-wrap:wrap;
+}
+
+.bottomLink{
+  font-size:12px;
+  color:rgba(255,255,255,0.92);
+  text-decoration:none;
+}
+.bottomLink:hover{
+  text-decoration:underline;
+  color:#ffffff;
+}
+
+/* responsive */
+@media (max-width: 900px){
+  .container{ grid-template-columns:1fr; }
+  .cols{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px){
+  .cols{ grid-template-columns:1fr; }
+  .logoWrap{ width:160px; height:52px; }
 }
