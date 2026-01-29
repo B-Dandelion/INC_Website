@@ -1,6 +1,7 @@
 // app/resources/page.tsx
 import Link from "next/link";
 import styles from "./resources.module.css";
+import { redirect } from "next/navigation";
 import ResourceList, { type ResourceItem } from "@/components/resources/ResourceList";
 import { RESOURCE_BOARDS } from "@/lib/resourceBoards";
 import { fetchPublicResources } from "@/lib/resourcesDb";
@@ -11,10 +12,10 @@ export const revalidate = 0;
 export default async function ResourcesPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ cat?: string }> | { cat?: string };
+  searchParams: Promise<{ cat?: string }>;
 }) {
-  const sp = searchParams ? await Promise.resolve(searchParams) : {};
-  const cat = (sp.cat ?? "").trim();
+  const { cat } = await searchParams;
+  if (cat) redirect(`/resources/${cat}`);
 
   const selected = RESOURCE_BOARDS.find((x) => x.slug === cat) ?? null;
 

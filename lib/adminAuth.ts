@@ -1,6 +1,7 @@
 // lib/adminAuth.ts
-import { createClient } from "@supabase/supabase-js";
 import { NextRequest } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+import { createSupabaseServerClient } from "@/lib/supabaseServer";
 
 function getBearerToken(req: NextRequest) {
   const h = req.headers.get("authorization") || "";
@@ -21,7 +22,6 @@ export async function requireAdmin(req: NextRequest) {
 
   const userId = data.user.id;
 
-  // 예시: profiles(role) 테이블에서 확인
   const { data: profile, error: pErr } = await supabase
     .from("profiles")
     .select("role")
@@ -32,4 +32,22 @@ export async function requireAdmin(req: NextRequest) {
   if (profile.role !== "admin") return { ok: false as const, status: 403, error: "not_admin" };
 
   return { ok: true as const, user: data.user };
+}
+
+// 서버 컴포넌트에서 쓰는 버전 추가
+export async function isAdminServer() {
+  const supabase = createSupabaseServerClient();
+
+  const { data: userRes, error: uErr } = await supabase.auth.getUser();
+  const user = userRes?.user;
+  if (uErr || !user) return false;
+
+  const { data: profile, error: pErr } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (pErr || !profile) return false;
+  return profile.role === "admin";
 }
