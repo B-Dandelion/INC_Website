@@ -28,7 +28,7 @@ export default function Header() {
   );
 
   return (
-    <header className="sticky top-0 z-20 border-b border-gray-200 bg-white">
+    <header className="sticky top-0 z-50 bg-white border-b border-[#2563EB]">
       <div className="max-w-7xl mx-auto px-6 py-3 flex flex-col md:flex-row md:items-center justify-between gap-3">
         {/* 1) 상단 줄: 로고 + (모바일) 우측 버튼들 */}
         <div className="flex items-center justify-between w-full md:w-auto">

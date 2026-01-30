@@ -14,6 +14,7 @@ export default function LatestTabs({
 }) {
   const [tab, setTab] = useState<"notice" | "resource">("notice");
   const items = tab === "notice" ? notices : resources;
+  const visible = items.slice(0, 3);
 
   return (
     <section className="mt-10">
@@ -58,7 +59,7 @@ export default function LatestTabs({
           </div>
 
           <ul className="divide-y divide-gray-100">
-            {items.map((it) => (
+            {visible.map((it) => (
               <li key={it.id} className="px-5 py-4">
                 <Link href={it.href} className="group flex items-center justify-between gap-4">
                   <div className="min-w-0">
@@ -70,13 +71,12 @@ export default function LatestTabs({
                 </Link>
               </li>
             ))}
-            {items.length === 0 ? (
+            {visible.length === 0 ? (
               <li className="px-5 py-8 text-sm text-gray-500">표시할 항목이 없습니다.</li>
             ) : null}
           </ul>
         </div>
 
-        {/* 오른쪽: 강조 카드(행사/안내) — 완성본 느낌용 */}
         <div className="rounded-2xl border border-blue-100 bg-blue-50/60 p-6 shadow-sm">
           <div className="text-sm font-extrabold text-[#2563EB]">행사</div>
           <div className="mt-2 text-lg font-extrabold text-gray-900">

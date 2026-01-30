@@ -24,3 +24,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   );
 }
+export const metadata = {
+  icons: {
+    icon: "/inc_logo_cut.png",
+  },
+};
