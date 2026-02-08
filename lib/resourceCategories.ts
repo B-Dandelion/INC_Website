@@ -6,7 +6,7 @@ export type ResourceCategoryLink = {
 export const resourceCategories: ResourceCategoryLink[] = [
   { label: "ATM", href: "/resources/atm" },
   { label: "Heartbeat of Atoms", href: "/resources/heartbeat-of-atoms" },
-  { label: "강연자료", href: "/resources/lectures" },
+  { label: "강연자료", href: "/resources/lecture" },
   { label: "세미나", href: "/resources/seminar" },
   { label: "워크샵", href: "/resources/workshop" },
   { label: "과제중간보고회", href: "/resources/progress-reports" },

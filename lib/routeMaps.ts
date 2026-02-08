@@ -1,5 +1,5 @@
 export const boardSlugToRoute: Record<string, string> = {
-  lecture: "lectures", // lecture만 예외(복수형)
+  lecture: "lecture",
   contribution: "contribution",
   seminar: "seminar",
   "expert-opinion-report": "expert-opinion-report",
@@ -15,3 +15,11 @@ export const boardSlugToRoute: Record<string, string> = {
 export const routeToBoardSlug: Record<string, string> = Object.fromEntries(
   Object.entries(boardSlugToRoute).map(([slug, route]) => [route, slug])
 );
+
+export function toRoute(boardSlug: string) {
+  return boardSlugToRoute[boardSlug] ?? boardSlug;
+}
+
+export function toBoardSlug(route: string) {
+  return routeToBoardSlug[route] ?? route;
+}
