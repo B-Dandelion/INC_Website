@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-export async function POST(
-  _req: Request,
-  { params }: { params: { id: string } }
-) {
-  const id = Number(params.id);
+type Ctx = { params: Promise<{ id: string }> };
+
+export async function POST(req: Request, { params }: Ctx) {
+  const { id } = await params;
   if (!Number.isFinite(id)) {
     return NextResponse.json({ error: "invalid id" }, { status: 400 });
   }

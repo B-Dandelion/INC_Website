@@ -59,7 +59,7 @@ export async function GET(req: Request) {
 
   const sb = sbAdmin();
 
-  // ✅ RPC: 조회수 +1 하면서 row 가져오기
+  // RPC: 조회수 +1 하면서 row 가져오기
   const { data, error } = await sb.rpc("go_resource", { p_id: id });
   if (error) return new NextResponse(error.message, { status: 500 });
 
