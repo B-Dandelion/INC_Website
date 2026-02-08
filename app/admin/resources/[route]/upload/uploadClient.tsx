@@ -2,16 +2,23 @@
 
 import { useMemo, useState } from "react";
 import { routeToBoardSlug } from "@/lib/routeMaps";
+import { createClient } from "@supabase/supabase-js";
 
 function extKind(fileName: string) {
   const ext = (fileName.split(".").pop() || "").toLowerCase();
   if (["pdf"].includes(ext)) return "pdf";
   if (["jpg", "jpeg", "png", "webp"].includes(ext)) return "image";
-  if (["ppt", "pptx"].includes(ext)) return "ppt";
+  if (["ppt", "pptx"].includes(ext)) return "slide";
   if (["doc", "docx"].includes(ext)) return "doc";
-  if (["hwp", "hwpx"].includes(ext)) return "hwp";
+  if (["hwp", "hwpx"].includes(ext)) return "doc";
   return "file";
 }
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  { auth: { persistSession: true } }
+);
 
 export default function UploadClient({ route }: { route: string }) {
   const boardSlug = useMemo(() => routeToBoardSlug[route] ?? route, [route]);
@@ -24,6 +31,11 @@ export default function UploadClient({ route }: { route: string }) {
   const [msg, setMsg] = useState<string>("");
 
   async function onUpload() {
+
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) throw new Error("로그인이 필요합니다. 다시 로그인하세요.");
+
     if (!file) return setMsg("파일을 선택해.");
     const finalTitle = title.trim() || file.name;
 
@@ -36,7 +48,7 @@ export default function UploadClient({ route }: { route: string }) {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          "x-admin-token": (process.env.NEXT_PUBLIC_ADMIN_TASK_TOKEN as string) ?? "",
+          authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ fileName: file.name, contentType: file.type }),
       }).then((r) => r.json());
@@ -53,18 +65,19 @@ export default function UploadClient({ route }: { route: string }) {
 
       // 3) insert DB
       const kind = extKind(file.name);
+      const today = new Date().toISOString().slice(0, 10);
       const created = await fetch("/api/admin/resources/create", {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          "x-admin-token": (process.env.NEXT_PUBLIC_ADMIN_TASK_TOKEN as string) ?? "",
+          authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
           boardSlug,
           title: finalTitle,
           kind,
           note,
-          published_at: publishedAt || null,
+          published_at: publishedAt || today,
           visibility: "public",
           r2_key: pres.key,
         }),
