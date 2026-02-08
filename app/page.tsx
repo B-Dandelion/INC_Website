@@ -4,10 +4,10 @@ import { RESOURCE_BOARDS } from "@/lib/resourceBoards";
 import { fetchPublicResources } from "@/lib/resourcesDb";
 
 export default async function HomePage() {
-  // 자료실 최신 업로드 (함수 시그니처에 맞게 조절)
+  // 자료실 최신 업로드
   const allResources = await fetchPublicResources();
   const latestResources = (allResources ?? []).slice(0, 5).map((r: any, idx: number) => ({
-    id: String(r.id ?? r.resource_id ?? r.slug ?? `res-${idx}`), // 너 DB에 맞춰
+    id: String(r.id ?? r.resource_id ?? r.slug ?? `res-${idx}`),
     title: r.title ?? "제목 없음",
     date: (r.date ?? r.created_at ?? "").toString().slice(0, 10),
     href: r.id ? `/resources/${r.id}` : "/resources",
@@ -47,32 +47,7 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-
       <div className="mx-auto max-w-7xl px-6 py-10">
-        {/* Quick Links */}
-        <section>
-          <h2 className="text-xl font-extrabold text-gray-900">Quick Links</h2>
-
-          <div className="mt-4 grid gap-4 md:grid-cols-3">
-            {[
-              { title: "INC 소개", desc: "기관 개요 및 비전", href: "/about" },
-              { title: "연구진", desc: "연구진 및 연구 분야", href: "/people" },
-              { title: "국제교류", desc: "국제 협력 및 교류 활동", href: "/exchange" },
-              { title: "자료실", desc: "보고서·발간물·자료", href: "/resources" },
-              { title: "공지사항", desc: "최신 공지 및 안내", href: "/notices" },
-              { title: "문의", desc: "연락처 및 문의", href: "/contact" },
-            ].map((x) => (
-              <Link
-                key={x.href}
-                href={x.href}
-                className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm hover:border-gray-300"
-              >
-                <div className="text-base font-extrabold text-gray-900">{x.title}</div>
-                <div className="mt-1 text-sm text-gray-600">{x.desc}</div>
-              </Link>
-            ))}
-          </div>
-        </section>
 
         {/* Categories */}
         <section className="mt-10">

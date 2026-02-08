@@ -1,33 +1,29 @@
-// app/resources/page.tsx
+// app/resources/[route]/page.tsx
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import styles from "./resources.module.css";
+import { notFound } from "next/navigation";
+import styles from "../resources.module.css";
 import ResourceList, { type ResourceItem } from "@/components/resources/ResourceList";
 import { RESOURCE_BOARDS } from "@/lib/resourceBoards";
 import { fetchPublicResources } from "@/lib/resourcesDb";
-import { boardSlugToRoute } from "@/lib/routeMaps";
+import { boardSlugToRoute, routeToBoardSlug } from "@/lib/routeMaps";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export default async function ResourcesPage({
-  searchParams,
+export default async function ResourceBoardPage({
+  params,
 }: {
-  searchParams?: Promise<{ cat?: string }> | { cat?: string };
+  params: { route: string };
 }) {
-  const sp = searchParams ? await Promise.resolve(searchParams) : {};
-  const cat = (sp.cat ?? "").trim();
+  const route = decodeURIComponent(params.route);
+  const boardSlug = routeToBoardSlug[route] ?? route;
 
-  // 옛 링크(/resources?cat=lecture) 들어오면 새 링크로 보냄
-  if (cat) {
-    const route = boardSlugToRoute[cat] ?? cat;
-    redirect(`/resources/${route}`);
-  }
+  const selected = RESOURCE_BOARDS.find((x) => x.slug === boardSlug) ?? null;
+  if (!selected) return notFound();
 
-  // 전체 보기
   const rows = await fetchPublicResources({
     limit: 200,
-    boardSlug: "",
+    boardSlug,
   });
 
   const items: ResourceItem[] = rows.map((r: any) => ({
@@ -48,16 +44,14 @@ export default async function ResourcesPage({
       <div className={styles.inner}>
         <section className={styles.hero}>
           <h1 className={styles.title}>자료실</h1>
-          <p className={styles.desc}>
-            전체 자료를 확인할 수 있습니다. 카테고리별로 빠르게 찾아보세요.
-          </p>
+          <p className={styles.desc}>카테고리별 자료를 확인할 수 있습니다.</p>
 
           <div className={styles.heroActions}>
             <Link className={styles.primaryBtn} href="/resources">
               전체 보기
             </Link>
             <span className={styles.pill}>
-              선택된 카테고리: <b>전체</b>
+              선택된 카테고리: <b>{selected.label}</b>
             </span>
           </div>
         </section>
@@ -71,18 +65,20 @@ export default async function ResourcesPage({
           </div>
 
           <div className={styles.chips}>
-            <Link
-              href="/resources"
-              className={`${styles.chip} ${styles.chipActive}`}
-              aria-current="page"
-            >
+            <Link href="/resources" className={styles.chip}>
               전체
             </Link>
 
             {RESOURCE_BOARDS.map((b) => {
+              const active = selected.slug === b.slug;
               const href = `/resources/${boardSlugToRoute[b.slug] ?? b.slug}`;
               return (
-                <Link key={b.slug} href={href} className={styles.chip}>
+                <Link
+                  key={b.slug}
+                  href={href}
+                  className={`${styles.chip} ${active ? styles.chipActive : ""}`}
+                  aria-current={active ? "page" : undefined}
+                >
                   {b.label}
                 </Link>
               );
@@ -92,8 +88,8 @@ export default async function ResourcesPage({
           <div className={styles.listWrap}>
             <ResourceList
               items={items}
-              showCategory={true}
-              emptyText="등록된 자료가 없습니다."
+              showCategory={false}
+              emptyText="해당 카테고리에 등록된 자료가 없습니다."
             />
           </div>
         </section>

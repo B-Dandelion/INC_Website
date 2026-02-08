@@ -43,7 +43,8 @@ export async function fetchPublicResources(
       id, board_id, title, kind, note, published_at, visibility, r2_key, created_at,
       boards:boards ( slug, title )
     `)
-    .eq("visibility", "public");
+    .eq("visibility", "public")
+    .is("deleted_at", null);
 
   if (boardSlug) {
     const boardId = await getBoardIdBySlug(boardSlug);
