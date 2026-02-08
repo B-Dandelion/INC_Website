@@ -35,67 +35,42 @@ const COMMIT = hasFlag("--commit");
 const BUCKET_MODE = (getArg("--bucket", "public") || "public").toLowerCase();
 const VISIBILITY = (getArg("--visibility", "public") || "public").toLowerCase();
 
-const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID;
-const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID;
-const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY;
-
-const R2_PUBLIC_BUCKET = process.env.R2_PUBLIC_BUCKET;
-const R2_PRIVATE_BUCKET = process.env.R2_PRIVATE_BUCKET;
-
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
 const missing = [];
-for (const k of [
-  "R2_ACCOUNT_ID",
-  "R2_ACCESS_KEY_ID",
-  "R2_SECRET_ACCESS_KEY",
-  "SUPABASE_URL",
-  "SUPABASE_SERVICE_ROLE_KEY",
-]) {
+for (const k of ["R2_ACCOUNT_ID", "R2_ACCESS_KEY_ID", "R2_SECRET_ACCESS_KEY", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"]) {
   if (!process.env[k]) missing.push(k);
 }
-if (BUCKET_MODE === "public" && !R2_PUBLIC_BUCKET) missing.push("R2_PUBLIC_BUCKET");
-if (BUCKET_MODE === "private" && !R2_PRIVATE_BUCKET) missing.push("R2_PRIVATE_BUCKET");
+if (BUCKET_MODE === "public" && !process.env.R2_PUBLIC_BUCKET) missing.push("R2_PUBLIC_BUCKET");
+if (BUCKET_MODE === "private" && !process.env.R2_PRIVATE_BUCKET) missing.push("R2_PRIVATE_BUCKET");
 if (missing.length) {
   console.error("[env] missing:", missing);
   process.exit(1);
 }
 
-const bucket = BUCKET_MODE === "public" ? R2_PUBLIC_BUCKET : R2_PRIVATE_BUCKET;
+const bucket = BUCKET_MODE === "public" ? process.env.R2_PUBLIC_BUCKET : process.env.R2_PRIVATE_BUCKET;
 // DB r2_key prefix (기존 스타일 유지)
 const r2Prefix = BUCKET_MODE === "public" ? "inc-public" : "inc-private";
 
 console.log(`[boot] ROOT=${ROOT}`);
-console.log(
-  `[mode] commit=${COMMIT} bucketMode=${BUCKET_MODE} bucket=${bucket} r2Prefix=${r2Prefix} visibility=${VISIBILITY}`
-);
+console.log(`[mode] commit=${COMMIT} bucketMode=${BUCKET_MODE} bucket=${bucket} r2Prefix=${r2Prefix} visibility=${VISIBILITY}`);
 
 // -------------------- helpers --------------------
 function slugifyBaseName(s) {
   const nfkd = (s || "").normalize("NFKD");
-  const ascii = nfkd.replace(/[\u0300-\u036f]/g, ""); // diacritics 제거
+  const ascii = nfkd.replace(/[\u0300-\u036f]/g, "");
   let out = ascii.replace(/[^A-Za-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
   if (!out) out = "file";
   return out.slice(0, 120);
 }
 
+// resources.kind enum: pdf | image | video | post | slide | doc | zip | link
 function extKindByFileName(fileName) {
   const ext = (fileName.split(".").pop() || "").toLowerCase();
-
-  // resources.kind enum: pdf | image | video | post | slide | doc | zip | link
   if (ext === "pdf") return "pdf";
   if (["jpg", "jpeg", "png", "webp", "gif", "bmp"].includes(ext)) return "image";
   if (["mp4", "mov", "webm"].includes(ext)) return "video";
-
-  // ppt/hwp “금지 아님” -> enum에는 slide/doc로 넣어야 함
   if (["ppt", "pptx", "key"].includes(ext)) return "slide";
-  if (["doc", "docx", "hwp", "hwpx", "txt", "rtf", "xls", "xlsx"].includes(ext))
-    return "doc";
-
+  if (["doc", "docx", "hwp", "hwpx", "txt", "rtf", "xls", "xlsx"].includes(ext)) return "doc";
   if (["zip", "7z", "rar"].includes(ext)) return "zip";
-
-  // 애매하면 doc으로
   return "doc";
 }
 
@@ -107,17 +82,14 @@ function guessMime(ext) {
   if (e === "webp") return "image/webp";
   if (e === "gif") return "image/gif";
   if (e === "bmp") return "image/bmp";
-  if (e === "docx")
-    return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+  if (e === "docx") return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
   if (e === "doc") return "application/msword";
-  if (e === "pptx")
-    return "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+  if (e === "pptx") return "application/vnd.openxmlformats-officedocument.presentationml.presentation";
   if (e === "ppt") return "application/vnd.ms-powerpoint";
   if (e === "hwp") return "application/x-hwp";
   if (e === "hwpx") return "application/vnd.hancom.hwpx";
   if (e === "xls") return "application/vnd.ms-excel";
-  if (e === "xlsx")
-    return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+  if (e === "xlsx") return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
   if (e === "zip") return "application/zip";
   if (e === "mp4") return "video/mp4";
   if (e === "mov") return "video/quicktime";
@@ -144,7 +116,7 @@ function isValidYMD(y, m, d) {
 function parsePublishedAtFromText(text) {
   const s = text;
 
-  // 13-digit epoch millis: 1757668665291.jpg 같은 거
+  // 13-digit epoch millis
   {
     const m = s.match(/\b(\d{13})\b/);
     if (m) {
@@ -160,29 +132,23 @@ function parsePublishedAtFromText(text) {
   {
     const m = s.match(/\b(20\d{2})(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])\b/);
     if (m) {
-      const y = Number(m[1]),
-        mo = Number(m[2]),
-        d = Number(m[3]);
+      const y = Number(m[1]), mo = Number(m[2]), d = Number(m[3]);
       if (isValidYMD(y, mo, d)) return `${m[1]}-${m[2]}-${m[3]}`;
     }
   }
 
   // YYYY[-_. ]MM[-_. ]DD
   {
-    const m = s.match(
-      /\b(20\d{2})[-_.\s](0?[1-9]|1[0-2])[-_.\s](0?[1-9]|[12]\d|3[01])\b/
-    );
+    const m = s.match(/\b(20\d{2})[-_.\s](0?[1-9]|1[0-2])[-_.\s](0?[1-9]|[12]\d|3[01])\b/);
     if (m) {
-      const y = Number(m[1]),
-        mo = Number(m[2]),
-        d = Number(m[3]);
+      const y = Number(m[1]), mo = Number(m[2]), d = Number(m[3]);
       if (isValidYMD(y, mo, d)) {
         return `${String(y)}-${String(mo).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
       }
     }
   }
 
-  // YY.MM.DD  (ex: 25.11.18-07.jpg => 2025-11-18)
+  // YY.MM.DD
   {
     const m = s.match(/\b(\d{2})\.(\d{2})\.(\d{2})\b/);
     if (m) {
@@ -193,8 +159,7 @@ function parsePublishedAtFromText(text) {
     }
   }
 
-  // YYMMDD (ex: (250117) => 2025-01-17)
-  // ⚠️ 오탐 방지하려고 괄호/구분자 없으면 너무 쉽게 걸릴 수 있음 -> 괄호/언더스코어/공백 주변만 허용
+  // YYMMDD (오탐 방지: 구분자/괄호 주변만 허용)
   {
     const m = s.match(/(?:\(|_|-|\s)(\d{2})(\d{2})(\d{2})(?:\)|_|-|\s)/);
     if (m) {
@@ -210,10 +175,7 @@ function parsePublishedAtFromText(text) {
     const m = s.match(/\b(20\d{2})\s+(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)\s+(\d{1,2})\b/i);
     if (m) {
       const y = Number(m[1]);
-      const monMap = {
-        jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6,
-        jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12
-      };
+      const monMap = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12 };
       const mo = monMap[m[2].toLowerCase()];
       const d = Number(m[3]);
       if (isValidYMD(y, mo, d)) return `${y}-${String(mo).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
@@ -230,13 +192,10 @@ function parsePublishedAtFromText(text) {
     }
   }
 
-  // year만 있으면 01-01 (최후의 추정)
+  // year만 있으면 01-01
   {
     const m = s.match(/\b(20\d{2})\b/);
-    if (m) {
-      const y = Number(m[1]);
-      return `${y}-01-01`;
-    }
+    if (m) return `${Number(m[1])}-01-01`;
   }
 
   return null;
@@ -261,7 +220,7 @@ async function walkFiles(rootDir) {
   return out;
 }
 
-// ✅ PATCH 2: 파일 내용 sha256 해시(중복 방지 키 안정화)
+// 파일 내용 sha256 해시(16)
 async function sha256_16_file(filePath) {
   return await new Promise((resolve, reject) => {
     const h = crypto.createHash("sha256");
@@ -273,16 +232,16 @@ async function sha256_16_file(filePath) {
 }
 
 // -------------------- clients --------------------
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
   auth: { persistSession: false },
 });
 
 const s3 = new S3Client({
   region: "auto",
-  endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+  endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
   credentials: {
-    accessKeyId: R2_ACCESS_KEY_ID,
-    secretAccessKey: R2_SECRET_ACCESS_KEY,
+    accessKeyId: process.env.R2_ACCESS_KEY_ID,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
   },
 });
 
@@ -305,10 +264,7 @@ const boardIdBySlug = new Map();
 
 // preload existing boards
 {
-  const { data: boards, error: boardsErr } = await supabase
-    .from("boards")
-    .select("id,slug");
-
+  const { data: boards, error: boardsErr } = await supabase.from("boards").select("id,slug");
   if (boardsErr) {
     console.error("[db] failed to load boards:", boardsErr.message || boardsErr);
     process.exit(1);
@@ -316,7 +272,7 @@ const boardIdBySlug = new Map();
   for (const b of boards || []) boardIdBySlug.set(b.slug, b.id);
 }
 
-// ✅ PATCH 1: boards 자동 생성
+// boards 자동 생성
 async function ensureBoardId(boardSlug) {
   const cached = boardIdBySlug.get(boardSlug);
   if (cached) return cached;
@@ -345,7 +301,7 @@ async function ensureBoardId(boardSlug) {
     .insert({
       slug: boardSlug,
       title,
-      visibility_default: "public", // boards default
+      visibility_default: "public",
       sort_order: 0,
     })
     .select("id")
@@ -357,21 +313,55 @@ async function ensureBoardId(boardSlug) {
   return created.id;
 }
 
+// “옛날 방식 row(size_bytes null)”까지 잡기 위한 중복 탐지:
+// 같은 board_id + original_filename 후보들을 가져와서,
+// (1) size_bytes가 있으면 비교
+// (2) size_bytes가 없으면 R2 Head로 ContentLength 비교
+async function findDuplicateByNameAndSize({ boardId, boardSlug, originalFilename, sizeBytes }) {
+  const { data: candidates, error } = await supabase
+    .from("resources")
+    .select("id,r2_key,size_bytes,deleted_at")
+    .eq("board_id", boardId)
+    .eq("original_filename", originalFilename)
+    .is("deleted_at", null)
+    .limit(20);
+
+  if (error) throw new Error(error.message || String(error));
+  if (!candidates || candidates.length === 0) return null;
+
+  for (const c of candidates) {
+    if (typeof c.size_bytes === "number" && c.size_bytes === sizeBytes) return c;
+
+    // DB에 size가 없으면 R2에서 확인
+    if (c.size_bytes == null && typeof c.r2_key === "string") {
+      // 다른 prefix(inc-private)까지 섞이면 bucket이 달라질 수 있어서, 현재 prefix만 검사
+      if (!c.r2_key.startsWith(`${r2Prefix}/${boardSlug}/`)) continue;
+      try {
+        const head = await s3.send(new HeadObjectCommand({ Bucket: bucket, Key: c.r2_key }));
+        const len = Number(head?.ContentLength);
+        if (Number.isFinite(len) && len === sizeBytes) return c;
+      } catch (_) {
+        // head 실패면 비교 불가 -> 무시
+      }
+    }
+  }
+  return null;
+}
+
 // -------------------- run --------------------
 const absRoot = path.resolve(ROOT);
 const files = await walkFiles(absRoot);
 console.log(`[scan] files=${files.length}`);
 
-let ok = 0,
-  skipped = 0,
-  failed = 0;
+let ok = 0, skipped = 0, failed = 0, updated = 0;
 
 for (const abs of files) {
   const rel = path.relative(absRoot, abs);
+  const source_path = rel.split(path.sep).join("/"); // 원본 경로 저장용
   const parts = rel.split(path.sep);
   const boardSlug = parts[0];
 
-  // ensure board exists (or log in dry)
+  // ensure board exists
   let boardId = null;
   try {
     boardId = await ensureBoardId(boardSlug);
@@ -389,7 +379,7 @@ for (const abs of files) {
   const safeBase = slugifyBaseName(base);
   const safeName = ext ? `${safeBase}.${ext}` : safeBase;
 
-  // ✅ PATCH 2: content-hash 기반 key
+  // content-hash 기반 key
   let hash16 = "";
   try {
     hash16 = await sha256_16_file(abs);
@@ -402,21 +392,16 @@ for (const abs of files) {
   const key = `${r2Prefix}/${boardSlug}/${hash16}_${safeName}`;
   const kind = extKindByFileName(originalFilename);
 
-  // published_at은 반드시 채움 (추정 → mtime fallback)
-  const parsed = parsePublishedAtFromText(rel);
+  const parsed = parsePublishedAtFromText(source_path);
   const published_at = parsed ?? fmtLocalDateYYYYMMDD(new Date(stat.mtimeMs));
-
   const title = base.trim() || originalFilename;
 
   if (!COMMIT) {
-    console.log(
-      `[dry] ${rel} -> key=${key} board=${boardSlug} kind=${kind} published_at=${published_at}`
-    );
+    console.log(`[dry] ${source_path} -> key=${key} board=${boardSlug} kind=${kind} published_at=${published_at}`);
     ok++;
     continue;
   }
 
-  // commit 모드인데 boardId가 null이면(이론상 거의 없음) 스킵
   if (!boardId) {
     console.log(`[skip] rel=${rel} reason=boardId_null boardSlug=${boardSlug}`);
     skipped++;
@@ -424,40 +409,50 @@ for (const abs of files) {
   }
 
   try {
-    // 1) r2_key로 idempotent 체크
-    const { data: existingByKey, error: exErr } = await supabase
-      .from("resources")
-      .select("id")
-      .eq("r2_key", key)
-      .limit(1);
+    // 1) r2_key 동일 row 있으면: 스킵이 아니라 source_path/mime/size_bytes 백필(update)
+    {
+      const { data: existing, error: exErr } = await supabase
+        .from("resources")
+        .select("id,source_path,mime,size_bytes")
+        .eq("r2_key", key)
+        .limit(1);
 
-    if (exErr) throw new Error(exErr.message || String(exErr));
-    if (existingByKey && existingByKey.length > 0) {
-      console.log(`[skip] id=${existingByKey[0].id} rel=${rel} (already in DB by r2_key)`);
+      if (exErr) throw new Error(exErr.message || String(exErr));
+      if (existing && existing.length > 0) {
+        const row = existing[0];
+        const patch = {};
+        if (!row.source_path) patch.source_path = source_path;
+        if (!row.mime) patch.mime = guessMime(ext);
+        if (row.size_bytes == null) patch.size_bytes = stat.size;
+
+        if (Object.keys(patch).length > 0) {
+          patch.updated_at = new Date().toISOString();
+          const { error: upErr } = await supabase.from("resources").update(patch).eq("id", row.id);
+          if (upErr) throw new Error(upErr.message || String(upErr));
+          console.log(`[upd] id=${row.id} rel=${rel}`);
+          updated++;
+        } else {
+          console.log(`[skip] id=${row.id} rel=${rel} (already in DB by r2_key)`);
+          skipped++;
+        }
+        continue;
+      }
+    }
+
+    // 2) 옛날 key 규칙으로 이미 DB에 올라간 “같은 파일” 중복 방지 (filename+real-size)
+    const dup = await findDuplicateByNameAndSize({
+      boardId,
+      boardSlug,
+      originalFilename,
+      sizeBytes: stat.size,
+    });
+    if (dup) {
+      console.log(`[skip] id=${dup.id} rel=${rel} (duplicate by original_filename+size)`);
       skipped++;
       continue;
     }
 
-    // ✅ PATCH 3: filename+size 기준 추가 중복 방지(예전 key 규칙으로 올라간 것까지 최대한 방지)
-    const { data: dup, error: dupErr } = await supabase
-      .from("resources")
-      .select("id,r2_key")
-      .eq("board_id", boardId)
-      .eq("original_filename", originalFilename)
-      .eq("size_bytes", stat.size)
-      .is("deleted_at", null)
-      .limit(1);
-
-    if (dupErr) throw new Error(dupErr.message || String(dupErr));
-    if (dup && dup.length > 0) {
-      console.log(
-        `[skip] id=${dup[0].id} rel=${rel} (same original_filename+size already in DB)`
-      );
-      skipped++;
-      continue;
-    }
-
-    // 2) R2 존재 체크 → 없으면 업로드
+    // 3) R2 존재 체크 → 없으면 업로드
     let existsInR2 = false;
     try {
       await s3.send(new HeadObjectCommand({ Bucket: bucket, Key: key }));
@@ -475,17 +470,18 @@ for (const abs of files) {
       );
     }
 
-    // 3) insert
+    // 4) insert
     const payload = {
       board_id: boardId,
       title,
       kind,
-      published_at, // NOT NULL
+      published_at,
       visibility: VISIBILITY,
       r2_key: key,
       mime: guessMime(ext),
       size_bytes: stat.size,
       original_filename: originalFilename,
+      source_path, // 추가
       note: null,
     };
 
@@ -504,4 +500,4 @@ for (const abs of files) {
   }
 }
 
-console.log(`[done] ok=${ok} skipped=${skipped} failed=${failed} commit=${COMMIT}`);
+console.log(`[done] ok=${ok} updated=${updated} skipped=${skipped} failed=${failed} commit=${COMMIT}`);

@@ -1,0 +1,6 @@
+/* components/resources/BoardNav.module.css */
+.nav { display: flex; flex-direction: column; gap: 6px; }
+.item { padding: 8px 10px; border-radius: 10px; text-decoration: none; color: #111; }
+.item:hover { background: #f7f7f7; }
+.active { background: #eef3ff; font-weight: 700; }
+.divider { height: 1px; background: #eee; margin: 8px 0; }

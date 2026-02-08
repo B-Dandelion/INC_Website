@@ -1,0 +1,258 @@
+/* components/resources/resources.module.css */
+
+.layout {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.sidebar {
+  width: 260px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 12px;
+  background: #fff;
+}
+
+.sidebarTitle {
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 10px;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.navGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.navLink {
+  display: block;
+  padding: 8px 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #111827;
+}
+
+.navLink:hover {
+  background: #f3f4f6;
+}
+
+.active {
+  background: #eef2ff;
+  font-weight: 700;
+}
+
+.subNav {
+  padding: 6px 6px 6px 10px;
+  border-left: 2px solid #e5e7eb;
+  margin-left: 6px;
+}
+
+.subAllLink {
+  display: inline-block;
+  padding: 6px 8px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #374151;
+  font-size: 13px;
+}
+
+.activeSub {
+  background: #f3f4f6;
+  font-weight: 700;
+}
+
+.tree {
+  list-style: none;
+  margin: 6px 0 0 0;
+  padding: 0;
+}
+
+.treeItem {
+  margin: 2px 0;
+}
+
+.treeLink {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  padding: 5px 6px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #374151;
+  font-size: 13px;
+}
+
+.treeLink:hover {
+  background: #f3f4f6;
+}
+
+.treeText {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 190px;
+}
+
+.bullet {
+  opacity: 0.6;
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+}
+
+.headerRow {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.pageTitle {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.searchBar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.searchInput {
+  width: 260px;
+  max-width: 40vw;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+}
+
+.searchBtn,
+.searchClear {
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  cursor: pointer;
+}
+
+.searchBtn:hover,
+.searchClear:hover {
+  background: #f3f4f6;
+}
+
+/* ResourceList가 쓰는 스타일들 (네 코드 기준 최소) */
+.list {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.row:first-child {
+  border-top: none;
+}
+
+.left {
+  min-width: 0;
+}
+
+.right {
+  flex: none;
+  width: 110px;
+  text-align: right;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.title {
+  display: inline-block;
+  text-decoration: none;
+  color: #111827;
+  font-weight: 700;
+  max-width: 70vw;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.title:hover {
+  text-decoration: underline;
+}
+
+.meta {
+  margin-top: 4px;
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.badge {
+  display: inline-block;
+  margin-right: 8px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: #f3f4f6;
+  font-size: 12px;
+  color: #374151;
+}
+
+.empty {
+  padding: 18px;
+  border: 1px dashed #e5e7eb;
+  border-radius: 10px;
+  color: #6b7280;
+  background: #fff;
+}
+
+.pager {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pagerBtn {
+  text-decoration: none;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  color: #111827;
+}
+
+.pagerBtn:hover {
+  background: #f3f4f6;
+}
+
+.pagerDisabled {
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid #f3f4f6;
+  background: #fafafa;
+  color: #9ca3af;
+}
+
+.pagerMid {
+  color: #6b7280;
+  font-size: 13px;
+}

@@ -1,5 +1,6 @@
 // lib/resourcesDb.ts
 import { createSupabaseServerClient } from "./supabaseServer";
+import { supabaseAnon } from "./supabaseServer";
 
 export type DbResource = {
   id: number;
@@ -60,4 +61,172 @@ export async function fetchPublicResources(
 
   if (error) return [];
   return data ?? [];
+}
+
+export type BoardRow = {
+  id: number;
+  slug: string;
+  title: string;
+  sort_order: number;
+};
+
+type BoardMini = { slug: string; title: string };
+
+export type ResourceRow = {
+  id: number;
+  title: string;
+  kind: string;
+  published_at: string; // date
+  r2_key: string;
+  original_filename: string;
+  source_path: string | null;
+  view_count: number | null;
+  created_at: string;
+  boards: BoardMini | null; // 화면에서는 단일로
+};
+
+// Supabase가 boards를 배열로 줄 수도 있어서(추론/조인문법에 따라) Raw 타입 따로 둠
+type ResourceRowRaw = Omit<ResourceRow, "boards"> & {
+  boards: BoardMini[] | BoardMini | null;
+};
+
+function normalizeBoard(b: ResourceRowRaw["boards"]): BoardMini | null {
+  if (!b) return null;
+  return Array.isArray(b) ? (b[0] ?? null) : b;
+}
+
+const NESTED_BOARDS = new Set(["contribution", "seminar", "workshop"]);
+
+export function isNestedBoard(slug: string) {
+  return NESTED_BOARDS.has(slug);
+}
+
+export async function fetchBoards(): Promise<BoardRow[]> {
+  const sb = supabaseAnon();
+  const { data, error } = await sb
+    .from("boards")
+    .select("id,slug,title,sort_order")
+    .order("sort_order", { ascending: true })
+    .order("id", { ascending: true });
+
+  if (error) throw new Error(error.message);
+  return (data ?? []) as BoardRow[];
+}
+
+type FetchResourcesArgs = {
+  boardSlug?: string;       // 없으면 전체
+  path?: string;            // source_path 필터(하위카테고리)
+  q?: string;               // title 검색
+  page?: number;            // 1-based
+  pageSize?: number;
+};
+
+export async function fetchResources(args: FetchResourcesArgs) {
+  const sb = supabaseAnon();
+  const page = Math.max(1, args.page ?? 1);
+  const pageSize = Math.min(100, Math.max(10, args.pageSize ?? 30));
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  let boardId: number | null = null;
+  if (args.boardSlug) {
+    boardId = await getBoardIdBySlug(args.boardSlug);
+    if (boardId == null) return [];
+  }
+
+  let q = sb
+    .from("resources")
+    .select(
+      `
+      id,title,kind,published_at,r2_key,original_filename,source_path,view_count,created_at,
+      boards:boards(slug,title)
+    `
+    )
+    .is("deleted_at", null)
+    .eq("visibility", "public")
+    .order("published_at", { ascending: false })
+    .order("id", { ascending: false })
+    .range(from, to);
+
+  if (boardId != null) {
+    q = q.eq("board_id", boardId); // 여기로 필터
+  }
+
+  if (args.q) {
+    q = q.ilike("title", `%${args.q}%`);
+  }
+
+  if (args.path) {
+    // source_path는 boardSlug 포함 경로로 저장해뒀다는 가정
+    q = q.eq("source_path", args.path);
+  }
+
+  const { data, error } = await q.returns<ResourceRowRaw[]>();
+  if (error) throw new Error(error.message);
+
+  // 단일 boards로 정리
+  return (data ?? []).map((r) => ({
+    ...r,
+    boards: normalizeBoard(r.boards),
+  }));
+}
+
+export async function fetchSourcePaths(boardSlug: string): Promise<string[]> {
+  if (!isNestedBoard(boardSlug)) return [];
+
+  const boardId = await getBoardIdBySlug(boardSlug);
+  if (boardId == null) return [];
+
+  const sb = supabaseAnon();
+  const { data, error } = await sb
+    .from("resources")
+    .select("source_path")
+    .is("deleted_at", null)
+    .eq("visibility", "public")
+    .eq("board_id", boardId)
+    .not("source_path", "is", null);
+
+  if (error) throw new Error(error.message);
+
+  const set = new Set<string>();
+  for (const row of data ?? []) {
+    const sp = (row as any).source_path as string | null;
+    if (sp) set.add(sp);
+  }
+  return [...set].sort((a, b) => a.localeCompare(b));
+}
+
+export function buildSourcePathTree(boardSlug: string, sourcePaths: string[]) {
+  // source_path: "seminar/국내세미나/...." 형태
+  // 좌측에서는 boardSlug 다음부터 트리로 표시
+  type Node = { name: string; fullPath?: string; children: Map<string, Node> };
+
+  const root: Node = { name: boardSlug, children: new Map() };
+
+  for (const sp of sourcePaths) {
+    const normalized = sp.replaceAll("\\", "/");
+    const parts = normalized.split("/").filter(Boolean);
+    if (parts[0] !== boardSlug) continue;
+
+    // "boardSlug" 이후 폴더들만 트리 노드로
+    const rest = parts.slice(1);
+    let cur = root;
+
+    for (let i = 0; i < rest.length; i++) {
+      const seg = rest[i];
+      let child = cur.children.get(seg);
+      if (!child) {
+        child = { name: seg, children: new Map() };
+        cur.children.set(seg, child);
+      }
+      cur = child;
+
+      // “하위 카테고리”는 폴더 단위로 클릭하게(leaf가 아니라도 클릭 가능)
+      // fullPath는 여기까지의 경로
+      const full = [boardSlug, ...rest.slice(0, i + 1)].join("/");
+      cur.fullPath = full;
+    }
+  }
+
+  return root;
 }

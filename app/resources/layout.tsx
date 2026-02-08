@@ -1,13 +1,6 @@
-import { Suspense } from "react";
+// app/resources/layout.tsx
+export const dynamic = "force-dynamic";
 
-export default function ResourcesLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <Suspense fallback={<div style={{ padding: 16 }}>Loading…</div>}>
-      {children}
-    </Suspense>
-  );
+export default function Layout({ children }: { children: React.ReactNode }) {
+  return children;
 }

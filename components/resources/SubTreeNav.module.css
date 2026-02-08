@@ -1,0 +1,10 @@
+/* components/resources/SubTreeNav.module.css */
+.wrap { margin-top: 12px; padding-top: 12px; border-top: 1px solid #eee; }
+.title { font-size: 12px; color: #666; margin-bottom: 8px; }
+.ul { list-style: none; margin: 0; padding: 0 0 0 6px; }
+.li { margin: 2px 0; }
+.link { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-radius: 10px; text-decoration: none; color: #333; }
+.link:hover { background: #f7f7f7; }
+.bullet { color: #9aa0a6; font-size: 12px; }
+.text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+.label { font-size: 13px; color: #333; padding: 6px 8px; }

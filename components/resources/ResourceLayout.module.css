@@ -1,0 +1,5 @@
+/* components/resources/ResourceLayout.module.css */
+.wrap { display: grid; grid-template-columns: 260px 1fr; gap: 16px; }
+.left { border: 1px solid #eee; border-radius: 12px; background: #fff; padding: 12px; }
+.right { min-width: 0; }
+@media (max-width: 900px) { .wrap { grid-template-columns: 1fr; } }
