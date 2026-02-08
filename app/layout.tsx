@@ -15,9 +15,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           policyLinks={policyLinks}
           orgName="INC"
           contact={{
-            addressLines: ["서울특별시", "(주소 확정 필요)"],
-            phone: "02-0000-0000",
-            email: "webmaster@example.org",
+            addressLines: ["울산광역시", "울주군 서생면 해맞이로 658-91, 45014"],
+            phone: "052-712-7345",
+            email: "yonghwang28@gamil.com",
           }}
         />
       </body>
