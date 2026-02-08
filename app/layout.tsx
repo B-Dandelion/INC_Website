@@ -26,6 +26,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 }
 export const metadata = {
   icons: {
-    icon: "/inc_logo_cut.png",
+    icon: "/inc_logo_mini.png",
   },
 };
