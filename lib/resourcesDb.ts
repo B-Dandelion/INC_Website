@@ -85,15 +85,13 @@ export type ResourceRow = {
   boards: BoardMini | null; // 화면에서는 단일로
 };
 
-// Supabase가 boards를 배열로 줄 수도 있어서(추론/조인문법에 따라) Raw 타입 따로 둠
-type ResourceRowRaw = Omit<ResourceRow, "boards"> & {
-  boards: BoardMini[] | BoardMini | null;
-};
-
-function normalizeBoard(b: ResourceRowRaw["boards"]): BoardMini | null {
+function normalizeBoard(
+  b: BoardMini | BoardMini[] | null | undefined
+): BoardMini | null {
   if (!b) return null;
   return Array.isArray(b) ? (b[0] ?? null) : b;
 }
+
 
 const NESTED_BOARDS = new Set(["contribution", "seminar", "workshop"]);
 
@@ -121,6 +119,9 @@ type FetchResourcesArgs = {
   pageSize?: number;
 };
 
+// fetchResources 수정
+// lib/resourcesDb.ts
+
 export async function fetchResources(args: FetchResourcesArgs) {
   const sb = supabaseAnon();
   const page = Math.max(1, args.page ?? 1);
@@ -128,19 +129,10 @@ export async function fetchResources(args: FetchResourcesArgs) {
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
-  let boardId: number | null = null;
-  if (args.boardSlug) {
-    boardId = await getBoardIdBySlug(args.boardSlug);
-    if (boardId == null) return [];
-  }
-
   let q = sb
     .from("resources")
     .select(
-      `
-      id,title,kind,published_at,r2_key,original_filename,source_path,view_count,created_at,
-      boards:boards(slug,title)
-    `
+      "id,title,kind,published_at,r2_key,original_filename,source_path,view_count,created_at,boards:boards(slug,title)"
     )
     .is("deleted_at", null)
     .eq("visibility", "public")
@@ -148,34 +140,34 @@ export async function fetchResources(args: FetchResourcesArgs) {
     .order("id", { ascending: false })
     .range(from, to);
 
-  if (boardId != null) {
-    q = q.eq("board_id", boardId); // 여기로 필터
+  // boardSlug 필터는 board_id로 (너가 적용한 방식 그대로)
+  if (args.boardSlug) {
+    const boardId = await getBoardIdBySlugAnon(args.boardSlug);
+    if (!boardId) return [];
+    q = q.eq("board_id", boardId);
   }
 
-  if (args.q) {
-    q = q.ilike("title", `%${args.q}%`);
-  }
+  if (args.q) q = q.ilike("title", `%${args.q}%`);
+  if (args.path) q = q.eq("source_path", args.path);
 
-  if (args.path) {
-    // source_path는 boardSlug 포함 경로로 저장해뒀다는 가정
-    q = q.eq("source_path", args.path);
-  }
-
-  const { data, error } = await q.returns<ResourceRowRaw[]>();
+  const { data, error } = await q;
   if (error) throw new Error(error.message);
 
-  // 단일 boards로 정리
-  return (data ?? []).map((r) => ({
+  // 여기서 boards를 “객체 1개”로 정규화
+  const rows = (data ?? []).map((r: any) => ({
     ...r,
     boards: normalizeBoard(r.boards),
   }));
+
+  return rows as ResourceRow[];
 }
+
 
 export async function fetchSourcePaths(boardSlug: string): Promise<string[]> {
   if (!isNestedBoard(boardSlug)) return [];
 
-  const boardId = await getBoardIdBySlug(boardSlug);
-  if (boardId == null) return [];
+  const boardId = await getBoardIdBySlugAnon(boardSlug);
+  if (!boardId) return [];
 
   const sb = supabaseAnon();
   const { data, error } = await sb
@@ -191,7 +183,8 @@ export async function fetchSourcePaths(boardSlug: string): Promise<string[]> {
   const set = new Set<string>();
   for (const row of data ?? []) {
     const sp = (row as any).source_path as string | null;
-    if (sp) set.add(sp);
+    if (!sp) continue;
+    set.add(sp);
   }
   return [...set].sort((a, b) => a.localeCompare(b));
 }
@@ -229,4 +222,16 @@ export function buildSourcePathTree(boardSlug: string, sourcePaths: string[]) {
   }
 
   return root;
+}
+
+async function getBoardIdBySlugAnon(slug: string): Promise<number | null> {
+  const sb = supabaseAnon();
+  const { data, error } = await sb
+    .from("boards")
+    .select("id")
+    .eq("slug", slug)
+    .maybeSingle<{ id: number }>();
+
+  if (error || !data) return null;
+  return data.id;
 }
