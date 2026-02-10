@@ -1,6 +1,7 @@
 import Link from "next/link";
 import styles from "./seminars.module.css";
 import { fetchEvents, fetchEventAssets } from "@/lib/eventsDb";
+import ResourcesFrame from "@/components/resources/ResourcesFrame";
 
 function fmtDate(dateStr?: string | null) {
   return dateStr ?? "";
@@ -33,57 +34,54 @@ export default async function SeminarsPage({
   const photos = assets.filter((a) => a.role === "photo");
   const slides = assets.filter((a) => a.role === "slide");
 
-  return (
-    <div className={styles.container}>
-      {/* LEFT */}
-      <aside className={styles.left}>
-        <div className={styles.leftHeader}>
-          <div className={styles.leftTitle}>세미나</div>
+  // 세미나 선택됐을 때만 펼쳐질 서브메뉴(국내/국제 + 행사 리스트)
+  const sidebarSubmenu = (
+    <div className={styles.sidebarSub}>
+      <div className={styles.segment}>
+        <Link
+          href={`/resources/seminars?sub=domestic`}
+          className={`${styles.segBtn} ${sub === "domestic" ? styles.segActive : ""}`}
+        >
+          국내
+        </Link>
+        <Link
+          href={`/resources/seminars?sub=international`}
+          className={`${styles.segBtn} ${sub === "international" ? styles.segActive : ""}`}
+        >
+          국제
+        </Link>
+      </div>
 
-          <div className={styles.segment}>
-            <Link
-              href={`/resources/seminars?sub=domestic`}
-              className={`${styles.segBtn} ${sub === "domestic" ? styles.segActive : ""}`}
-            >
-              국내
-            </Link>
-            <Link
-              href={`/resources/seminars?sub=international`}
-              className={`${styles.segBtn} ${sub === "international" ? styles.segActive : ""}`}
-            >
-              국제
-            </Link>
+      <div className={styles.eventList}>
+        {events.length === 0 ? (
+          <div className={styles.muted} style={{ padding: 12 }}>
+            등록된 세미나가 없습니다.
           </div>
-        </div>
+        ) : (
+          events.map((e) => {
+            const active = e.id === selectedEventId;
+            return (
+              <Link
+                key={e.id}
+                href={`/resources/seminars?sub=${sub}&event=${e.id}`}
+                className={`${styles.eventItem} ${active ? styles.eventActive : ""}`}
+              >
+                <div className={styles.eventDate}>{fmtDate(e.event_date)}</div>
+                <div className={styles.eventName}>{e.title_ko}</div>
+              </Link>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
 
-        <div className={styles.eventList}>
-          {events.length === 0 ? (
-            <div className={styles.muted} style={{ padding: 12 }}>
-              등록된 세미나가 없습니다.
-            </div>
-          ) : (
-            events.map((e) => {
-              const active = e.id === selectedEventId;
-              return (
-                <Link
-                  key={e.id}
-                  href={`/resources/seminars?sub=${sub}&event=${e.id}`}
-                  className={`${styles.eventItem} ${active ? styles.eventActive : ""}`}
-                >
-                  <div className={styles.eventDate}>{fmtDate(e.event_date)}</div>
-                  <div className={styles.eventName}>{e.title_ko}</div>
-                </Link>
-              );
-            })
-          )}
-        </div>
-      </aside>
-
+  return (
+    <ResourcesFrame activeKey="seminars" sidebarSubmenu={sidebarSubmenu}>
       {/* RIGHT */}
-      <main className={styles.right}>
+      <div className={styles.right}>
         <div className={styles.content}>
           <div className={styles.hero}>
-
             <h1 className={styles.h1}>{selectedEvent?.title_ko ?? "세미나"}</h1>
 
             <div className={styles.meta}>
@@ -97,6 +95,7 @@ export default async function SeminarsPage({
               <a href="#materials">자료</a>
             </div>
           </div>
+
           {!selectedEventId ? (
             <div className={styles.card}>
               <div className={styles.muted}>좌측에서 세미나를 선택해 주세요.</div>
@@ -168,11 +167,10 @@ export default async function SeminarsPage({
                       {slides.map((s) => {
                         const r = s.resources;
                         if (!r) return null;
+
                         const label =
-                          s.item_title_ko ??
-                          r.title ??
-                          r.original_filename ??
-                          `자료 ${r.id}`;
+                          s.item_title_ko ?? r.title ?? r.original_filename ?? `자료 ${r.id}`;
+
                         return (
                           <li key={r.id}>
                             <a
@@ -192,7 +190,7 @@ export default async function SeminarsPage({
             </>
           )}
         </div>
-      </main>
-    </div>
+      </div>
+    </ResourcesFrame>
   );
 }

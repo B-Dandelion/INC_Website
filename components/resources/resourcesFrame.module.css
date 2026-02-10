@@ -1,0 +1,88 @@
+/* components/resources/resourcesFrame.module.css */
+:root {
+  --blue: #2563eb;
+  --blueSoft: rgba(37, 99, 235, 0.12);
+}
+
+.container {
+  display: grid;
+  grid-template-columns: 292px minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+  padding: 18px 18px 36px;
+}
+
+/* LEFT */
+.sidebar {
+  position: sticky;
+  top: 88px; /* 헤더 높이에 맞춰 조정 */
+  height: calc(100vh - 120px);
+  overflow: auto;
+
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.sidebarHeader {
+  padding: 14px 14px 12px;
+  border-bottom: 1px solid rgba(37, 99, 235, 0.12);
+  background: rgba(37, 99, 235, 0.05);
+
+  font-size: 14px;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.nav {
+  padding: 10px;
+  display: grid;
+  gap: 6px;
+}
+
+.navGroup {
+  display: block;
+}
+
+.navItem {
+  display: block;
+  padding: 12px 12px;
+  padding-left: 24px;
+  border-radius: 14px;
+  text-decoration: none;
+  color: #0f172a;
+  font-weight: 900;
+  border: 1px solid transparent;
+}
+
+.navItem:hover {
+  background: rgba(37, 99, 235, 0.06);
+  border-color: rgba(37, 99, 235, 0.18);
+}
+
+.navActive {
+  background: var(--blueSoft);
+  border-color: rgba(37, 99, 235, 0.28);
+  position: relative;
+}
+
+.navActive::before {
+  content: "";
+  position: absolute;
+  left: 14px;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 999px;
+  background: var(--blue);
+}
+
+.submenuWrap {
+  margin-top: 8px;
+  padding-left: 10px;
+}
+
+/* RIGHT */
+.main {
+  min-width: 0;
+}
