@@ -1,0 +1,227 @@
+:root {
+  --blue: #2563eb;
+  --blueSoft: rgba(37, 99, 235, 0.12);
+}
+
+.container {
+  display: grid;
+  grid-template-columns: 292px minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+  padding: 18px 18px 36px;
+}
+
+/* LEFT */
+.left {
+  position: sticky;
+  top: 88px; /* 헤더 높이에 맞춰 조정 */
+  height: calc(100vh - 120px);
+  overflow: auto;
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.leftHeader {
+  padding: 14px 14px 12px;
+  border-bottom: 1px solid rgba(37, 99, 235, 0.12);
+  background: rgba(37, 99, 235, 0.05);
+}
+
+.leftTitle {
+  font-size: 16px;
+  font-weight: 900;
+  margin: 0 0 10px 0;
+  color: #0f172a;
+}
+
+.segment {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  background: rgba(37, 99, 235, 0.10);
+  border-radius: 14px;
+  padding: 6px;
+}
+
+.segBtn {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  height: 36px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  text-decoration: none;
+  font-size: 13px;
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.segBtn:hover {
+  border-color: rgba(37, 99, 235, 0.25);
+}
+
+.segActive {
+  background: var(--blue);
+  color: #fff;
+  font-weight: 800;
+}
+
+.eventList {
+  padding: 10px;
+  display: grid;
+  gap: 6px;
+}
+
+.eventItem {
+  display: block;
+  padding: 12px 12px;
+  border-radius: 14px;
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid transparent;
+  position: relative;
+}
+
+.eventItem:hover {
+  background: rgba(37, 99, 235, 0.06);
+  border-color: rgba(37, 99, 235, 0.18);
+}
+
+.eventActive {
+  background: var(--blueSoft);
+  border-color: rgba(37, 99, 235, 0.28);
+}
+
+.eventActive::before {
+  content: "";
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 999px;
+  background: var(--blue);
+}
+
+.eventDate {
+  font-size: 12px;
+  color: #475569;
+  margin-bottom: 4px;
+  padding-left: 10px;
+}
+
+.eventName {
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.25;
+  padding-left: 10px;
+}
+
+/* RIGHT */
+.right {
+  min-width: 0;
+}
+
+.content {
+  max-width: 1040px; /* 여백 확보(너무 꽉 차는 느낌 제거) */
+  margin: 0 auto;
+  padding: 0 6px 32px;
+}
+
+.hero {
+  margin: 6px 0 18px;
+  padding: 18px 18px 16px;
+  border: 1px solid #eee;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.breadcrumb {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+
+.h1 {
+  font-size: 45px; 
+  font-weight: 950;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.2px;
+  color: #0f172a;
+}
+
+.meta {
+  font-size: 20px;    
+  font-weight: 700;       
+  color: #2563eb;    
+}
+
+.jump {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.jump a {
+  font-size: 15px;
+  text-decoration: none;
+  color: #0f172a;
+  padding: 8px 12px;
+  border: 1.5px solid #2563eb;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.05);
+}
+
+.section {
+  margin: 24px 0 0; /* 섹션 간격 ↑ */
+}
+
+.sectionTitle {
+  font-size: 17px;
+  font-weight: 900;
+  margin: 0 0 10px;
+  color: #0f172a;
+}
+
+.card {
+  border: 2px solid #eee;
+  border-radius: 16px;
+  background: #fff;
+  padding: 18px; /* 여백 ↑ */
+}
+
+.posterWrap {
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  border-radius: 16px;
+  background: rgba(37, 99, 235, 0.03);
+  padding: 16px; /* 포스터 주변 여백 확보 */
+}
+
+.posterInner {
+  max-width: 880px; /* 너무 커서 답답한 느낌 방지 */
+  margin: 0 auto;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #eee;
+}
+
+.posterImg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.iframe {
+  width: 100%;
+  height: 600px;
+  border: 0;
+  display: block;
+}
+
+.muted {
+  color: #64748b;
+  font-size: 13px;
+}
