@@ -22,7 +22,7 @@ const NAV: Array<{ key: ResourceNavKey; label: string; href: string }> = [
   { key: "columns", label: "기고문", href: "/resources/columns" },
   { key: "seminars", label: "세미나", href: "/resources/seminars" },
   { key: "expert", label: "전문가기획보고서", href: "/resources/expert" },
-  { key: "essay", label: "에세이 경진대회", href: "/resources/essay" },
+  { key: "essay", label: "에세이 경진대회", href: "/resources/essay-contest" },
   { key: "shortform", label: "숏폼영상공모전", href: "/resources/shortform" },
   { key: "reports", label: "과제 보고회", href: "/resources/reports" },
   { key: "others", label: "기타 보고서", href: "/resources/others" },

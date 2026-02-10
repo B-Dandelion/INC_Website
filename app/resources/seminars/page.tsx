@@ -2,6 +2,7 @@ import Link from "next/link";
 import styles from "./seminars.module.css";
 import { fetchEvents, fetchEventAssets } from "@/lib/eventsDb";
 import ResourcesFrame from "@/components/resources/ResourcesFrame";
+import SectionTabs from "@/components/resources/SectionTabs";
 
 function fmtDate(dateStr?: string | null) {
   return dateStr ?? "";
@@ -88,12 +89,14 @@ export default async function SeminarsPage({
               {selectedEvent?.event_date ? selectedEvent.event_date : ""}
             </div>
 
-            <div className={styles.jump}>
-              <a href="#poster">포스터</a>
-              <a href="#timetable">시간표</a>
-              <a href="#photo">사진</a>
-              <a href="#materials">자료</a>
-            </div>
+            <SectionTabs
+              items={[
+                { id: "poster", label: "포스터" },
+                { id: "timetable", label: "시간표" },
+                { id: "photo", label: "사진" },
+                { id: "materials", label: "자료" },
+              ]}
+            />
           </div>
 
           {!selectedEventId ? (
