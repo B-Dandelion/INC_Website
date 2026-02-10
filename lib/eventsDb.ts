@@ -8,14 +8,17 @@ export type EventRow = {
   series_year: number | null;
   title_ko: string;
   event_date: string | null;
+  period_end: string | null;   // end
   visibility: string;
 };
 
 export type EventAssetRow = {
   role: string;
   sort_order: number;
+  id: string | null;
   award: string | null;
   person_ko: string | null;
+  person_en: string | null;
   item_title_ko: string | null;
   resources: {
     id: number;
@@ -34,7 +37,7 @@ export async function fetchEvents(params: {
 
   let q = supabase
     .from("events")
-    .select("id, category, subtype, series_year, title_ko, event_date, visibility")
+    .select("id, category, subtype, series_year, title_ko, event_date, period_end, visibility")
     .eq("visibility", "public")
     .eq("category", params.category);
 
