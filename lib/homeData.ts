@@ -70,15 +70,6 @@ export const highlights: HighlightItem[] = [
   },
 ];
 
-export const partners: PartnerItem[] = [
-  { name: "KAERI", href: "https://www.kaeri.re.kr" },
-  { name: "IAEA", href: "https://www.iaea.org" },
-  { name: "OECD/NEA", href: "https://www.oecd-nea.org" },
-  { name: "Partner A", href: "#" },
-  { name: "Partner B", href: "#" },
-  { name: "Partner C", href: "#" },
-];
-
 export type ContactInfo = {
   orgName: string;
   address: string;
@@ -94,10 +85,10 @@ export type PolicyLink = {
 
 export const contactInfo: ContactInfo = {
   orgName: "INC",
-  address: "서울특별시 (주소 확정 필요)",
-  phone: "02-0000-0000",
-  email: "contact@example.org",
-  webmasterEmail: "webmaster@example.org",
+  address: "울산광역시 울주군 서생면 해맞이로 658-91, 45014",
+  phone: "052-712-7345",
+  email: "inc@kings.ac.kr",
+  webmasterEmail: "inc@kings.ac.kr",
 };
 
 export const policyLinks: PolicyLink[] = [

@@ -17,7 +17,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           contact={{
             addressLines: ["울산광역시", "울주군 서생면 해맞이로 658-91, 45014"],
             phone: "052-712-7345",
-            email: "yonghwang28@gamil.com",
+            email: "inc@kings.ac.kr",
           }}
         />
       </body>
