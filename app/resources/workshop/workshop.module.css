@@ -1,0 +1,255 @@
+:root {
+  --blue: #2563eb;
+  --blueSoft: rgba(37, 99, 235, 0.12);
+}
+
+.content {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 0 6px 32px;
+}
+
+.hero {
+  margin: 6px 0 18px;
+  padding: 18px 18px 16px;
+  border: 1px solid #eee;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.h1 {
+  font-size: 42px;
+  font-weight: 950;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.2px;
+  color: #0f172a;
+}
+
+.meta {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--blue);
+}
+
+.section {
+  margin: 24px 0 0;
+}
+
+.sectionTitle {
+  font-size: 17px;
+  font-weight: 900;
+  margin: 0 0 10px;
+  color: #0f172a;
+}
+
+.card {
+  border: 2px solid #eee;
+  border-radius: 16px;
+  background: #fff;
+  padding: 18px;
+}
+
+.muted {
+  color: #64748b;
+  font-size: 13px;
+}
+
+/* ====== 좌측 서브메뉴 ====== */
+.submenu {
+  margin-top: 8px;
+}
+
+.eventList {
+  display: grid;
+  gap: 6px;
+}
+
+.eventItem {
+  display: block;
+  padding: 12px 12px;
+  border-radius: 14px;
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid transparent;
+  position: relative;
+  background: #fff;
+}
+
+.eventItem:hover {
+  background: rgba(37, 99, 235, 0.06);
+  border-color: rgba(37, 99, 235, 0.18);
+}
+
+.eventActive {
+  background: var(--blueSoft);
+  border-color: rgba(37, 99, 235, 0.28);
+}
+
+.eventActive::before {
+  content: "";
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 999px;
+  background: var(--blue);
+}
+
+.eventDate {
+  font-size: 12px;
+  color: #475569;
+  margin-bottom: 4px;
+  padding-left: 10px;
+}
+
+.eventName {
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.25;
+  padding-left: 10px;
+}
+
+/* ====== 포스터/시간표 ====== */
+.posterGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+@media (min-width: 980px) {
+  .posterGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.posterBlock {
+  display: grid;
+  gap: 8px;
+}
+
+.posterLabel {
+  font-size: 13px;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+/* image/pdf 공통 래퍼 */
+.mediaWrap {
+  display: block;
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  border-radius: 16px;
+  background: #fff;
+  padding: 14px;
+  text-decoration: none;
+}
+
+.mediaImg {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 14px;
+}
+
+.linkBtn {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  background: #fff;
+  text-decoration: none;
+  color: #0f172a;
+  font-weight: 900;
+}
+
+.linkBtn:hover {
+  background: rgba(37, 99, 235, 0.06);
+  border-color: rgba(37, 99, 235, 0.28);
+}
+
+/* ====== 사진 그리드 ====== */
+.photoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.photoThumb {
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+  aspect-ratio: 4 / 3;
+}
+
+.photoThumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ====== 자료: 게시판 스타일 ====== */
+.board {
+  border: 2px solid #eee;
+  border-radius: 16px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.boardHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  font-weight: 950;
+  color: #0f172a;
+  border-bottom: 1px solid #eee;
+  background: rgba(37, 99, 235, 0.04);
+}
+
+.boardCount {
+  font-size: 12px;
+  color: #475569;
+  font-weight: 900;
+}
+
+.boardList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.boardRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 16px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.boardRow:first-child {
+  border-top: none;
+}
+
+.boardLink {
+  text-decoration: none;
+  color: #0f172a;
+  font-weight: 900;
+  line-height: 1.3;
+}
+
+.boardLink:hover {
+  text-decoration: underline;
+}
+
+.boardMeta {
+  font-size: 12px;
+  font-weight: 900;
+  color: #fff;
+  background: var(--blue);
+  border-radius: 999px;
+  padding: 6px 10px;
+}

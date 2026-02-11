@@ -8,18 +8,18 @@ export type EventRow = {
   series_year: number | null;
   title_ko: string;
   event_date: string | null;
-  period_end: string | null;   // end
+  period_end: string | null;
   visibility: string;
 };
 
 export type EventAssetRow = {
   role: string;
   sort_order: number;
-  id: string | null;
   award: string | null;
   person_ko: string | null;
   person_en: string | null;
   item_title_ko: string | null;
+  item_title_en: string | null;
   resources: {
     id: number;
     title: string | null;
@@ -29,7 +29,7 @@ export type EventAssetRow = {
 };
 
 export async function fetchEvents(params: {
-  category: "seminar" | "essay_contest" | "shortform_contest" | "project_report";
+  category: "seminar" | "essay_contest" | "shortform_contest" | "project_report" | "workshop";
   subtype?: string;
   year?: number;
 }) {
@@ -55,7 +55,8 @@ export async function fetchEventAssets(eventId: string): Promise<EventAssetRow[]
 
   const { data, error } = await supabase
     .from("event_assets")
-    .select(`
+    .select(
+      `
       role,
       sort_order,
       award,
@@ -66,11 +67,9 @@ export async function fetchEventAssets(eventId: string): Promise<EventAssetRow[]
       resources:resources!event_assets_resource_id_fkey(
         id, title, mime, original_filename
       )
-    `)
+    `
+    )
     .eq("event_id", eventId)
-    // role로 한번 묶어주고(포스터/사진/수상자/자료)
-    .order("role", { ascending: true })
-    // 그 다음 sort_order
     .order("sort_order", { ascending: true });
 
   if (error) throw error;
