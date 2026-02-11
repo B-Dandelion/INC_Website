@@ -185,17 +185,21 @@
   gap: 12px;
 }
 
-@media (min-width: 980px) {
-  .winnerGrid {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
 .winnerCard {
   border: 2px solid #eee;
   border-radius: 16px;
   background: #fff;
   padding: 14px;
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 14px;
+  align-items: center;
+}
+
+@media (max-width: 860px) {
+  .winnerCard {
+    grid-template-columns: 1fr;
+  }
 }
 
 .winnerTop {
@@ -226,6 +230,28 @@
   align-items: start;
 }
 
+/* 우측 큰 사진 */
+.winnerPhotoLarge {
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  background: rgba(37, 99, 235, 0.04);
+  height: 190px;
+}
+
+.winnerPhotoLarge a {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.winnerPhotoLarge img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 .winnerPhoto {
   width: 96px;
   height: 96px;
@@ -245,12 +271,60 @@
 }
 
 .winnerPhotoEmpty {
-  font-size: 12px;
+  height: 190px;
+  display: grid;
+  place-items: center;
   color: #64748b;
+  font-size: 13px;
+  font-weight: 800;
 }
 
 .winnerInfo {
   min-width: 0;
+  display: grid;
+  gap: 8px;
+  align-content: center;
+}
+
+.badge {
+  width: fit-content;
+  font-size: 12px;
+  font-weight: 900;
+  color: #fff;
+  background: var(--blue);
+  border-radius: 999px;
+  padding: 6px 10px;
+}
+
+.winnerNameLink {
+  font-size: 22px;
+  font-weight: 950;
+  color: #0f172a;
+  text-decoration: none;
+  line-height: 1.15;
+  word-break: break-word;
+}
+
+.winnerNameLink:hover {
+  text-decoration: underline;
+}
+
+.winnerNameText {
+  font-size: 22px;
+  font-weight: 950;
+  color: #0f172a;
+  line-height: 1.15;
+}
+
+.winnerSub {
+  margin-top: 4px;
+}
+
+.winnerMiniLink {
+  font-size: 13px;
+  font-weight: 900;
+  color: #2563eb;
+  text-decoration: none;
 }
 
 .winnerLink {
@@ -260,16 +334,12 @@
   line-height: 1.3;
 }
 
-.winnerLink:hover {
+.winnerMiniLink:hover {
   text-decoration: underline;
 }
 
-/* winner photo 이미지 꽉 채우기 */
-.winnerPhoto img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
+.winnerLink:hover {
+  text-decoration: underline;
 }
 
 /* 단체사진 크게 */
@@ -338,4 +408,67 @@
 .materialLink:hover {
   background: rgba(37, 99, 235, 0.06);
   border-color: rgba(37, 99, 235, 0.28);
+}
+
+/* ====== 응모작 게시판 ====== */
+.board {
+  border: 2px solid #eee;
+  border-radius: 16px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.boardHead,
+.boardRow {
+  display: grid;
+  grid-template-columns: 70px 1fr 110px;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px;
+}
+
+.boardHead {
+  background: rgba(37, 99, 235, 0.06);
+  font-weight: 950;
+  color: #0f172a;
+}
+
+.boardRow {
+  border-top: 1px solid #f1f5f9;
+}
+
+.boardNo {
+  color: #64748b;
+  font-weight: 900;
+}
+
+.boardTitle a {
+  font-weight: 950;
+  color: #0f172a;
+  text-decoration: none;
+}
+
+.boardTitle a:hover {
+  text-decoration: underline;
+}
+
+.boardAction {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.boardBtn {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  background: #fff;
+  font-weight: 950;
+  color: #2563eb;
+  text-decoration: none;
+}
+.boardBtn:hover {
+  background: rgba(37, 99, 235, 0.06);
 }

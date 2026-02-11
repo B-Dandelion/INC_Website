@@ -239,59 +239,63 @@ export default async function EssayContestPage({
               ) : (
                 <div className={styles.winnerGrid}>
                   {awardDocs.map((w, idx) => {
-                    const person = (w.person_en ?? w.person_ko ?? "").trim();
+                    const person = (w.person_en ?? w.person_ko ?? "").trim() || "수상자";
                     const personKey = norm(person);
 
-                    // 사진 매칭: 1) 정확히 2) 부분 포함(이름 차이 방어)
-                    const exact = personKey ? photoByPerson.get(personKey) : null;
+                    const photoAsset =
+                      photoByPerson.get(personKey) ??
+                      winnerPhotos.find((p) => {
+                        const pk = norm(p.person_en ?? p.person_ko);
+                        return pk && (personKey.includes(pk) || pk.includes(personKey));
+                      }) ??
+                      null;
 
-                    let fuzzy: any = null;
-                    if (!exact && personKey) {
-                      for (const [k, v] of photoByPerson.entries()) {
-                        if (!k) continue;
-                        if (personKey.includes(k) || k.includes(personKey)) {
-                          fuzzy = v;
-                          break;
-                        }
-                      }
-                    }
+                    const docId = w.resources?.id ?? null;
+                    const photoId = photoAsset?.resources?.id ?? null;
 
-                    const photoAsset = exact ?? fuzzy ?? null;
-                    const doc = w.resources;
+                    const docUrl = docId ? `/api/resources/go?id=${docId}` : null;
+                    const photoUrl = photoId ? `/api/resources/go?id=${photoId}` : null;
 
                     return (
-                      <div key={`${doc?.id ?? idx}`} className={styles.winnerCard}>
-                        <div className={styles.winnerTop}>
+                      <div key={`${docId ?? personKey ?? idx}`} className={styles.winnerCard}>
+                        {/* 좌측 정보 */}
+                        <div className={styles.winnerInfo}>
                           <span className={styles.badge}>{w.award ?? "수상"}</span>
-                          <span className={styles.winnerName}>{person || "수상자"}</span>
-                        </div>
 
-                        <div className={styles.winnerBody}>
-                          <div className={styles.winnerPhoto}>
-                            {photoAsset?.resources?.id ? (
-                              <img
-                                src={`/api/resources/go?id=${photoAsset.resources.id}`}
-                                alt={photoAsset.resources.title ?? "winner_photo"}
-                              />
-                            ) : (
-                              <div className={styles.winnerPhotoEmpty}>사진 없음</div>
-                            )}
-                          </div>
+                          {docUrl ? (
+                            <a
+                              className={styles.winnerNameLink}
+                              href={docUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              title="응모작(PDF) 열기"
+                            >
+                              {person}
+                            </a>
+                          ) : (
+                            <div className={styles.winnerNameText}>{person}</div>
+                          )}
 
-                          <div className={styles.winnerInfo}>
-                            {doc?.id ? (
-                              <a
-                                className={styles.winnerLink}
-                                href={`/api/resources/go?id=${doc.id}`}
-                                target="_blank"
-                                rel="noreferrer"
-                              >
-                                응모작 열기
+                          <div className={styles.winnerSub}>
+                            {docUrl ? (
+                              <a className={styles.winnerMiniLink} href={docUrl} target="_blank" rel="noreferrer">
+                                응모작 열기 ↗
                               </a>
                             ) : (
-                              <div className={styles.muted}>문서 없음</div>
+                              <span className={styles.muted}>문서 없음</span>
                             )}
                           </div>
+                        </div>
+
+                        {/* 우측 큰 사진 */}
+                        <div className={styles.winnerPhotoLarge}>
+                          {photoUrl ? (
+                            <a href={photoUrl} target="_blank" rel="noreferrer" title="사진 원본 열기">
+                              <img src={photoUrl} alt={person} />
+                            </a>
+                          ) : (
+                            <div className={styles.winnerPhotoEmpty}>사진 없음</div>
+                          )}
                         </div>
                       </div>
                     );
@@ -352,29 +356,40 @@ export default async function EssayContestPage({
 
               {materialItems.length === 0 ? (
                 <div className={styles.card}>
-                  <div className={styles.muted}>등록된 응모작이 없습니다.</div>
+                  <div className={styles.muted}>등록된 자료가 없습니다.</div>
                 </div>
               ) : (
-                <ul className={styles.materialsList}>
+                <div className={styles.board}>
+                  <div className={styles.boardHead}>
+                    <div>No</div>
+                    <div>지원자</div>
+                    <div>열기</div>
+                  </div>
+
                   {materialItems.map((a, i) => {
-                    const person = (a.person_en ?? a.person_ko ?? "").trim() || "지원자";
-                    const rid = a?.resources?.id;
-                    if (!rid) return null;
+                    const person = (a.person_en ?? a.person_ko ?? "").trim() || "익명";
+                    const r = a.resources;
+                    if (!r?.id) return null;
 
                     return (
-                      <li key={rid} className={styles.materialRow}>
-                        <a
-                          className={styles.materialLink}
-                          href={`/api/resources/go?id=${rid}`}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          {person}
-                        </a>
-                      </li>
+                      <div key={`${r.id}`} className={styles.boardRow}>
+                        <div className={styles.boardNo}>{i + 1}</div>
+
+                        <div className={styles.boardTitle}>
+                          <a href={`/api/resources/go?id=${r.id}`} target="_blank" rel="noreferrer">
+                            {person}
+                          </a>
+                        </div>
+
+                        <div className={styles.boardAction}>
+                          <a className={styles.boardBtn} href={`/api/resources/go?id=${r.id}`} target="_blank" rel="noreferrer">
+                            PDF ↗
+                          </a>
+                        </div>
+                      </div>
                     );
                   })}
-                </ul>
+                </div>
               )}
             </section>
           </>
