@@ -60,12 +60,17 @@ export async function fetchEventAssets(eventId: string): Promise<EventAssetRow[]
       sort_order,
       award,
       person_ko,
+      person_en,
       item_title_ko,
+      item_title_en,
       resources:resources!event_assets_resource_id_fkey(
         id, title, mime, original_filename
       )
     `)
     .eq("event_id", eventId)
+    // role로 한번 묶어주고(포스터/사진/수상자/자료)
+    .order("role", { ascending: true })
+    // 그 다음 sort_order
     .order("sort_order", { ascending: true });
 
   if (error) throw error;

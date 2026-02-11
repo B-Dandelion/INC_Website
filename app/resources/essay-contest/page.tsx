@@ -63,6 +63,7 @@ export default async function EssayContestPage({
 
   const selectedEvent = events.find((e) => e.id === selectedEventId) ?? null;
   const assets = selectedEventId ? await fetchEventAssets(selectedEventId) : [];
+  console.log("assets roles sample:", assets.map(a => [a.role, a.award, a.person_en, a.person_ko]).slice(0, 20));
 
   // posters
   const posterKo = assets.find((a) => a.role === "poster_ko") ?? null;
