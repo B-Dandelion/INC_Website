@@ -2,6 +2,28 @@
 import { createSupabaseServerClient } from "./supabaseServer";
 import { supabaseAnon } from "./supabaseServer";
 
+export type SimpleResourceRow = {
+  id: number;
+  title: string | null;
+  original_filename: string | null;
+  source_path: string | null;
+};
+
+export async function fetchResourcesByPrefix(prefix: string): Promise<SimpleResourceRow[]> {
+  const supabase = createSupabaseServerClient();
+
+  const like = prefix.endsWith("/") ? `${prefix}%` : `${prefix}/%`;
+
+  const { data, error } = await supabase
+    .from("resources")
+    .select("id, title, original_filename, source_path")
+    .ilike("source_path", like)
+    .order("source_path", { ascending: true });
+
+  if (error) throw error;
+  return (data ?? []) as SimpleResourceRow[];
+}
+
 export type DbResource = {
   id: number;
   board_id: number;                // 이제 null 안 쓰는 방향이면 number로 고정 권장

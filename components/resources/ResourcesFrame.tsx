@@ -17,14 +17,14 @@ export type ResourceNavKey =
 
 const NAV: Array<{ key: ResourceNavKey; label: string; href: string }> = [
   { key: "atm", label: "ATM", href: "/resources/atm" },
-  { key: "heartbeat", label: "Heartbeat of Atoms", href: "/resources/heartbeat" },
+  { key: "heartbeat", label: "Heartbeat of Atoms", href: "/resources/heartbeat-of-atoms" },
   { key: "lectures", label: "강연자료", href: "/resources/lectures" },
   { key: "columns", label: "기고문", href: "/resources/columns" },
   { key: "seminars", label: "세미나", href: "/resources/seminars" },
-  { key: "expert", label: "전문가기획보고서", href: "/resources/expert" },
+  { key: "expert", label: "전문가 의견 보고서", href: "/resources/expert" },
   { key: "essay", label: "에세이 경진대회", href: "/resources/essay-contest" },
-  { key: "shortform", label: "숏폼영상공모전", href: "/resources/shortform" },
-  { key: "reports", label: "과제 보고회", href: "/resources/reports" },
+  { key: "shortform", label: "숏폼영상 공모전", href: "/resources/shortform" },
+  { key: "reports", label: "과제 보고회", href: "/resources/project-report" },
   { key: "others", label: "기타 보고서", href: "/resources/others" },
   { key: "workshop", label: "워크샵", href: "/resources/workshop" },
 ];
