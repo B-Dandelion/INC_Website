@@ -2,6 +2,8 @@ import Link from "next/link";
 import LatestTabs from "@/components/home/LatestTabs";
 import { RESOURCE_BOARDS } from "@/lib/resourceBoards";
 import { fetchPublicResources } from "@/lib/resourcesDb";
+import Image from "next/image";
+
 
 export default async function HomePage() {
   // 자료실 최신 업로드
@@ -21,31 +23,55 @@ export default async function HomePage() {
   return (
     <main className="bg-gray-50">
       {/* Hero */}
-      <section className="border-b border-gray-200 bg-gradient-to-b from-blue-50 to-white">
-        <div className="mx-auto max-w-7xl px-6 py-14 text-center">
-          <div className="text-xs font-bold tracking-widest text-gray-500">
-            International Nuclear Cooperation
-          </div>
-          <h1 className="mt-3 text-5xl font-black text-[#2563EB]">INC</h1>
-          <p className="mx-auto mt-4 max-w-2xl text-sm text-gray-700">
-            한국 원자력 연구 및 국제 협력 네트워크를 이끄는 INC 공식 홈페이지입니다.
-          </p>
+      <section className="relative border-b border-gray-200">
+        {/* 배경 이미지 */}
+        <div className="absolute inset-0">
+          <Image
+            src="/images/hero_kings.jpg"
+            alt="KINGS campus building"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-[50%_35%]"
+          />
+        </div>
 
-          <div className="mt-6 flex justify-center gap-3">
-            <Link
-              href="/notices"
-              className="rounded-xl bg-[#2563EB] px-5 py-3 text-sm font-extrabold text-white hover:bg-[#1D4ED8]"
-            >
-              공지사항
-            </Link>
-            <Link
-              href="/resources"
-              className="rounded-xl border border-gray-200 bg-white px-5 py-3 text-sm font-extrabold text-gray-900 hover:border-gray-300"
-            >
-              자료실
-            </Link>
+        {/* 가독성 오버레이 */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/35 to-transparent" />
+
+        {/* 내용 */}
+        <div className="relative mx-auto max-w-7xl px-6 py-16 md:py-24">
+          <div className="max-w-2xl text-left">
+            <div className="text-xs font-bold tracking-widest text-white/80">
+              International Nuclear Cooperation
+            </div>
+
+            <h1 className="mt-3 text-6xl md:text-7xl font-black text-white drop-shadow-[0_10px_30px_rgba(0,0,0,0.65)]">
+              INC
+            </h1>
+            <p className="mt-4 max-w-xl text-sm md:text-base text-white/90">
+              한국 원자력 연구 및 국제 협력 네트워크를 이끄는 INC 공식 홈페이지입니다.
+            </p>
+
+            <div className="mt-7 flex flex-wrap gap-3">
+              <Link
+                href="/notices"
+                className="rounded-xl bg-white px-5 py-3 text-sm font-extrabold text-gray-900 hover:bg-white/90"
+              >
+                공지사항
+              </Link>
+              <Link
+                href="/resources"
+                className="rounded-xl border border-white/40 bg-white/10 px-5 py-3 text-sm font-extrabold text-white hover:bg-white/20"
+              >
+                자료실
+              </Link>
+            </div>
           </div>
         </div>
+
+        {/* 섹션 높이 확보용 (이미지 위에 내용이 얹히도록) */}
+        <div className="h-[420px] md:h-[560px]" />
       </section>
       <div className="mx-auto max-w-7xl px-6 py-10">
 
