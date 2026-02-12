@@ -161,7 +161,7 @@ export default async function EssayContestPage({
   );
 
   return (
-    <ResourcesFrame activeKey="essay" sidebarSubmenu={sidebarSubmenu}>
+    <ResourcesFrame activeKey="essay-contest" sidebarSubmenu={sidebarSubmenu}>
       <div className={styles.content}>
         <div className={styles.hero}>
           <h1 className={styles.h1}>{selectedEvent?.title_ko ?? "에세이 경진대회"}</h1>

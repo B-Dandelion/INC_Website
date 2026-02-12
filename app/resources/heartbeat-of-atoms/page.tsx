@@ -1,30 +1,19 @@
-import ResourcesFrame from "@/components/resources/ResourcesFrame";
-import ResourceBoard, { type BoardItem } from "@/components/resources/ResourceBoard";
-import { fetchPublicResources } from "@/lib/resourcesDb";
-import PageShell from "@/components/PageShell";
+import SimpleListPage from "@/components/resources/SimpleListPage";
 
 function guessIssue(title: string) {
-  const m = title.match(/(\d{1,4})/);
+  // "ATM No. 12", "12호", "12" 같은 케이스 대충 대응
+  const m = title.match(/\bNo\.?\s*(\d{1,4})\b/i);
   return m ? `No. ${m[1]}` : "";
 }
 
 export default async function HeartbeatPage() {
-  const rows = await fetchPublicResources({ boardSlug: "heartbeat" });
-  const items: BoardItem[] = (rows ?? []).map((r: any) => {
-    const title = (r.title ?? r.original_filename ?? "자료").toString();
-    return {
-      id: r.id,
-      title,
-      subtitle: r.description ?? r.summary ?? "",
-      rightMeta: guessIssue(title),
-    };
-  });
-
   return (
-    <ResourcesFrame activeKey="heartbeat">
-      <PageShell title="Heartbeat of Atoms">
-        <ResourceBoard items={items} />
-      </PageShell>
-    </ResourcesFrame>
+    <SimpleListPage
+      activeKey="heartbeat-of-atoms"
+      title="Heartbeat of Atoms"
+      prefix="heartbeat-of-atoms"
+      hint="제목 클릭 시 파일이 새 창으로 열립니다."
+      rightMetaFromTitle={guessIssue}
+    />
   );
 }

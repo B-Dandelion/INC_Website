@@ -72,7 +72,7 @@ export default async function ProjectReportPage({
   );
 
   return (
-    <ResourcesFrame activeKey="reports" sidebarSubmenu={sidebarSubmenu}>
+    <ResourcesFrame activeKey="midterm-report" sidebarSubmenu={sidebarSubmenu}>
       <div className={styles.content}>
         <div className={styles.hero}>
           <h1 className={styles.h1}>{selectedEvent?.title_ko ?? "과제 보고회"}</h1>

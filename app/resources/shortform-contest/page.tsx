@@ -107,7 +107,7 @@ export default async function ShortformContestPage({
   );
 
   return (
-    <ResourcesFrame activeKey="shortform" sidebarSubmenu={sidebarSubmenu}>
+    <ResourcesFrame activeKey="shortform-contest" sidebarSubmenu={sidebarSubmenu}>
       <div className={styles.content}>
         <div className={styles.hero}>
           <h1 className={styles.h1}>{selectedEvent?.title_ko ?? "숏폼영상공모전"}</h1>

@@ -1,17 +1,38 @@
 // components/resources/SimpleListPage.tsx
-import ResourcesFrame from "@/components/resources/ResourcesFrame";
+import ResourcesFrame, { type ResourceNavKey } from "@/components/resources/ResourcesFrame";
+import ResourceBoard, { type BoardItem } from "@/components/resources/ResourceBoard";
 import styles from "./SimpleListPage.module.css";
-import { fetchResourcesByPrefix } from "@/lib/resourcesDb";
+import { fetchResources } from "@/lib/resourcesDb";
 
 type Props = {
-  activeKey: any; // ResourceNavKey로 타입 잡혀있으면 그걸로 바꿔
+  activeKey: ResourceNavKey;
   title: string;
-  prefix: string; // 예: "lectures", "columns" ...
-  hint?: string;  // 상단 한 줄 설명
+  prefix: string; // ✅ 이제 "boardSlug"로 사용 (예: "lecture", "atm", "heartbeat-of-atoms")
+  hint?: string;
+  rightMetaFromTitle?: (title: string) => string;
 };
 
-export default async function SimpleListPage({ activeKey, title, prefix, hint }: Props) {
-  const items = await fetchResourcesByPrefix(prefix);
+export default async function SimpleListPage({
+  activeKey,
+  title,
+  prefix,
+  hint,
+  rightMetaFromTitle,
+}: Props) {
+  // 보드 기준으로 가져오기 (ATM/Heartbeat 포함 전부 정상)
+  const rows = await fetchResources({ boardSlug: prefix, page: 1, pageSize: 200 });
+
+  const boardItems: BoardItem[] = (rows ?? []).map((r: any) => {
+    const titleText = ((r.title ?? "").trim() || r.original_filename || "자료").toString();
+    const subText = (r.original_filename ?? "").toString();
+
+    return {
+      id: r.id,
+      title: titleText,
+      subtitle: subText,
+      rightMeta: rightMetaFromTitle ? rightMetaFromTitle(titleText) : "",
+    };
+  });
 
   return (
     <ResourcesFrame activeKey={activeKey}>
@@ -21,32 +42,12 @@ export default async function SimpleListPage({ activeKey, title, prefix, hint }:
           {hint ? <div className={styles.meta}>{hint}</div> : null}
         </div>
 
-        {items.length === 0 ? (
+        {boardItems.length === 0 ? (
           <div className={styles.card}>
             <div className={styles.muted}>등록된 자료가 없습니다.</div>
           </div>
         ) : (
-          <div className={styles.list}>
-            {items.map((r) => {
-              const t = (r.title ?? "").trim() || (r.original_filename ?? "자료");
-              const sub = r.original_filename ?? r.source_path ?? "";
-              return (
-                <a
-                  key={r.id}
-                  className={styles.row}
-                  href={`/api/resources/go?id=${r.id}`}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <div className={styles.rowLeft}>
-                    <div className={styles.rowTitle}>{t}</div>
-                    {sub ? <div className={styles.rowSub}>{sub}</div> : null}
-                  </div>
-                  <div className={styles.rowRight}>파일 열기 →</div>
-                </a>
-              );
-            })}
-          </div>
+          <ResourceBoard items={boardItems} />
         )}
       </div>
     </ResourcesFrame>

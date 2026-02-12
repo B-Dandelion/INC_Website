@@ -78,7 +78,7 @@ export default async function SeminarsPage({
   );
 
   return (
-    <ResourcesFrame activeKey="seminars" sidebarSubmenu={sidebarSubmenu}>
+    <ResourcesFrame activeKey="seminar" sidebarSubmenu={sidebarSubmenu}>
       {/* RIGHT */}
       <div className={styles.right}>
         <div className={styles.content}>

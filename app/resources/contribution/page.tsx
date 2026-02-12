@@ -1,5 +1,5 @@
 import SimpleListPage from "@/components/resources/SimpleListPage";
 
-export default async function ColumnsPage() {
-  return <SimpleListPage activeKey="columns" title="기고문" prefix="columns" />;
+export default async function ContributionPage() {
+  return <SimpleListPage activeKey="contribution" title="기고문" prefix="contribution" />;
 }
