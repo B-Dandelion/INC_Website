@@ -6,12 +6,12 @@ function guessIssue(title: string) {
   return m ? `No. ${m[1]}` : "";
 }
 
-export default async function ATMPage() {
+export default async function HeartbeatPage() {
   return (
     <SimpleListPage
-      activeKey="atm"
-      title="ATM"
-      prefix="atm"
+      activeKey="heartbeat-of-atoms"
+      title="Heartbeat of Atoms"
+      prefix="heartbeat-of-atoms"
       hint="제목 클릭 시 파일이 새 창으로 열립니다."
       rightMetaFromTitle={guessIssue}
     />

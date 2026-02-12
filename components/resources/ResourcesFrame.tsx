@@ -2,32 +2,21 @@
 import Link from "next/link";
 import styles from "./resourcesFrame.module.css";
 
-export type ResourceNavKey =
-  | "atm"
-  | "heartbeat"
-  | "lectures"
-  | "columns"
-  | "seminars"
-  | "essay"
-  | "shortform"
-  | "reports"
-  | "others"
-  | "workshop"
-  | "expert";
-
-const NAV: Array<{ key: ResourceNavKey; label: string; href: string }> = [
+export const NAV = [
   { key: "atm", label: "ATM", href: "/resources/atm" },
-  { key: "heartbeat", label: "Heartbeat of Atoms", href: "/resources/heartbeat-of-atoms" },
-  { key: "lectures", label: "강연자료", href: "/resources/lectures" },
-  { key: "columns", label: "기고문", href: "/resources/columns" },
-  { key: "seminars", label: "세미나", href: "/resources/seminars" },
-  { key: "expert", label: "전문가 의견 보고서", href: "/resources/expert" },
-  { key: "essay", label: "에세이 경진대회", href: "/resources/essay-contest" },
-  { key: "shortform", label: "숏폼영상 공모전", href: "/resources/shortform" },
-  { key: "reports", label: "과제 보고회", href: "/resources/project-report" },
-  { key: "others", label: "기타 보고서", href: "/resources/others" },
+  { key: "heartbeat-of-atoms", label: "Heartbeat of Atoms", href: "/resources/heartbeat-of-atoms" },
+  { key: "lecture", label: "강연자료", href: "/resources/lecture" },
+  { key: "contribution", label: "기고문", href: "/resources/contribution" },
+  { key: "seminar", label: "세미나", href: "/resources/seminar" },
+  { key: "expert-opinion-report", label: "전문가 의견 보고서", href: "/resources/expert-opinion-report" },
+  { key: "essay-contest", label: "에세이 경진대회", href: "/resources/essay-contest" },
+  { key: "shortform-contest", label: "숏폼영상 공모전", href: "/resources/shortform-contest" },
+  { key: "midterm-report", label: "과제 보고회", href: "/resources/midterm-report" },
+  { key: "misc-reports", label: "기타 보고서", href: "/resources/misc-reports" },
   { key: "workshop", label: "워크샵", href: "/resources/workshop" },
-];
+] as const;
+
+export type ResourceNavKey = typeof NAV[number]["key"];
 
 export default function ResourcesFrame({
   activeKey,
