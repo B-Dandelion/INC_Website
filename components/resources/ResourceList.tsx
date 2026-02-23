@@ -37,8 +37,8 @@ export default function ResourceList({
 
               <div className={styles.meta}>
                 <span className={styles.kind}>{r.kind}</span>
-                {typeof r.view_count === "number" ? (
-                  <span className={styles.views}>조회 {r.view_count}</span>
+                {typeof r.views_count === "number" ? (
+                  <span className={styles.views}>조회 {r.views_count}</span>
                 ) : null}
               </div>
             </div>

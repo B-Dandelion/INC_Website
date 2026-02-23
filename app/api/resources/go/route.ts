@@ -32,7 +32,6 @@ function s3() {
 }
 
 function bucketForKey(_r2Key: string) {
-  // 지금은 public만 쓰는 흐름
   return process.env.R2_PUBLIC_BUCKET!;
 }
 

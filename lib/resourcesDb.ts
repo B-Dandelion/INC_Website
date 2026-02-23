@@ -102,7 +102,7 @@ export type ResourceRow = {
   r2_key: string;
   original_filename: string;
   source_path: string | null;
-  view_count: number | null;
+  views_count: number | null;
   created_at: string;
   boards: BoardMini | null; // 화면에서는 단일로
 };
@@ -154,7 +154,7 @@ export async function fetchResources(args: FetchResourcesArgs) {
   let q = sb
     .from("resources")
     .select(
-      "id,title,kind,published_at,r2_key,original_filename,source_path,view_count,created_at,boards:boards(slug,title)"
+      "id,title,kind,published_at,r2_key,original_filename,source_path,views_count,created_at,boards:boards(slug,title)"
     )
     .is("deleted_at", null)
     .eq("visibility", "public")
