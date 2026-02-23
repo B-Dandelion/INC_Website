@@ -182,9 +182,11 @@ export async function fetchResources(args: FetchResourcesArgs) {
 
   if (args.q) q = q.or(`title.ilike.%${args.q}%,note.ilike.%${args.q}%`);
 
-  if (args.publishedFrom) q = q.gte("published_at", args.publishedFrom);
-  if (args.publishedTo) q = q.lte("published_at", args.publishedTo);
-  // if (args.path) q = q.eq("source_path", args.path);
+  if (isIssueBoard) {
+    if (args.publishedFrom) q = q.gte("published_at", args.publishedFrom);
+    if (args.publishedTo) q = q.lte("published_at", args.publishedTo);
+  }
+  if (args.path) q = q.eq("source_path", args.path);
 
   const { data, error } = await q;
   if (error) throw new Error(error.message);

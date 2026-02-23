@@ -1,17 +1,59 @@
 import SimpleListPage from "@/components/resources/SimpleListPage";
+import styles from "@/components/resources/SimpleListPage.module.css";
 
 function guessIssue(title: string) {
   const m = title.match(/\bNo\.?\s*(\d{1,4})\b/i);
   return m ? `No. ${m[1]}` : "";
 }
 
+function isYmd(s: any) {
+  return typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s);
+}
+
 export default async function ATMPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; d?: string; dir?: string }>;
 }) {
   const sp = await searchParams;
+
   const page = Math.max(1, Number(sp.page ?? "1") || 1);
+  const d = isYmd(sp.d) ? sp.d : "";
+  const dir = sp.dir === "after" ? "after" : "before"; // default before
+
+  const publishedFrom = d && dir === "after" ? d : undefined;
+  const publishedTo = d && dir === "before" ? d : undefined;
+
+  const makePageHref = (p: number) => {
+    const qs = new URLSearchParams();
+    qs.set("page", String(p));
+    if (d) qs.set("d", d);
+    if (d) qs.set("dir", dir);
+    return `/resources/atm?${qs.toString()}`;
+  };
+
+  const heroExtra = (
+    <form method="get" action="/resources/atm" className={styles.search}>
+      <input type="date" name="d" defaultValue={d} className={styles.searchInput} />
+      <select name="dir" defaultValue={dir} className={styles.searchInput} style={{ maxWidth: 140 }}>
+        <option value="before">이전</option>
+        <option value="after">이후</option>
+      </select>
+      <button className={styles.searchBtn} type="submit">
+        적용
+      </button>
+
+      {d ? (
+        <a
+          href="/resources/atm"
+          className={styles.searchBtn}
+          style={{ textDecoration: "none", display: "inline-flex", alignItems: "center" }}
+        >
+          해제
+        </a>
+      ) : null}
+    </form>
+  );
 
   return (
     <SimpleListPage
@@ -22,7 +64,10 @@ export default async function ATMPage({
       rightMetaFromTitle={guessIssue}
       page={page}
       pageSize={50}
-      makePageHref={(p) => `/resources/atm?page=${p}`}
+      makePageHref={makePageHref}
+      publishedFrom={publishedFrom}
+      publishedTo={publishedTo}
+      heroExtra={heroExtra}
     />
   );
 }
