@@ -141,6 +141,9 @@ type FetchResourcesArgs = {
   q?: string;               // title 검색
   page?: number;            // 1-based
   pageSize?: number;
+
+  publishedFrom?: string; // YYYY-MM-DD
+  publishedTo?: string;   // YYYY-MM-DD
 };
 
 // fetchResources 수정
@@ -177,8 +180,11 @@ export async function fetchResources(args: FetchResourcesArgs) {
     q = q.eq("board_id", boardId);
   }
 
-  if (args.q) q = q.ilike("title", `%${args.q}%`);
-  if (args.path) q = q.eq("source_path", args.path);
+  if (args.q) q = q.or(`title.ilike.%${args.q}%,note.ilike.%${args.q}%`);
+
+  if (args.publishedFrom) q = q.gte("published_at", args.publishedFrom);
+  if (args.publishedTo) q = q.lte("published_at", args.publishedTo);
+  // if (args.path) q = q.eq("source_path", args.path);
 
   const { data, error } = await q;
   if (error) throw new Error(error.message);

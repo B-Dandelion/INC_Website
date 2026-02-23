@@ -7,9 +7,16 @@ import { fetchResources } from "@/lib/resourcesDb";
 type Props = {
   activeKey: ResourceNavKey;
   title: string;
-  prefix: string; // ✅ 이제 "boardSlug"로 사용 (예: "lecture", "atm", "heartbeat-of-atoms")
+  prefix: string;
+
   hint?: string;
   rightMetaFromTitle?: (title: string) => string;
+
+  // 추가
+  page?: number;          // 1-based
+  pageSize?: number;      // default 50
+  // 추가: URL 생성 함수(보드별 page.tsx에서 넘김)
+  makePageHref?: (page: number) => string;
 };
 
 export default async function SimpleListPage({
@@ -18,13 +25,17 @@ export default async function SimpleListPage({
   prefix,
   hint,
   rightMetaFromTitle,
+  page = 1,
+  pageSize = 50,
+  makePageHref,
 }: Props) {
-  // 보드 기준으로 가져오기 (ATM/Heartbeat 포함 전부 정상)
-  const rows = await fetchResources({ boardSlug: prefix, page: 1, pageSize: 200 });
+  const rows = await fetchResources({ boardSlug: prefix, page, pageSize });
 
   const boardItems: BoardItem[] = (rows ?? []).map((r: any) => {
     const titleText = ((r.title ?? "").trim() || r.original_filename || "자료").toString();
-    const subText = (r.note ?? r.original_filename ?? "").toString();
+    const metaLine = `게시 ${r.posted_at ?? "-"} · 조회 ${r.views_count ?? 0}`;
+    const base = (r.note ?? r.original_filename ?? "").toString();
+    const subText = base ? `${base} · ${metaLine}` : metaLine;
 
     return {
       id: r.id,
@@ -33,6 +44,9 @@ export default async function SimpleListPage({
       rightMeta: rightMetaFromTitle ? rightMetaFromTitle(titleText) : "",
     };
   });
+
+  const hasPrev = page > 1;
+  const hasNext = (rows?.length ?? 0) === pageSize;
 
   return (
     <ResourcesFrame activeKey={activeKey}>
@@ -47,7 +61,34 @@ export default async function SimpleListPage({
             <div className={styles.muted}>등록된 자료가 없습니다.</div>
           </div>
         ) : (
-          <ResourceBoard items={boardItems} />
+          <>
+            <ResourceBoard items={boardItems} />
+
+            {/* pager */}
+            {makePageHref ? (
+              <div className={styles.pager}>
+                {hasPrev ? (
+                  <a className={styles.pagerBtn} href={makePageHref(page - 1)} aria-label="이전" title="이전">
+                    ‹
+                  </a>
+                ) : (
+                  <span className={styles.pagerBtn} style={{ visibility: "hidden" }}>
+                    ‹
+                  </span>
+                )}
+
+                {hasNext ? (
+                  <a className={styles.pagerBtn} href={makePageHref(page + 1)} aria-label="다음" title="다음">
+                    ›
+                  </a>
+                ) : (
+                  <span className={styles.pagerBtn} style={{ visibility: "hidden" }}>
+                    ›
+                  </span>
+                )}
+              </div>
+            ) : null}
+          </>
         )}
       </div>
     </ResourcesFrame>

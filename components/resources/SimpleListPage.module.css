@@ -18,3 +18,39 @@
 .rowTitle { font-weight: 900; color: #0f172a; line-height: 1.2; }
 .rowSub { margin-top: 4px; font-size: 12px; color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 760px; }
 .rowRight { white-space: nowrap; font-weight: 900; color: #2563eb; }
+
+/* pager */
+.pager {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.pagerBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(37, 99, 235, 0.22);
+  background: #fff;
+  color: #2563eb;
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 900;
+  text-decoration: none;
+  user-select: none;
+}
+
+.pagerBtn:hover {
+  background: rgba(37, 99, 235, 0.06);
+  border-color: rgba(37, 99, 235, 0.32);
+}
+
+.pagerBtn:active {
+  transform: translateY(1px);
+}
