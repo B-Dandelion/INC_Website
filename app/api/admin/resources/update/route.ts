@@ -1,88 +1,68 @@
-// app/api/admin/resources/update/route.ts
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { requireAdminOrThrow } from "@/lib/requireAdmin";
 
 export const runtime = "nodejs";
 
-const supabaseAdmin = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+const supabaseAdmin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 
-function getBearerToken(authHeader: string) {
-  const m = authHeader.match(/^Bearer\s+(.+)$/i);
-  return m?.[1] || null;
+function isYmd(s: any) {
+  return typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s);
 }
 
+type Visibility = "public" | "member" | "admin";
+const VIS_SET = new Set<Visibility>(["public", "member", "admin"]);
+
 export async function POST(req: Request) {
-  const authHeader = req.headers.get("authorization") || "";
-  const token = getBearerToken(authHeader);
+  try {
+    await requireAdminOrThrow();
 
-  if (!token) {
-    return NextResponse.json({ ok: false, error: "missing auth token" }, { status: 401 });
+    const body = await req.json().catch(() => ({}));
+    const resourceId = Number(body?.resourceId);
+
+    if (!Number.isFinite(resourceId) || resourceId <= 0) {
+      return NextResponse.json({ ok: false, error: "invalid resourceId" }, { status: 400 });
+    }
+
+    const patch: any = { updated_at: new Date().toISOString() };
+
+    if (typeof body.title === "string") patch.title = body.title.trim();
+    if (typeof body.note === "string") patch.note = body.note.trim() || null;
+    if (typeof body.displayname === "string") patch.displayname = body.displayname.trim() || null;
+    if (typeof body.source_path === "string") patch.source_path = body.source_path.trim() || null;
+
+    if (body.visibility != null) {
+      const v = String(body.visibility).trim() as Visibility;
+      if (!VIS_SET.has(v)) return NextResponse.json({ ok: false, error: "invalid visibility" }, { status: 400 });
+      patch.visibility = v;
+    }
+
+    if (body.published_at != null) {
+      if (!isYmd(body.published_at)) {
+        return NextResponse.json({ ok: false, error: "published_at must be YYYY-MM-DD" }, { status: 400 });
+      }
+      patch.published_at = body.published_at;
+    }
+
+    // 아무 것도 없으면 업데이트 의미 없음
+    const keys = Object.keys(patch).filter((k) => k !== "updated_at");
+    if (keys.length === 0) {
+      return NextResponse.json({ ok: false, error: "no fields to update" }, { status: 400 });
+    }
+
+    const { data: updated, error: upErr } = await supabaseAdmin
+      .from("resources")
+      .update(patch)
+      .eq("id", resourceId)
+      .select("id,title,note,displayname,source_path,visibility,published_at,posted_at,updated_at")
+      .maybeSingle();
+
+    if (upErr) return NextResponse.json({ ok: false, error: upErr.message }, { status: 500 });
+    if (!updated) return NextResponse.json({ ok: false, error: "not found" }, { status: 404 });
+
+    return NextResponse.json({ ok: true, resource: updated });
+  } catch (e: any) {
+    const status = e?.status ?? 500;
+    return NextResponse.json({ ok: false, error: String(e?.message ?? e) }, { status });
   }
-
-  // 1) 토큰 검증 (anon key로 충분)
-  const supabaseAnon = createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_ANON_KEY!,
-    { auth: { persistSession: false } }
-  );
-
-  const { data: userData, error: userErr } = await supabaseAnon.auth.getUser(token);
-  const user = userData?.user;
-
-  if (userErr || !user) {
-    return NextResponse.json({ ok: false, error: "invalid token" }, { status: 401 });
-  }
-
-  // 2) admin + approved 확인 (service role)
-  const { data: profile, error: profErr } = await supabaseAdmin
-    .from("profiles")
-    .select("role, approved")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  if (profErr) {
-    return NextResponse.json({ ok: false, error: profErr.message }, { status: 500 });
-  }
-
-  if (!profile || profile.role !== "admin" || profile.approved !== true) {
-    return NextResponse.json({ ok: false, error: "forbidden" }, { status: 403 });
-  }
-
-  // 3) 입력
-  const body = await req.json().catch(() => ({}));
-  const resourceId = Number(body?.resourceId);
-  const displayRaw = body?.displayname; // string | null | undefined
-
-  if (!Number.isFinite(resourceId) || resourceId <= 0) {
-    return NextResponse.json({ ok: false, error: "invalid resourceId" }, { status: 400 });
-  }
-
-  // displayname: string | null 허용
-  const display =
-    typeof displayRaw === "string" ? displayRaw.trim() : "";
-
-  const displayOrNull = display.length ? display : null;
-
-  // 4) 업데이트
-  const { data: updated, error: upErr } = await supabaseAdmin
-    .from("resources")
-    .update({
-      displayname: displayOrNull,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", resourceId)
-    .select("id, title, displayname, updated_at")
-    .maybeSingle();
-
-  if (upErr) {
-    return NextResponse.json({ ok: false, error: upErr.message }, { status: 500 });
-  }
-  if (!updated) {
-    return NextResponse.json({ ok: false, error: "not found" }, { status: 404 });
-  }
-
-  return NextResponse.json({ ok: true, resource: updated });
 }
