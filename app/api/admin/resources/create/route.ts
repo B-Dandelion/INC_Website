@@ -1,11 +1,17 @@
 import { NextResponse } from "next/server";
-import { requireApprovedAdmin, supabaseAdmin } from "@/lib/requireAdmin";
+import { requireAdminOrThrow } from "@/lib/requireAdmin";
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseAdmin = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  { auth: { persistSession: false } }
+);
 
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
-  const guard = await requireApprovedAdmin(req);
-  if (guard instanceof NextResponse) return guard;
+  await requireAdminOrThrow();
 
   const body = await req.json().catch(() => ({}));
   const boardSlug = String(body.boardSlug ?? "").trim();

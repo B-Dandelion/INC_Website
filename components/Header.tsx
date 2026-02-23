@@ -74,15 +74,16 @@ export default function Header() {
             <ResourcesMegaMenu key={pathname} />
           </nav>
 
-          {/* 검색 */}
-          <div className="relative">
+          {/* 검색 (Enter → /resources/search?q=...) */}
+          <form action="/resources/search" method="get" className="relative">
             <input
+              name="q"
               type="text"
               placeholder="검색"
               className="border border-gray-300 rounded-full pl-8 pr-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
             <Search className="w-4 h-4 text-gray-400 absolute left-2 top-1/2 -translate-y-1/2" />
-          </div>
+          </form>
 
           {/* 언어 + 로그인 */}
           <div className="flex items-center gap-2">
@@ -129,14 +130,15 @@ export default function Header() {
               </div>
             </div>
 
-            <div className="mt-4 relative">
+            <form action="/resources/search" method="get" className="mt-4 relative">
               <input
+                name="q"
                 type="text"
                 placeholder="검색"
                 className="w-full border border-gray-300 rounded-full pl-8 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
               />
               <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            </div>
+            </form>
           </div>
         </div>
       ) : null}

@@ -54,3 +54,35 @@
 .pagerBtn:active {
   transform: translateY(1px);
 }
+
+/* search */
+.search {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.searchInput {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #eee;
+  background: #fff;
+  font-size: 14px;
+}
+
+.searchBtn {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(37, 99, 235, 0.22);
+  background: #fff;
+  color: #2563eb;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.searchBtn:hover {
+  background: rgba(37, 99, 235, 0.06);
+  border-color: rgba(37, 99, 235, 0.32);
+}

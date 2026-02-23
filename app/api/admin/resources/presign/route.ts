@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { requireApprovedAdmin } from "@/lib/requireAdmin";
+import { requireAdminOrThrow } from "@/lib/requireAdmin";
 import { isSensitiveFilename } from "@/lib/piiBlock";
 
 export const runtime = "nodejs";
@@ -16,9 +16,8 @@ const r2 = new S3Client({
 });
 
 export async function POST(req: Request) {
-  const guard = await requireApprovedAdmin(req);
-  if (guard instanceof NextResponse) return guard;
-
+  const guard = await requireAdminOrThrow();
+  
   const body = await req.json().catch(() => ({}));
   const fileName = String(body.fileName ?? "").trim();
   const contentType = String(body.contentType ?? "application/octet-stream");
