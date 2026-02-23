@@ -24,7 +24,7 @@ export default async function SimpleListPage({
 
   const boardItems: BoardItem[] = (rows ?? []).map((r: any) => {
     const titleText = ((r.title ?? "").trim() || r.original_filename || "자료").toString();
-    const subText = (r.original_filename ?? "").toString();
+    const subText = (r.note ?? r.original_filename ?? "").toString();
 
     return {
       id: r.id,

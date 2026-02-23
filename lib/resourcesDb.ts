@@ -98,10 +98,12 @@ export type ResourceRow = {
   id: number;
   title: string;
   kind: string;
+  posted_at: string;
   published_at: string; // date
   r2_key: string;
   original_filename: string;
   source_path: string | null;
+  note: string | null;
   views_count: number | null;
   created_at: string;
   boards: BoardMini | null; // 화면에서는 단일로
@@ -151,18 +153,24 @@ export async function fetchResources(args: FetchResourcesArgs) {
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
+  // 리스트 정렬 기준:
+  // - ATM/Heartbeat: 발간일(published_at)
+  // - 나머지: 게시일(posted_at)
+  const slug = (args.boardSlug ?? "").trim();
+  const isIssueBoard = slug === "atm" || slug === "heartbeat-of-atoms";
+  const orderField = isIssueBoard ? "published_at" : "posted_at";
+
   let q = sb
     .from("resources")
     .select(
-      "id,title,kind,published_at,r2_key,original_filename,source_path,views_count,created_at,boards:boards(slug,title)"
+      "id,title,kind,posted_at,published_at,r2_key,original_filename,source_path,note,views_count,created_at,boards:boards(slug,title)"
     )
     .is("deleted_at", null)
     .eq("visibility", "public")
-    .order("published_at", { ascending: false })
+    .order(orderField, { ascending: false })
     .order("id", { ascending: false })
     .range(from, to);
 
-  // boardSlug 필터는 board_id로 (너가 적용한 방식 그대로)
   if (args.boardSlug) {
     const boardId = await getBoardIdBySlugAnon(args.boardSlug);
     if (!boardId) return [];
@@ -175,7 +183,6 @@ export async function fetchResources(args: FetchResourcesArgs) {
   const { data, error } = await q;
   if (error) throw new Error(error.message);
 
-  // 여기서 boards를 “객체 1개”로 정규화
   const rows = (data ?? []).map((r: any) => ({
     ...r,
     boards: normalizeBoard(r.boards),
