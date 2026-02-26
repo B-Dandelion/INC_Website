@@ -13,10 +13,15 @@ export default function AdminEventNewPage() {
   const map = adminSlugToEventCategory(slug);
 
   const subtypeFromQuery = sp.get("subtype") || "";
+  const initSubtype =
+    slug === "seminar"
+      ? (subtypeFromQuery === "international" ? "international" : "domestic")
+      : (subtypeFromQuery || map?.subtypeDefault || "");
+
+  const [subtype, setSubtype] = useState(initSubtype);
   const [titleKo, setTitleKo] = useState("");
   const [eventDate, setEventDate] = useState("");
   const [periodEnd, setPeriodEnd] = useState("");
-  const [subtype, setSubtype] = useState(subtypeFromQuery || map?.subtypeDefault || "");
   const [seriesYear, setSeriesYear] = useState<number | "">("");
 
   const can = useMemo(() => !!map && !!titleKo.trim(), [map, titleKo]);
@@ -29,7 +34,8 @@ export default function AdminEventNewPage() {
       title_ko: titleKo.trim(),
       visibility: "public",
     };
-    if (subtype.trim()) body.subtype = subtype.trim();
+    if (slug === "seminar") body.subtype = subtype || "domestic";
+    else if (subtype.trim()) body.subtype = subtype.trim();
     if (eventDate) body.event_date = eventDate;
     if (periodEnd) body.period_end = periodEnd;
     if (typeof seriesYear === "number") body.series_year = seriesYear;
@@ -74,10 +80,56 @@ export default function AdminEventNewPage() {
           <input type="date" value={periodEnd} onChange={(e) => setPeriodEnd(e.target.value)} style={inp} />
         </label>
 
-        <label style={lbl}>
-          subtype(선택)
-          <input value={subtype} onChange={(e) => setSubtype(e.target.value)} placeholder="seminar: domestic/international" style={inp} />
-        </label>
+        <div style={{ display: "grid", gap: 6 }}>
+          <div style={{ fontSize: 14, fontWeight: 700 }}>구분</div>
+
+          {slug === "seminar" ? (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 6,
+                background: "rgba(37, 99, 235, 0.10)",
+                borderRadius: 14,
+                padding: 6,
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setSubtype("domestic")}
+                style={{
+                  height: 36,
+                  borderRadius: 12,
+                  border: "1px solid transparent",
+                  background: subtype === "domestic" ? "#2563eb" : "rgba(255,255,255,0.7)",
+                  color: subtype === "domestic" ? "#fff" : "#0f172a",
+                  fontWeight: subtype === "domestic" ? 800 : 600,
+                  cursor: "pointer",
+                }}
+              >
+                국내
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSubtype("international")}
+                style={{
+                  height: 36,
+                  borderRadius: 12,
+                  border: "1px solid transparent",
+                  background: subtype === "international" ? "#2563eb" : "rgba(255,255,255,0.7)",
+                  color: subtype === "international" ? "#fff" : "#0f172a",
+                  fontWeight: subtype === "international" ? 800 : 600,
+                  cursor: "pointer",
+                }}
+              >
+                국제
+              </button>
+            </div>
+          ) : (
+            <div style={{ fontSize: 13, opacity: 0.7 }}>subtype 없음</div>
+          )}
+        </div>
 
         <label style={lbl}>
           연도(선택)
