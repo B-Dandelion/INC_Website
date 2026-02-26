@@ -23,7 +23,7 @@ export default function Header() {
   }, [pathname]);
 
   const resourceLinks = useMemo(
-    () => RESOURCE_BOARDS.map((b) => ({ label: b.label, href: `/resources?cat=${b.slug}` })),
+    () => RESOURCE_BOARDS.map((b) => ({ label: b.label, href: `/resources/${b.slug}` })),
     [],
   );
 
@@ -72,6 +72,9 @@ export default function Header() {
           <nav className="flex items-center gap-4 text-sm font-medium text-gray-700">
             {/* pathname key로 라우트 이동 시 열림 상태 초기화(선택이지만 추천) */}
             <ResourcesMegaMenu key={pathname} />
+            <Link href="/notice" className="hover:text-blue-600">
+              공지사항
+            </Link>
           </nav>
 
           {/* 검색 (Enter → /resources/search?q=...) */}
@@ -112,6 +115,9 @@ export default function Header() {
           <div className="max-w-7xl mx-auto px-6 py-4">
             <Link href="/resources" className="block py-2 text-sm font-semibold text-gray-900">
               자료실 전체 보기
+            </Link>
+            <Link href="/notice" className="block py-2 text-sm font-semibold text-gray-900">
+              공지사항
             </Link>
 
             <div className="mt-2">

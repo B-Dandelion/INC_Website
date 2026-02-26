@@ -3,7 +3,7 @@ import LatestTabs from "@/components/home/LatestTabs";
 import { RESOURCE_BOARDS } from "@/lib/resourceBoards";
 import { fetchPublicResources } from "@/lib/resourcesDb";
 import Image from "next/image";
-
+import { fetchNotices } from "@/lib/noticesDb";
 
 export default async function HomePage() {
   // 자료실 최신 업로드
@@ -11,14 +11,17 @@ export default async function HomePage() {
   const latestResources = (allResources ?? []).slice(0, 5).map((r: any, idx: number) => ({
     id: String(r.id ?? r.resource_id ?? r.slug ?? `res-${idx}`),
     title: r.title ?? "제목 없음",
-    date: (r.date ?? r.created_at ?? "").toString().slice(0, 10),
-    href: r.id ? `/resources/${r.id}` : "/resources",
+    date: (r.posted_at ?? r.published_at ?? r.created_at ?? "").toString().slice(0, 10),
+    href: r.id ? `/api/resources/go?id=${r.id}` : "/resources",
   }));
-  const latestNotices = [
-    { id: "notice-1", title: "홈페이지 개편 안내", date: "2026-01-05", href: "/notices/1" },
-    { id: "notice-2", title: "국제협력 세미나 참가 신청", date: "2026-01-02", href: "/notices/2" },
-    { id: "notice-3", title: "연구자료 이용 가이드", date: "2025-12-20", href: "/notices/3" },
-  ];
+  const noticeRows = await fetchNotices({ page: 1, pageSize: 5 });
+
+  const latestNotices = noticeRows.map((n) => ({
+    id: String(n.id),
+    title: n.title,
+    date: (n.posted_at ?? "").toString().slice(0, 10),
+    href: `/notice/${n.id}`,
+  }));
 
   return (
     <main className="bg-gray-50">
@@ -55,7 +58,7 @@ export default async function HomePage() {
 
             <div className="mt-7 flex flex-wrap gap-3">
               <Link
-                href="/notices"
+                href="/notice"
                 className="rounded-xl bg-white px-5 py-3 text-sm font-extrabold text-gray-900 hover:bg-white/90"
               >
                 공지사항
@@ -88,7 +91,7 @@ export default async function HomePage() {
             {RESOURCE_BOARDS.map((b) => (
               <Link
                 key={b.slug}
-                href={`/resources?cat=${b.slug}`}
+                href={`/resources/${b.slug}`}
                 className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm hover:border-gray-300"
               >
                 <div className="text-base font-extrabold text-gray-900">{b.label}</div>
