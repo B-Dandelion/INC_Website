@@ -46,9 +46,13 @@ export default async function SimpleListPage({
     publishedTo,
   });
 
+  const isIssueBoard = prefix === "atm" || prefix === "heartbeat-of-atoms";
+
   const boardItems: BoardItem[] = (rows ?? []).map((r: any) => {
     const titleText = ((r.title ?? "").trim() || r.original_filename || "자료").toString();
-    const metaLine = `게시 ${r.posted_at ?? "-"} · 조회 ${r.views_count ?? 0}`;
+    const metaLine = isIssueBoard
+      ? `발간 ${r.published_at ?? "-"} · 조회 ${r.views_count ?? 0}`
+      : `게시 ${r.posted_at ?? "-"} · 조회 ${r.views_count ?? 0}`;
     const base = (r.note ?? r.original_filename ?? "").toString();
     const subText = base ? `${base} · ${metaLine}` : metaLine;
 

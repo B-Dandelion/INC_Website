@@ -163,6 +163,10 @@ export async function fetchResources(args: FetchResourcesArgs) {
   const isIssueBoard = slug === "atm" || slug === "heartbeat-of-atoms";
   const orderField = isIssueBoard ? "published_at" : "posted_at";
 
+  // ATM/Heartbeat: "이후" 검색(publishedFrom 있음, publishedTo 없음)일 때는 오름차순
+  const issueAfterMode = isIssueBoard && !!args.publishedFrom && !args.publishedTo;
+  const primaryAscending = issueAfterMode ? true : false;
+
   let q = sb
     .from("resources")
     .select(
@@ -170,7 +174,7 @@ export async function fetchResources(args: FetchResourcesArgs) {
     )
     .is("deleted_at", null)
     .eq("visibility", "public")
-    .order(orderField, { ascending: false })
+    .order(orderField, { ascending: primaryAscending })
     .order("id", { ascending: false })
     .range(from, to);
 
