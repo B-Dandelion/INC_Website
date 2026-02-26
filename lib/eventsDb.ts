@@ -13,6 +13,7 @@ export type EventRow = {
 };
 
 export type EventAssetRow = {
+  id: string;
   role: string;
   sort_order: number;
   award: string | null;
@@ -57,6 +58,7 @@ export async function fetchEventAssets(eventId: string): Promise<EventAssetRow[]
     .from("event_assets")
     .select(
       `
+      id,
       role,
       sort_order,
       award,

@@ -2,6 +2,10 @@ import ResourcesFrame, { NAV } from "@/components/resources/AdminResourcesFrame"
 import styles from "@/components/resources/SimpleListPage.module.css";
 import { fetchResources } from "@/lib/resourcesDb";
 import AdminResourceBoard from "@/components/resources/AdminResourceBoard";
+import { adminSlugToEventCategory } from "@/lib/eventCategoryMap";
+import AdminEventsShell from "@/components/admin/AdminEventsShell";
+
+
 
 function guessIssue(title: string) {
     const m = title.match(/\bNo\.?\s*(\d{1,4})\b/i);
@@ -15,9 +19,14 @@ export default async function AdminBoardPage({
     searchParams,
 }: {
     params: Promise<{ slug: string }>;
-    searchParams: Promise<{ page?: string }>;
+    searchParams: Promise<{ page?: string; subtype?: string; event?: string }>;
 }) {
     const { slug } = await params;
+
+    const map = adminSlugToEventCategory(slug);
+    if (map) {
+        return <AdminEventsShell slug={slug} searchParams={searchParams as any} />;
+    }
     const sp = await searchParams;
     const page = Math.max(1, Number(sp.page ?? "1") || 1);
 
