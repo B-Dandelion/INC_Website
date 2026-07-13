@@ -1,11 +1,11 @@
-// app/resources/shortform/page.tsx
+// app/resources/shortform-contest/page.tsx
 import Link from "next/link";
 import ResourcesFrame from "@/components/resources/ResourcesFrame";
 import SectionTabs from "@/components/resources/SectionTabs";
 import { fetchEvents, fetchEventAssets } from "@/lib/eventsDb";
 import styles from "../essay-contest/essayContest.module.css";
 
-const BASE = "/resources/shortform";
+const BASE = "/resources/shortform-contest";
 
 function fmtPeriod(start?: string | null, end?: string | null) {
   if (!start) return "";
@@ -14,6 +14,78 @@ function fmtPeriod(start?: string | null, end?: string | null) {
 
 function norm(s?: string | null) {
   return (s ?? "").trim().toLowerCase();
+}
+
+function isPdfAsset(asset: any) {
+  const mime = norm(asset?.resources?.mime);
+  const filename = norm(asset?.resources?.original_filename);
+
+  return mime === "application/pdf" || filename.endsWith(".pdf");
+}
+
+function PosterContent({
+  asset,
+  emptyText,
+  alt,
+}: {
+  asset: any;
+  emptyText: string;
+  alt: string;
+}) {
+  const resourceId = asset?.resources?.id;
+
+  if (!resourceId) {
+    return (
+      <div className={styles.card}>
+        <div className={styles.muted}>{emptyText}</div>
+      </div>
+    );
+  }
+
+  const href = `/api/resources/go?id=${resourceId}`;
+
+  if (isPdfAsset(asset)) {
+    return (
+      <div
+        className={styles.card}
+        style={{
+          minHeight: 180,
+          display: "grid",
+          placeItems: "center",
+          textAlign: "center",
+          gap: 10,
+        }}
+      >
+        <div style={{ fontWeight: 800 }}>
+          {asset.resources.title ?? alt}
+        </div>
+        <a
+          href={href}
+          target="_blank"
+          rel="noreferrer"
+          style={{
+            display: "inline-block",
+            padding: "10px 14px",
+            borderRadius: 10,
+            border: "1px solid #2563eb",
+            color: "#2563eb",
+            textDecoration: "none",
+            fontWeight: 800,
+          }}
+        >
+          PDF 포스터 열기
+        </a>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={href}
+      alt={asset.resources.title ?? alt}
+      className={styles.posterImg}
+    />
+  );
 }
 
 function awardRank(label?: string | null) {
@@ -138,17 +210,11 @@ export default async function ShortformContestPage({
                   <div className={styles.posterLabel}>국문</div>
                   <div className={styles.posterWrap}>
                     <div className={styles.posterInner}>
-                      {posterKo?.resources?.id ? (
-                        <img
-                          src={`/api/resources/go?id=${posterKo.resources.id}`}
-                          alt={posterKo.resources.title ?? "poster_ko"}
-                          className={styles.posterImg}
-                        />
-                      ) : (
-                        <div className={styles.card}>
-                          <div className={styles.muted}>국문 포스터가 없습니다.</div>
-                        </div>
-                      )}
+                      <PosterContent
+                        asset={posterKo}
+                        emptyText="국문 포스터가 없습니다."
+                        alt="국문 포스터"
+                      />
                     </div>
                   </div>
                 </div>
@@ -157,17 +223,11 @@ export default async function ShortformContestPage({
                   <div className={styles.posterLabel}>영문</div>
                   <div className={styles.posterWrap}>
                     <div className={styles.posterInner}>
-                      {posterEn?.resources?.id ? (
-                        <img
-                          src={`/api/resources/go?id=${posterEn.resources.id}`}
-                          alt={posterEn.resources.title ?? "poster_en"}
-                          className={styles.posterImg}
-                        />
-                      ) : (
-                        <div className={styles.card}>
-                          <div className={styles.muted}>영문 포스터가 없습니다.</div>
-                        </div>
-                      )}
+                      <PosterContent
+                        asset={posterEn}
+                        emptyText="영문 포스터가 없습니다."
+                        alt="영문 포스터"
+                      />
                     </div>
                   </div>
                 </div>

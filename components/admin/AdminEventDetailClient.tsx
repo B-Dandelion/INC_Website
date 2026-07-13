@@ -234,16 +234,16 @@ export default function AdminEventDetailClient({
     }
 
     function fileAcceptForRole(role: string) {
-        if (
-            ["poster_ko", "poster_en", "winner_photo", "photo"].includes(
-                role
-            )
-        ) {
+        if (["poster_ko", "poster_en"].includes(role)) {
+            return "image/*,.pdf,application/pdf";
+        }
+
+        if (["winner_photo", "photo"].includes(role)) {
             return "image/*";
         }
 
         if (role === "slide" && slug === "shortform-contest") {
-            return "video/*,.pdf";
+            return "video/*,.pdf,application/pdf";
         }
 
         return undefined;
@@ -470,6 +470,9 @@ export default function AdminEventDetailClient({
             const input = document.createElement("input");
             input.type = "file";
 
+            const accept = fileAcceptForRole(asset.role);
+            if (accept) input.accept = accept;
+
             input.onchange = async () => {
                 const selectedFile = input.files?.[0];
                 if (!selectedFile) return;
@@ -499,12 +502,28 @@ export default function AdminEventDetailClient({
 
         async function deleteResource(resourceId: number) {
             const confirmed = confirm(
-                "리소스를 삭제(soft delete)할까요? 행사에서만 제거가 아니라 파일 자체가 숨김 처리됩니다."
+                "이 자료를 행사에서 제거하고 파일도 숨김 처리할까요?"
             );
 
             if (!confirmed) return;
 
-            const response = await fetch(
+            // event_assets 연결을 먼저 제거해야 포스터 재업로드 시
+            // 행사별 1개 제한(unique index)에 걸리지 않습니다.
+            const unlinkResponse = await fetch(
+                "/api/admin/event-assets/remove",
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id: asset.id }),
+                }
+            );
+
+            if (!unlinkResponse.ok) {
+                alert(await unlinkResponse.text());
+                return;
+            }
+
+            const deleteResponse = await fetch(
                 "/api/admin/resources/delete",
                 {
                     method: "POST",
@@ -513,8 +532,11 @@ export default function AdminEventDetailClient({
                 }
             );
 
-            if (!response.ok) {
-                alert(await response.text());
+            if (!deleteResponse.ok) {
+                alert(
+                    "행사 연결은 제거됐지만 파일 숨김 처리에 실패했습니다.\n" +
+                    (await deleteResponse.text())
+                );
                 return;
             }
 
