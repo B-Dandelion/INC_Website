@@ -26,12 +26,14 @@ function safeName(name: string) {
 
 function inferKindFromFileName(name: string) {
   const ext = name.split(".").pop()?.toLowerCase() ?? "";
+
   if (ext === "pdf") return "pdf";
   if (["png", "jpg", "jpeg", "webp", "gif"].includes(ext)) return "image";
   if (["mp4", "mov", "webm", "mkv"].includes(ext)) return "video";
   if (["ppt", "pptx", "key"].includes(ext)) return "slide";
   if (["doc", "docx", "hwp", "txt"].includes(ext)) return "doc";
   if (["zip", "7z", "rar"].includes(ext)) return "zip";
+
   return null;
 }
 
@@ -42,78 +44,156 @@ export async function POST(req: Request) {
     await requireAdminOrThrow();
 
     const form = await req.formData();
-    const resourceIdRaw = String(form.get("resourceId") ?? "");
-    const resourceId = Number(resourceIdRaw);
+    const resourceId = Number(String(form.get("resourceId") ?? ""));
     const file = form.get("file");
 
     if (!Number.isFinite(resourceId) || resourceId <= 0) {
-      return NextResponse.json({ ok: false, error: "invalid resourceId" }, { status: 400 });
+      return NextResponse.json(
+        { ok: false, error: "invalid resourceId" },
+        { status: 400 }
+      );
     }
+
     if (!file || !(file instanceof File)) {
-      return NextResponse.json({ ok: false, error: "file is required" }, { status: 400 });
+      return NextResponse.json(
+        { ok: false, error: "file is required" },
+        { status: 400 }
+      );
     }
 
     const inferred = inferKindFromFileName(file.name);
+
     if (!inferred) {
-      return NextResponse.json({ ok: false, error: "unsupported file type" }, { status: 400 });
+      return NextResponse.json(
+        { ok: false, error: "unsupported file type" },
+        { status: 400 }
+      );
     }
 
-    const { data: r, error: rErr } = await supabaseAdmin
+    const { data: resource, error: resourceError } = await supabaseAdmin
       .from("resources")
       .select("id, board_id, kind, visibility, r2_key, deleted_at")
       .eq("id", resourceId)
       .maybeSingle();
 
-    if (rErr || !r) return NextResponse.json({ ok: false, error: "resource not found" }, { status: 404 });
-    if (r.deleted_at) return NextResponse.json({ ok: false, error: "resource is deleted" }, { status: 400 });
-
-    if (String(r.kind) !== inferred) {
+    if (resourceError || !resource) {
       return NextResponse.json(
-        { ok: false, error: `kind mismatch (current=${r.kind}, new=${inferred})` },
+        { ok: false, error: "resource not found" },
+        { status: 404 }
+      );
+    }
+
+    if (resource.deleted_at) {
+      return NextResponse.json(
+        { ok: false, error: "resource is deleted" },
         { status: 400 }
       );
     }
 
-    const { data: board, error: bErr } = await supabaseAdmin
+    // 포스터는 이미지와 PDF 사이의 형식 변경을 허용합니다.
+    // 다른 자료는 기존처럼 같은 kind끼리만 교체합니다.
+    const { data: assetLinks, error: assetLinksError } =
+      await supabaseAdmin
+        .from("event_assets")
+        .select("role")
+        .eq("resource_id", resourceId);
+
+    if (assetLinksError) {
+      return NextResponse.json(
+        { ok: false, error: assetLinksError.message },
+        { status: 500 }
+      );
+    }
+
+    const linkedRoles = (assetLinks ?? []).map((row) => String(row.role));
+    const isPosterResource =
+      linkedRoles.length > 0 &&
+      linkedRoles.every((role) =>
+        ["poster_ko", "poster_en"].includes(role)
+      );
+
+    if (String(resource.kind) !== inferred && !isPosterResource) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: `kind mismatch (current=${resource.kind}, new=${inferred})`,
+        },
+        { status: 400 }
+      );
+    }
+
+    const { data: board, error: boardError } = await supabaseAdmin
       .from("boards")
       .select("slug")
-      .eq("id", r.board_id)
+      .eq("id", resource.board_id)
       .maybeSingle();
 
-    if (bErr || !board?.slug) return NextResponse.json({ ok: false, error: "board not found" }, { status: 500 });
+    if (boardError || !board?.slug) {
+      return NextResponse.json(
+        { ok: false, error: "board not found" },
+        { status: 500 }
+      );
+    }
 
-    const visibility = r.visibility as Visibility;
-    const bucket = visibility === "public" ? process.env.R2_PUBLIC_BUCKET! : process.env.R2_PRIVATE_BUCKET!;
-    const key = `${board.slug}/${resourceId}/${Date.now()}-${safeName(file.name)}`;
+    const visibility = resource.visibility as Visibility;
+    const bucket =
+      visibility === "public"
+        ? process.env.R2_PUBLIC_BUCKET!
+        : process.env.R2_PRIVATE_BUCKET!;
 
-    const buf = Buffer.from(await file.arrayBuffer());
-    await s3.send(new PutObjectCommand({
-      Bucket: bucket,
-      Key: key,
-      Body: buf,
-      ContentType: file.type || "application/octet-stream",
-    }));
+    const key = `${board.slug}/${resourceId}/${Date.now()}-${safeName(
+      file.name
+    )}`;
 
-    const { data: updated, error: upErr } = await supabaseAdmin
+    const buffer = Buffer.from(await file.arrayBuffer());
+
+    await s3.send(
+      new PutObjectCommand({
+        Bucket: bucket,
+        Key: key,
+        Body: buffer,
+        ContentType: file.type || "application/octet-stream",
+      })
+    );
+
+    const { data: updated, error: updateError } = await supabaseAdmin
       .from("resources")
       .update({
+        kind: inferred,
         r2_key: key,
         mime: file.type || null,
-        size_bytes: buf.length,
+        size_bytes: buffer.length,
         original_filename: file.name,
         updated_at: new Date().toISOString(),
       })
       .eq("id", resourceId)
-      .select("id, r2_key, original_filename, mime, size_bytes, updated_at")
+      .select(
+        "id, kind, r2_key, original_filename, mime, size_bytes, updated_at"
+      )
       .maybeSingle();
 
-    if (upErr || !updated) {
-      return NextResponse.json({ ok: false, error: upErr?.message || "db update failed" }, { status: 500 });
+    if (updateError || !updated) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: updateError?.message || "db update failed",
+        },
+        { status: 500 }
+      );
     }
 
-    return NextResponse.json({ ok: true, resource: updated, oldKey: r.r2_key, newKey: key });
+    return NextResponse.json({
+      ok: true,
+      resource: updated,
+      oldKey: resource.r2_key,
+      newKey: key,
+    });
   } catch (e: any) {
     const status = e?.status ?? 500;
-    return NextResponse.json({ ok: false, error: String(e?.message ?? e) }, { status });
+
+    return NextResponse.json(
+      { ok: false, error: String(e?.message ?? e) },
+      { status }
+    );
   }
 }

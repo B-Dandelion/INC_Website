@@ -26,32 +26,51 @@ export type EventAssetRow = {
     title: string | null;
     mime: string | null;
     original_filename: string | null;
+    source_path: string | null;
   } | null;
 };
 
 export async function fetchEvents(params: {
-  category: "seminar" | "essay_contest" | "shortform_contest" | "project_report" | "workshop";
+  category:
+    | "seminar"
+    | "essay_contest"
+    | "shortform_contest"
+    | "project_report"
+    | "workshop";
   subtype?: string;
   year?: number;
 }) {
   const supabase = createSupabaseServerClient();
 
-  let q = supabase
+  let query = supabase
     .from("events")
-    .select("id, category, subtype, series_year, title_ko, event_date, period_end, visibility")
+    .select(
+      "id, category, subtype, series_year, title_ko, event_date, period_end, visibility"
+    )
     .eq("visibility", "public")
     .eq("category", params.category);
 
-  if (params.subtype) q = q.eq("subtype", params.subtype);
-  if (typeof params.year === "number") q = q.eq("series_year", params.year);
+  if (params.subtype) {
+    query = query.eq("subtype", params.subtype);
+  }
 
-  const { data, error } = await q.order("event_date", { ascending: false, nullsFirst: false });
+  if (typeof params.year === "number") {
+    query = query.eq("series_year", params.year);
+  }
+
+  const { data, error } = await query.order("event_date", {
+    ascending: false,
+    nullsFirst: false,
+  });
+
   if (error) throw error;
 
   return (data ?? []) as EventRow[];
 }
 
-export async function fetchEventAssets(eventId: string): Promise<EventAssetRow[]> {
+export async function fetchEventAssets(
+  eventId: string
+): Promise<EventAssetRow[]> {
   const supabase = createSupabaseServerClient();
 
   const { data, error } = await supabase
@@ -67,7 +86,11 @@ export async function fetchEventAssets(eventId: string): Promise<EventAssetRow[]
       item_title_ko,
       item_title_en,
       resources:resources!event_assets_resource_id_fkey(
-        id, title, mime, original_filename
+        id,
+        title,
+        mime,
+        original_filename,
+        source_path
       )
     `
     )
@@ -75,5 +98,6 @@ export async function fetchEventAssets(eventId: string): Promise<EventAssetRow[]
     .order("sort_order", { ascending: true });
 
   if (error) throw error;
+
   return (data ?? []) as unknown as EventAssetRow[];
 }
