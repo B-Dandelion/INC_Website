@@ -535,12 +535,13 @@ export default async function ShortformContestPage({
                       ""
                     ).trim();
                     const label =
-                      asset.item_title_ko ??
-                      asset.item_title_en ??
-                      (person ||
-                        asset.resources?.title ||
-                        asset.resources?.original_filename ||
-                        "응모작");
+                      (
+                        asset.resources?.title ??
+                        asset.item_title_ko ??
+                        asset.item_title_en ??
+                        asset.resources?.original_filename ??
+                        "응모작"
+                      ).trim() || "응모작";
                     const resourceId = asset.resources?.id;
                     const sourcePath =
                       asset.resources?.source_path ?? "";
