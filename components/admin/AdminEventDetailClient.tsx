@@ -33,6 +33,7 @@ type Asset = {
         title: string | null;
         mime: string | null;
         original_filename: string | null;
+        source_path: string | null;
     } | null;
 };
 
@@ -117,6 +118,47 @@ function errorMessage(error: unknown) {
     return error instanceof Error ? error.message : String(error);
 }
 
+function youtubeVideoId(value: string) {
+    const input = value.trim();
+    if (!input) return null;
+
+    try {
+        const normalized = /^https?:\/\//i.test(input)
+            ? input
+            : `https://${input}`;
+        const url = new URL(normalized);
+        const host = url.hostname.replace(/^www\./, "").toLowerCase();
+
+        let id: string | null = null;
+
+        if (host === "youtu.be") {
+            id = url.pathname.split("/").filter(Boolean)[0] ?? null;
+        } else if (
+            host === "youtube.com" ||
+            host === "m.youtube.com" ||
+            host === "music.youtube.com"
+        ) {
+            if (url.pathname === "/watch") {
+                id = url.searchParams.get("v");
+            } else {
+                const match = url.pathname.match(
+                    /^\/(?:shorts|embed|live)\/([^/?#]+)/
+                );
+                id = match?.[1] ?? null;
+            }
+        }
+
+        return id && /^[A-Za-z0-9_-]{11}$/.test(id) ? id : null;
+    } catch {
+        return null;
+    }
+}
+
+function canonicalYoutubeUrl(value: string) {
+    const id = youtubeVideoId(value);
+    return id ? `https://www.youtube.com/watch?v=${id}` : null;
+}
+
 export default function AdminEventDetailClient({
     slug,
     event,
@@ -136,6 +178,8 @@ export default function AdminEventDetailClient({
     // 공통 업로드 정보
     const [roleToAdd, setRoleToAdd] = useState("");
     const [file, setFile] = useState<File | null>(null);
+    const [uploadMode, setUploadMode] = useState<"file" | "youtube">("file");
+    const [youtubeUrl, setYoutubeUrl] = useState("");
     const [resTitle, setResTitle] = useState("");
     const [note, setNote] = useState("");
     const [sortOrder, setSortOrder] = useState("0");
@@ -156,6 +200,8 @@ export default function AdminEventDetailClient({
     const isAwardDoc = isContest && roleToAdd === "award_doc";
     const isWinnerPhoto = isContest && roleToAdd === "winner_photo";
     const isContestSubmission = isContest && roleToAdd === "slide";
+    const supportsYoutube = isAwardDoc || isContestSubmission;
+    const isYoutubeMode = supportsYoutube && uploadMode === "youtube";
     const usesPersonMetadata = isAwardDoc || isWinnerPhoto || isContestSubmission;
 
     const configuredRoleOptions = EVENT_ROLE_OPTIONS[slug] ?? [];
@@ -297,7 +343,16 @@ export default function AdminEventDetailClient({
             return;
         }
 
-        if (!file) {
+        const normalizedYoutubeUrl = isYoutubeMode
+            ? canonicalYoutubeUrl(youtubeUrl)
+            : null;
+
+        if (isYoutubeMode && !normalizedYoutubeUrl) {
+            setErr("올바른 유튜브 링크를 입력하세요.");
+            return;
+        }
+
+        if (!isYoutubeMode && !file) {
             setErr("파일을 선택하세요.");
             return;
         }
@@ -334,13 +389,18 @@ export default function AdminEventDetailClient({
         setBusy(true);
 
         try {
-            // 1. resources에 실제 파일 업로드
+            // 1. resources에 파일 또는 유튜브 링크 등록
             const formData = new FormData();
             formData.set("title", resTitle.trim());
             formData.set("note", note);
             formData.set("boardSlug", slug);
             formData.set("visibility", "public");
-            formData.set("file", file);
+
+            if (isYoutubeMode && normalizedYoutubeUrl) {
+                formData.set("source_path", normalizedYoutubeUrl);
+            } else if (file) {
+                formData.set("file", file);
+            }
 
             const uploadResponse = await fetch("/api/admin/upload", {
                 method: "POST",
@@ -500,6 +560,44 @@ export default function AdminEventDetailClient({
             input.click();
         }
 
+        async function updateYoutubeResource(
+            resourceId: number,
+            currentUrl: string
+        ) {
+            const nextValue = prompt(
+                "새 유튜브 링크를 입력하세요.",
+                currentUrl
+            );
+
+            if (nextValue == null) return;
+
+            const normalized = canonicalYoutubeUrl(nextValue);
+
+            if (!normalized) {
+                alert("올바른 유튜브 링크를 입력하세요.");
+                return;
+            }
+
+            const response = await fetch(
+                "/api/admin/resources/update",
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        resourceId,
+                        source_path: normalized,
+                    }),
+                }
+            );
+
+            if (!response.ok) {
+                alert(await response.text());
+                return;
+            }
+
+            location.reload();
+        }
+
         async function deleteResource(resourceId: number) {
             const confirmed = confirm(
                 "이 자료를 행사에서 제거하고 파일도 숨김 처리할까요?"
@@ -546,6 +644,8 @@ export default function AdminEventDetailClient({
         const rid = asset.resources?.id ?? null;
         const mime = asset.resources?.mime ?? null;
         const filename = asset.resources?.original_filename ?? null;
+        const sourcePath = asset.resources?.source_path?.trim() ?? "";
+        const sourceYoutubeId = youtubeVideoId(sourcePath);
         const title =
             asset.resources?.title ??
             asset.resources?.original_filename ??
@@ -554,7 +654,7 @@ export default function AdminEventDetailClient({
             asset.item_title_ko ?? asset.item_title_en ?? null;
         const person =
             asset.person_ko ?? asset.person_en ?? null;
-        const href = rid ? `/api/resources/go?id=${rid}` : "#";
+        const href = sourcePath || (rid ? `/api/resources/go?id=${rid}` : "#");
 
         return (
             <div
@@ -576,7 +676,20 @@ export default function AdminEventDetailClient({
                         minWidth: 0,
                     }}
                 >
-                    {rid ? (
+                    {sourceYoutubeId ? (
+                        <img
+                            src={`https://i.ytimg.com/vi/${sourceYoutubeId}/hqdefault.jpg`}
+                            alt=""
+                            style={{
+                                width: 96,
+                                height: 56,
+                                objectFit: "cover",
+                                borderRadius: 12,
+                                border: "1px solid #eee",
+                                flex: "0 0 auto",
+                            }}
+                        />
+                    ) : rid ? (
                         <Thumb
                             rid={rid}
                             mime={mime}
@@ -619,17 +732,33 @@ export default function AdminEventDetailClient({
                                 className={styles.pagerBtn}
                                 style={miniBtnStyle}
                             >
-                                열기
+                                {sourcePath ? "유튜브 열기" : "열기"}
                             </a>
 
-                            <button
-                                type="button"
-                                onClick={() => replaceResource(rid)}
-                                className={styles.pagerBtn}
-                                style={miniBtnStyle}
-                            >
-                                교체
-                            </button>
+                            {sourcePath ? (
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        updateYoutubeResource(
+                                            rid,
+                                            sourcePath
+                                        )
+                                    }
+                                    className={styles.pagerBtn}
+                                    style={miniBtnStyle}
+                                >
+                                    링크 수정
+                                </button>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={() => replaceResource(rid)}
+                                    className={styles.pagerBtn}
+                                    style={miniBtnStyle}
+                                >
+                                    교체
+                                </button>
+                            )}
 
                             <button
                                 type="button"
@@ -780,8 +909,20 @@ export default function AdminEventDetailClient({
                         <select
                             value={roleToAdd}
                             onChange={(event) => {
-                                setRoleToAdd(event.target.value);
+                                const nextRole = event.target.value;
+                                setRoleToAdd(nextRole);
                                 setErr(null);
+                                setFile(null);
+
+                                const nextSupportsYoutube =
+                                    isContest &&
+                                    (nextRole === "award_doc" ||
+                                        nextRole === "slide");
+
+                                if (!nextSupportsYoutube) {
+                                    setUploadMode("file");
+                                    setYoutubeUrl("");
+                                }
                             }}
                             style={inp}
                         >
@@ -974,18 +1115,96 @@ export default function AdminEventDetailClient({
                         />
                     </label>
 
-                    <label style={lbl}>
-                        파일
-                        <input
-                            type="file"
-                            accept={fileAcceptForRole(roleToAdd)}
-                            onChange={(event) =>
-                                setFile(
-                                    event.target.files?.[0] ?? null
-                                )
-                            }
-                        />
-                    </label>
+                    {supportsYoutube ? (
+                        <div
+                            style={{
+                                display: "grid",
+                                gap: 8,
+                                padding: 12,
+                                borderRadius: 10,
+                                border: "1px solid #e5e7eb",
+                            }}
+                        >
+                            <div style={{ fontWeight: 800 }}>등록 방식</div>
+
+                            <div style={{ display: "flex", gap: 18 }}>
+                                <label
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 6,
+                                    }}
+                                >
+                                    <input
+                                        type="radio"
+                                        name="uploadMode"
+                                        value="file"
+                                        checked={uploadMode === "file"}
+                                        onChange={() => {
+                                            setUploadMode("file");
+                                            setYoutubeUrl("");
+                                            setErr(null);
+                                        }}
+                                    />
+                                    파일 첨부
+                                </label>
+
+                                <label
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 6,
+                                    }}
+                                >
+                                    <input
+                                        type="radio"
+                                        name="uploadMode"
+                                        value="youtube"
+                                        checked={uploadMode === "youtube"}
+                                        onChange={() => {
+                                            setUploadMode("youtube");
+                                            setFile(null);
+                                            setErr(null);
+                                        }}
+                                    />
+                                    유튜브 링크
+                                </label>
+                            </div>
+                        </div>
+                    ) : null}
+
+                    {isYoutubeMode ? (
+                        <label style={lbl}>
+                            유튜브 링크
+                            <input
+                                type="url"
+                                value={youtubeUrl}
+                                onChange={(event) =>
+                                    setYoutubeUrl(event.target.value)
+                                }
+                                placeholder="https://www.youtube.com/watch?v=..."
+                                style={inp}
+                            />
+                            <span style={{ fontSize: 12, opacity: 0.7 }}>
+                                일반 사용자 페이지에는 유튜브 영상 미리보기가
+                                표시됩니다.
+                            </span>
+                        </label>
+                    ) : (
+                        <label style={lbl}>
+                            파일
+                            <input
+                                key={`${roleToAdd}-${uploadMode}`}
+                                type="file"
+                                accept={fileAcceptForRole(roleToAdd)}
+                                onChange={(event) =>
+                                    setFile(
+                                        event.target.files?.[0] ?? null
+                                    )
+                                }
+                            />
+                        </label>
+                    )}
 
                     <button
                         onClick={uploadAndAttach}
@@ -994,8 +1213,10 @@ export default function AdminEventDetailClient({
                         style={{ width: 180 }}
                     >
                         {busy
-                            ? "업로드 중..."
-                            : "+ 업로드 & 연결"}
+                            ? "등록 중..."
+                            : isYoutubeMode
+                              ? "+ 링크 등록 & 연결"
+                              : "+ 업로드 & 연결"}
                     </button>
                 </div>
             </div>

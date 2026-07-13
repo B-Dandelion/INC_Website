@@ -23,6 +23,79 @@ function isPdfAsset(asset: any) {
   return mime === "application/pdf" || filename.endsWith(".pdf");
 }
 
+function youtubeVideoId(value?: string | null) {
+  const input = (value ?? "").trim();
+  if (!input) return null;
+
+  try {
+    const normalized = /^https?:\/\//i.test(input)
+      ? input
+      : `https://${input}`;
+    const url = new URL(normalized);
+    const host = url.hostname.replace(/^www\./, "").toLowerCase();
+
+    let id: string | null = null;
+
+    if (host === "youtu.be") {
+      id = url.pathname.split("/").filter(Boolean)[0] ?? null;
+    } else if (
+      host === "youtube.com" ||
+      host === "m.youtube.com" ||
+      host === "music.youtube.com"
+    ) {
+      if (url.pathname === "/watch") {
+        id = url.searchParams.get("v");
+      } else {
+        const match = url.pathname.match(
+          /^\/(?:shorts|embed|live)\/([^/?#]+)/
+        );
+        id = match?.[1] ?? null;
+      }
+    }
+
+    return id && /^[A-Za-z0-9_-]{11}$/.test(id) ? id : null;
+  } catch {
+    return null;
+  }
+}
+
+function YouTubePreview({
+  url,
+  title,
+}: {
+  url: string;
+  title: string;
+}) {
+  const videoId = youtubeVideoId(url);
+  if (!videoId) return null;
+
+  return (
+    <div
+      style={{
+        width: "100%",
+        aspectRatio: "16 / 9",
+        overflow: "hidden",
+        borderRadius: 12,
+        background: "#000",
+      }}
+    >
+      <iframe
+        src={`https://www.youtube-nocookie.com/embed/${videoId}`}
+        title={title}
+        loading="lazy"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowFullScreen
+        style={{
+          width: "100%",
+          height: "100%",
+          border: 0,
+          display: "block",
+        }}
+      />
+    </div>
+  );
+}
+
 function PosterContent({
   asset,
   emptyText,
@@ -245,34 +318,137 @@ export default async function ShortformContestPage({
               ) : (
                 <div className={styles.winnerGrid}>
                   {awardDocs.map((w, idx) => {
-                    const person = (w.person_en ?? w.person_ko ?? "").trim() || "수상자";
+                    const person =
+                      (w.person_en ?? w.person_ko ?? "").trim() ||
+                      "수상자";
                     const personKey = norm(person);
-                    const photoAsset = photoByPerson.get(personKey) ?? null;
+                    const photoAsset =
+                      photoByPerson.get(personKey) ?? null;
+                    const photoResource = photoAsset?.resources ?? null;
                     const doc = w.resources;
 
                     return (
-                      <div key={`${doc?.id ?? idx}`} className={styles.winnerCard}>
-                        <div className={styles.winnerTop}>
-                          <span className={styles.badge}>{w.award ?? "수상"}</span>
-                          <span className={styles.winnerName}>{person}</span>
+                      <div
+                        key={`${doc?.id ?? idx}`}
+                        className={styles.winnerCard}
+                        style={{
+                          gridTemplateColumns: "1fr",
+                          gap: 18,
+                          alignItems: "stretch",
+                        }}
+                      >
+                        <div
+                          className={styles.winnerTop}
+                          style={{
+                            justifyContent: "center",
+                            marginBottom: 0,
+                            textAlign: "center",
+                          }}
+                        >
+                          <span className={styles.badge}>
+                            {w.award ?? "수상"}
+                          </span>
+                          <span className={styles.winnerName}>
+                            {person}
+                          </span>
                         </div>
 
-                        <div className={styles.winnerBody}>
-                          <div className={styles.winnerPhoto}>
-                            {photoAsset?.resources?.id ? (
-                              <a href={`/api/resources/go?id=${photoAsset.resources.id}`} target="_blank" rel="noreferrer">
+                        <div
+                          className={styles.winnerBody}
+                          style={{
+                            display: "flex",
+                            flexWrap: "wrap",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            gap: 20,
+                            width: "100%",
+                          }}
+                        >
+                          {photoResource?.id ? (
+                            <div
+                              className={styles.winnerPhoto}
+                              style={{
+                                width: 160,
+                                height: 160,
+                                flex: "0 0 160px",
+                              }}
+                            >
+                              <a
+                                href={`/api/resources/go?id=${photoResource.id}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                style={{
+                                  display: "block",
+                                  width: "100%",
+                                  height: "100%",
+                                }}
+                              >
                                 <img
-                                  src={`/api/resources/go?id=${photoAsset.resources.id}`}
-                                  alt={photoAsset.resources.title ?? "winner_photo"}
+                                  src={`/api/resources/go?id=${photoResource.id}`}
+                                  alt={
+                                    photoResource.title ??
+                                    "winner_photo"
+                                  }
                                 />
                               </a>
-                            ) : (
-                              <div className={styles.winnerPhotoEmpty}>사진 없음</div>
-                            )}
-                          </div>
+                            </div>
+                          ) : null}
 
-                          <div className={styles.winnerInfo}>
-                            {doc?.id ? (
+                          <div
+                            className={styles.winnerInfo}
+                            style={{
+                              flex: "1 1 360px",
+                              width: "100%",
+                              maxWidth: 640,
+                              minWidth: 0,
+                              justifySelf: "center",
+                              textAlign: "center",
+                            }}
+                          >
+                            {doc?.source_path &&
+                            youtubeVideoId(doc.source_path) ? (
+                              <div
+                                style={{
+                                  display: "grid",
+                                  gap: 12,
+                                  width: "100%",
+                                }}
+                              >
+                                {w.item_title_ko ||
+                                w.item_title_en ? (
+                                  <div
+                                    style={{
+                                      fontWeight: 850,
+                                      wordBreak: "break-word",
+                                    }}
+                                  >
+                                    {w.item_title_ko ??
+                                      w.item_title_en}
+                                  </div>
+                                ) : null}
+
+                                <YouTubePreview
+                                  url={doc.source_path}
+                                  title={
+                                    w.item_title_ko ??
+                                    w.item_title_en ??
+                                    `${person} 수상 작품`
+                                  }
+                                />
+
+                                <a
+                                  className={styles.winnerLink}
+                                  href={doc.source_path}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  style={{
+                                    justifySelf: "center",
+                                  }}
+                                >
+                                  유튜브에서 보기
+                                </a>
+                              </div>
+                            ) : doc?.id ? (
                               <a
                                 className={styles.winnerLink}
                                 href={`/api/resources/go?id=${doc.id}`}
@@ -282,7 +458,9 @@ export default async function ShortformContestPage({
                                 응모작 열기
                               </a>
                             ) : (
-                              <div className={styles.muted}>응모작이 없습니다.</div>
+                              <div className={styles.muted}>
+                                응모작이 없습니다.
+                              </div>
                             )}
                           </div>
                         </div>
@@ -344,30 +522,77 @@ export default async function ShortformContestPage({
 
               {submissions.length === 0 ? (
                 <div className={styles.card}>
-                  <div className={styles.muted}>등록된 응모작이 없습니다.</div>
+                  <div className={styles.muted}>
+                    등록된 응모작이 없습니다.
+                  </div>
                 </div>
               ) : (
-                <ul className={styles.materialsList}>
-                  {submissions.map((a, i) => {
-                    const person = (a.person_en ?? a.person_ko ?? "").trim();
-                    const label = person || a.resources?.title || a.resources?.original_filename || "응모작";
-                    const rid = a.resources?.id;
-                    if (!rid) return null;
+                <div style={{ display: "grid", gap: 14 }}>
+                  {submissions.map((asset, index) => {
+                    const person = (
+                      asset.person_en ??
+                      asset.person_ko ??
+                      ""
+                    ).trim();
+                    const label =
+                      asset.item_title_ko ??
+                      asset.item_title_en ??
+                      (person ||
+                        asset.resources?.title ||
+                        asset.resources?.original_filename ||
+                        "응모작");
+                    const resourceId = asset.resources?.id;
+                    const sourcePath =
+                      asset.resources?.source_path ?? "";
+                    const videoId = youtubeVideoId(sourcePath);
+
+                    if (!resourceId) return null;
 
                     return (
-                      <li key={`${rid}-${i}`} className={styles.materialRow}>
-                        <a
-                          className={styles.materialLink}
-                          href={`/api/resources/go?id=${rid}`}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
+                      <div
+                        key={`${resourceId}-${index}`}
+                        className={styles.card}
+                        style={{ display: "grid", gap: 10 }}
+                      >
+                        <div style={{ fontWeight: 900 }}>
                           {label}
-                        </a>
-                      </li>
+                        </div>
+
+                        {person ? (
+                          <div className={styles.muted}>
+                            {person}
+                          </div>
+                        ) : null}
+
+                        {videoId ? (
+                          <>
+                            <YouTubePreview
+                              url={sourcePath}
+                              title={label}
+                            />
+                            <a
+                              className={styles.materialLink}
+                              href={sourcePath}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              유튜브에서 보기
+                            </a>
+                          </>
+                        ) : (
+                          <a
+                            className={styles.materialLink}
+                            href={`/api/resources/go?id=${resourceId}`}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            응모작 열기
+                          </a>
+                        )}
+                      </div>
                     );
                   })}
-                </ul>
+                </div>
               )}
             </section>
           </>
