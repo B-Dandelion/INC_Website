@@ -5,7 +5,7 @@ import SectionTabs from "@/components/resources/SectionTabs";
 import styles from "./projectReport.module.css";
 import { fetchEvents, fetchEventAssets } from "@/lib/eventsDb";
 
-const BASE = "/resources/project-report";
+const BASE = "/resources/midterm-report";
 
 function fmtPeriod(start?: string | null, end?: string | null) {
   if (!start) return "";
