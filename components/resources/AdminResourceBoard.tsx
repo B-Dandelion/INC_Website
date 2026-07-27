@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import styles from "./ResourceBoard.module.css";
 
 type AdminItem = {
@@ -12,6 +13,13 @@ type AdminItem = {
 
 const ISSUE_BOARDS = new Set(["atm", "heartbeat-of-atoms"]);
 
+function redirectIfExpired(res: Response) {
+  if (res.status !== 401) return false;
+  alert("관리자 세션이 만료되었습니다. 다시 로그인해 주세요.");
+  location.href = "/admin-x7k3p9?reason=session";
+  return true;
+}
+
 export default function AdminResourceBoard({
   items,
   boardSlug,
@@ -19,35 +27,60 @@ export default function AdminResourceBoard({
   items: AdminItem[];
   boardSlug: string;
 }) {
+  const [busyId, setBusyId] = useState<number | null>(null);
+
   async function onDelete(id: number) {
     if (!confirm("삭제(soft delete)할까요?")) return;
+    setBusyId(id);
 
-    const res = await fetch("/api/admin/resources/delete", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ resourceId: id }),
-    });
+    try {
+      const res = await fetch("/api/admin/resources/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ resourceId: id }),
+      });
 
-    if (!res.ok) {
-      const t = await safeText(res);
-      alert(`삭제 실패: ${t}`);
-      return;
+      if (redirectIfExpired(res)) return;
+
+      if (!res.ok) {
+        alert(`삭제 실패: ${await safeText(res)}`);
+        return;
+      }
+
+      location.reload();
+    } catch {
+      alert("삭제 요청 중 네트워크 오류가 발생했습니다.");
+    } finally {
+      setBusyId(null);
     }
-    location.reload();
   }
 
   async function onEdit(item: AdminItem) {
-    const nextTitle = prompt("제목", item.title) ?? "";
-    if (!nextTitle.trim()) return;
+    const nextTitle = prompt("제목", item.title);
+    if (nextTitle == null) return;
+    if (!nextTitle.trim()) {
+      alert("제목은 비워둘 수 없습니다.");
+      return;
+    }
 
-    const curNote = item._raw?.note ?? item.subtitle ?? "";
-    const nextNote = prompt("note(상세 내용)", String(curNote ?? "")) ?? "";
+    const curNote = item._raw?.note ?? "";
+    const nextNote = prompt(
+      "note(상세 내용)",
+      String(curNote ?? "")
+    );
+    if (nextNote == null) return;
 
     const isIssue = ISSUE_BOARDS.has(boardSlug);
     let nextPublishedAt: string | null = null;
 
     if (isIssue) {
-      nextPublishedAt = (prompt("발간일 (YYYY-MM-DD)", item._raw?.published_at ?? "") ?? "").trim();
+      nextPublishedAt = (
+        prompt(
+          "발간일 (YYYY-MM-DD)",
+          item._raw?.published_at ?? ""
+        ) ?? ""
+      ).trim();
+
       if (!/^\d{4}-\d{2}-\d{2}$/.test(nextPublishedAt)) {
         alert("발간일 형식이 올바르지 않습니다. (YYYY-MM-DD)");
         return;
@@ -59,20 +92,30 @@ export default function AdminResourceBoard({
       title: nextTitle.trim(),
       note: nextNote,
     };
+
     if (isIssue) payload.published_at = nextPublishedAt;
+    setBusyId(item.id);
 
-    const res = await fetch("/api/admin/resources/update", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    try {
+      const res = await fetch("/api/admin/resources/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-    if (!res.ok) {
-      const t = await safeText(res);
-      alert(`수정 실패: ${t}`);
-      return;
+      if (redirectIfExpired(res)) return;
+
+      if (!res.ok) {
+        alert(`수정 실패: ${await safeText(res)}`);
+        return;
+      }
+
+      location.reload();
+    } catch {
+      alert("수정 요청 중 네트워크 오류가 발생했습니다.");
+    } finally {
+      setBusyId(null);
     }
-    location.reload();
   }
 
   async function onReplace(id: number) {
@@ -80,21 +123,44 @@ export default function AdminResourceBoard({
     input.type = "file";
 
     input.onchange = async () => {
-      const f = input.files?.[0];
-      if (!f) return;
+      const file = input.files?.[0];
+      if (!file) return;
 
-      const fd = new FormData();
-      fd.set("resourceId", String(id));
-      fd.set("file", f);
-
-      const res = await fetch("/api/admin/resources/replace", { method: "POST", body: fd });
-
-      if (!res.ok) {
-        const t = await safeText(res);
-        alert(`파일 교체 실패: ${t}`);
+      const maxBytes = 200 * 1024 * 1024;
+      if (file.size > maxBytes) {
+        alert("파일 크기는 200MB 이하여야 합니다.");
         return;
       }
-      location.reload();
+
+      const formData = new FormData();
+      formData.set("resourceId", String(id));
+      formData.set("file", file);
+      setBusyId(id);
+
+      try {
+        const res = await fetch(
+          "/api/admin/resources/replace",
+          { method: "POST", body: formData }
+        );
+
+        if (redirectIfExpired(res)) return;
+
+        if (!res.ok) {
+          alert(`파일 교체 실패: ${await safeText(res)}`);
+          return;
+        }
+
+        const out = await res.json().catch(() => null);
+        if (out?.cleanupWarning) {
+          alert(`파일은 교체됐지만 정리 경고가 있습니다.\n${out.cleanupWarning}`);
+        }
+
+        location.reload();
+      } catch {
+        alert("파일 교체 중 네트워크 오류가 발생했습니다.");
+      } finally {
+        setBusyId(null);
+      }
     };
 
     input.click();
@@ -102,18 +168,29 @@ export default function AdminResourceBoard({
 
   return (
     <div className={styles.board}>
-      {items.map((it) => {
-        const kind = it._raw?.kind as string | undefined;
-        const thumbUrl = `/api/resources/go?id=${it.id}`;
+      {items.map((item) => {
+        const kind = item._raw?.kind as string | undefined;
+        const visibility = item._raw?.visibility as string | undefined;
+        const fileUrl = `/api/admin/resources/go?id=${item.id}`;
+        const disabled = busyId === item.id;
 
         return (
-          <div key={it.id} className={styles.row} style={{ cursor: "default" }}>
-            {/* LEFT: thumbnail + text */}
-            <div className={styles.left} style={{ display: "flex", gap: 12, alignItems: "center" }}>
-              {/* thumbnail */}
+          <div
+            key={item.id}
+            className={styles.row}
+            style={{ cursor: "default", opacity: disabled ? 0.65 : 1 }}
+          >
+            <div
+              className={styles.left}
+              style={{
+                display: "flex",
+                gap: 12,
+                alignItems: "center",
+              }}
+            >
               {kind === "image" ? (
                 <img
-                  src={thumbUrl}
+                  src={fileUrl}
                   alt=""
                   style={{
                     width: 56,
@@ -126,7 +203,7 @@ export default function AdminResourceBoard({
                 />
               ) : kind === "video" ? (
                 <video
-                  src={thumbUrl}
+                  src={fileUrl}
                   muted
                   playsInline
                   preload="metadata"
@@ -158,31 +235,61 @@ export default function AdminResourceBoard({
                 </div>
               )}
 
-              {/* text */}
               <div style={{ minWidth: 0 }}>
-                <div className={styles.title}>{it.title}</div>
-                {it.subtitle ? <div className={styles.sub}>{it.subtitle}</div> : null}
+                <div className={styles.title}>{item.title}</div>
+                {item.subtitle ? (
+                  <div className={styles.sub}>{item.subtitle}</div>
+                ) : null}
+                {visibility ? (
+                  <div style={{ fontSize: 12, marginTop: 4, opacity: 0.65 }}>
+                    공개 범위: {visibility}
+                  </div>
+                ) : null}
               </div>
             </div>
 
-            {/* RIGHT: buttons */}
             <div
               className={styles.right}
-              style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                flexWrap: "wrap",
+              }}
             >
-              {it.rightMeta ? <span className={styles.meta}>{it.rightMeta}</span> : null}
+              {item.rightMeta ? (
+                <span className={styles.meta}>{item.rightMeta}</span>
+              ) : null}
 
-              <a className={styles.open} href={thumbUrl} target="_blank" rel="noreferrer" title="새 창으로 열기">
+              <a
+                className={styles.open}
+                href={fileUrl}
+                target="_blank"
+                rel="noreferrer"
+                title="새 창으로 열기"
+              >
                 열기
               </a>
 
-              <button onClick={() => onEdit(it)} style={btnStyle}>
+              <button
+                disabled={disabled}
+                onClick={() => onEdit(item)}
+                style={btnStyle}
+              >
                 수정
               </button>
-              <button onClick={() => onReplace(it.id)} style={btnStyle}>
+              <button
+                disabled={disabled}
+                onClick={() => onReplace(item.id)}
+                style={btnStyle}
+              >
                 교체
               </button>
-              <button onClick={() => onDelete(it.id)} style={{ ...btnStyle, borderColor: "#ffb3b3" }}>
+              <button
+                disabled={disabled}
+                onClick={() => onDelete(item.id)}
+                style={{ ...btnStyle, borderColor: "#ffb3b3" }}
+              >
                 삭제
               </button>
             </div>
@@ -203,11 +310,13 @@ const btnStyle: React.CSSProperties = {
 
 async function safeText(res: Response) {
   try {
-    const ct = res.headers.get("content-type") ?? "";
-    if (ct.includes("application/json")) {
-      const j = await res.json().catch(() => null);
-      return j ? JSON.stringify(j) : `HTTP ${res.status}`;
+    const contentType = res.headers.get("content-type") ?? "";
+
+    if (contentType.includes("application/json")) {
+      const out = await res.json().catch(() => null);
+      return out?.error ?? out?.detail ?? JSON.stringify(out);
     }
+
     return await res.text();
   } catch {
     return `HTTP ${res.status}`;

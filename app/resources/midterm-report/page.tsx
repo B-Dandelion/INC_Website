@@ -34,7 +34,10 @@ export default async function ProjectReportPage({
   const assets = selectedEventId ? await fetchEventAssets(selectedEventId) : [];
 
   // 역할별 분리
-  const poster = assets.find((a) => a.role === "poster_ko") ?? null;
+  const poster =
+    assets.find((a) => a.role === "poster_ko") ??
+    assets.find((a) => a.role === "poster_en") ??
+    null;
 
   const photos = assets
     .filter((a) => a.role === "photo" && a.resources?.id)

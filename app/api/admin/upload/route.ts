@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand,
+} from "@aws-sdk/client-s3";
 import { createClient } from "@supabase/supabase-js";
 import { requireAdminOrThrow } from "@/lib/requireAdmin";
 
@@ -277,6 +281,22 @@ export async function POST(req: Request) {
       .maybeSingle();
 
     if (insertError || !inserted) {
+      if (file && r2Key) {
+        const rollbackBucket =
+          visibilityRaw === "public"
+            ? process.env.R2_PUBLIC_BUCKET!
+            : process.env.R2_PRIVATE_BUCKET!;
+
+        await s3
+          .send(
+            new DeleteObjectCommand({
+              Bucket: rollbackBucket,
+              Key: r2Key,
+            })
+          )
+          .catch(() => null);
+      }
+
       return NextResponse.json(
         {
           ok: false,

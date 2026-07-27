@@ -7,23 +7,25 @@ export const runtime = "nodejs";
 const sb = createClient(
   process.env.SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: { persistSession: false },
-  }
+  { auth: { persistSession: false } }
 );
 
-const SINGLE_ASSET_ROLES = new Set(["poster_ko", "poster_en"]);
+const SINGLE_ASSET_ROLES = new Set([
+  "poster_ko",
+  "poster_en",
+  "timetable",
+]);
 
 export async function POST(req: Request) {
   try {
     await requireAdminOrThrow();
     const body = await req.json().catch(() => ({}));
 
-    const event_id = String(body.event_id ?? "").trim();
+    const eventId = String(body.event_id ?? "").trim();
     const role = String(body.role ?? "").trim();
-    const resource_id = Number(body.resource_id);
+    const resourceId = Number(body.resource_id);
 
-    if (!event_id) {
+    if (!eventId) {
       return NextResponse.json(
         { ok: false, error: "event_id required" },
         { status: 400 }
@@ -37,7 +39,7 @@ export async function POST(req: Request) {
       );
     }
 
-    if (!Number.isFinite(resource_id) || resource_id <= 0) {
+    if (!Number.isFinite(resourceId) || resourceId <= 0) {
       return NextResponse.json(
         { ok: false, error: "resource_id required" },
         { status: 400 }
@@ -45,9 +47,9 @@ export async function POST(req: Request) {
     }
 
     const values = {
-      event_id,
+      event_id: eventId,
       role,
-      resource_id,
+      resource_id: resourceId,
       person_ko: body.person_ko ?? null,
       person_en: body.person_en ?? null,
       item_title_ko: body.item_title_ko ?? null,
@@ -57,16 +59,15 @@ export async function POST(req: Request) {
         typeof body.sort_order === "number" ? body.sort_order : 0,
     };
 
-    // 포스터는 행사별 국문/영문 각각 1개만 허용됩니다.
-    // 삭제된 resources를 가리키는 기존 event_assets가 남아 있더라도
-    // 새 행을 insert하지 않고 기존 연결을 새 resource로 교체합니다.
     if (SINGLE_ASSET_ROLES.has(role)) {
-      const { data: existing, error: existingError } = await sb
+      const { data: existingRows, error: existingError } = await sb
         .from("event_assets")
-        .select("id")
-        .eq("event_id", event_id)
+        .select("id,resource_id,sort_order")
+        .eq("event_id", eventId)
         .eq("role", role)
-        .maybeSingle();
+        .order("sort_order", { ascending: true })
+        .order("id", { ascending: true })
+        .limit(1);
 
       if (existingError) {
         return NextResponse.json(
@@ -75,11 +76,15 @@ export async function POST(req: Request) {
         );
       }
 
+      const existing = existingRows?.[0] ?? null;
+
       if (existing?.id) {
+        const oldResourceId = Number(existing.resource_id);
+
         const { data, error } = await sb
           .from("event_assets")
           .update({
-            resource_id,
+            resource_id: resourceId,
             person_ko: values.person_ko,
             person_en: values.person_en,
             item_title_ko: values.item_title_ko,
@@ -99,10 +104,38 @@ export async function POST(req: Request) {
           );
         }
 
+        let cleanupWarning: string | null = null;
+
+        if (
+          Number.isFinite(oldResourceId) &&
+          oldResourceId > 0 &&
+          oldResourceId !== resourceId
+        ) {
+          const { count, error: countError } = await sb
+            .from("event_assets")
+            .select("id", { count: "exact", head: true })
+            .eq("resource_id", oldResourceId);
+
+          if (countError) {
+            cleanupWarning = countError.message;
+          } else if ((count ?? 0) === 0) {
+            const { error: cleanupError } = await sb
+              .from("resources")
+              .update({ deleted_at: new Date().toISOString() })
+              .eq("id", oldResourceId)
+              .is("deleted_at", null);
+
+            if (cleanupError) {
+              cleanupWarning = cleanupError.message;
+            }
+          }
+        }
+
         return NextResponse.json({
           ok: true,
           asset: data,
           replacedExisting: true,
+          cleanupWarning,
         });
       }
     }
@@ -121,10 +154,10 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ ok: true, asset: data });
-  } catch (e: any) {
+  } catch (error: any) {
     return NextResponse.json(
-      { ok: false, error: String(e?.message ?? e) },
-      { status: e?.status ?? 500 }
+      { ok: false, error: String(error?.message ?? error) },
+      { status: error?.status ?? 500 }
     );
   }
 }

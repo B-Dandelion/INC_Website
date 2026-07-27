@@ -1,5 +1,5 @@
-import UploadClient from "./uploadClient";
+import { redirect } from "next/navigation";
 
-export default function Page({ params }: { params: { route: string } }) {
-  return <UploadClient route={decodeURIComponent(params.route)} />;
+export default function LegacyAdminUploadRedirect() {
+  redirect("/admin-x7k3p9/resources");
 }

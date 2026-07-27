@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand,
+} from "@aws-sdk/client-s3";
 import { requireAdminOrThrow } from "@/lib/requireAdmin";
 
 export const runtime = "nodejs";
@@ -58,6 +62,14 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { ok: false, error: "file is required" },
         { status: 400 }
+      );
+    }
+
+    const maxFileBytes = 200 * 1024 * 1024;
+    if (file.size > maxFileBytes) {
+      return NextResponse.json(
+        { ok: false, error: "file too large (max 200MB)" },
+        { status: 413 }
       );
     }
 
@@ -164,6 +176,7 @@ export async function POST(req: Request) {
         mime: file.type || null,
         size_bytes: buffer.length,
         original_filename: file.name,
+        source_path: null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", resourceId)
@@ -173,6 +186,10 @@ export async function POST(req: Request) {
       .maybeSingle();
 
     if (updateError || !updated) {
+      await s3
+        .send(new DeleteObjectCommand({ Bucket: bucket, Key: key }))
+        .catch(() => null);
+
       return NextResponse.json(
         {
           ok: false,
@@ -182,11 +199,29 @@ export async function POST(req: Request) {
       );
     }
 
+    let cleanupWarning: string | null = null;
+
+    if (resource.r2_key && resource.r2_key !== key) {
+      try {
+        await s3.send(
+          new DeleteObjectCommand({
+            Bucket: bucket,
+            Key: resource.r2_key,
+          })
+        );
+      } catch (cleanupError: any) {
+        cleanupWarning = String(
+          cleanupError?.message ?? cleanupError
+        );
+      }
+    }
+
     return NextResponse.json({
       ok: true,
       resource: updated,
       oldKey: resource.r2_key,
       newKey: key,
+      cleanupWarning,
     });
   } catch (e: any) {
     const status = e?.status ?? 500;

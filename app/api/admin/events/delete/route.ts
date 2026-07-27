@@ -46,6 +46,9 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ ok: true, deleted_resources: resourceIds.length });
   } catch (e: any) {
-    return NextResponse.json({ ok: false, error: String(e?.message ?? e) }, { status: 500 });
+    return NextResponse.json(
+      { ok: false, error: String(e?.message ?? e) },
+      { status: e?.status ?? 500 }
+    );
   }
 }

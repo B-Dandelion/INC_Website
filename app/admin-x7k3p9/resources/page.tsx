@@ -7,7 +7,30 @@ export default async function AdminResourcesHome() {
   return (
     <main style={{ maxWidth: 900, margin: "40px auto", padding: 16 }}>
       <h1 style={{ fontSize: 24, fontWeight: 800 }}>자료실 관리자</h1>
-      <p style={{ opacity: 0.7, marginTop: 6 }}>카테고리를 선택하세요.</p>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+        }}
+      >
+        <p style={{ opacity: 0.7, marginTop: 6 }}>카테고리를 선택하세요.</p>
+        <form action="/api/admin/logout" method="post">
+          <button
+            type="submit"
+            style={{
+              border: "1px solid #ddd",
+              borderRadius: 8,
+              padding: "7px 10px",
+              background: "#fff",
+              cursor: "pointer",
+            }}
+          >
+            로그아웃
+          </button>
+        </form>
+      </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 12, marginTop: 16 }}>
         {boards.map((b) => (

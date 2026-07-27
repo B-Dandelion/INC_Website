@@ -79,6 +79,7 @@ const EVENT_ROLE_OPTIONS: Record<string, RoleOption[]> = {
     workshop: [
         { role: "poster_ko", label: "포스터(국문)" },
         { role: "poster_en", label: "포스터(영문)" },
+        { role: "timetable", label: "시간표" },
         { role: "photo", label: "사진" },
         { role: "slide", label: "자료" },
     ],
@@ -116,6 +117,14 @@ function trimOrNull(value: string) {
 
 function errorMessage(error: unknown) {
     return error instanceof Error ? error.message : String(error);
+}
+
+function handleUnauthorized(response: Response) {
+    if (response.status !== 401) return false;
+
+    alert("관리자 세션이 만료되었습니다. 다시 로그인해 주세요.");
+    location.href = "/admin-x7k3p9?reason=session";
+    return true;
 }
 
 function youtubeVideoId(value: string) {
@@ -304,6 +313,17 @@ export default function AdminEventDetailClient({
 
     async function saveEventMeta() {
         setErr(null);
+
+        if (!titleKo.trim()) {
+            setErr("행사명은 비워둘 수 없습니다.");
+            return;
+        }
+
+        if (eventDate && periodEnd && periodEnd < eventDate) {
+            setErr("기간 종료일은 행사일보다 빠를 수 없습니다.");
+            return;
+        }
+
         setBusy(true);
 
         try {
@@ -318,6 +338,8 @@ export default function AdminEventDetailClient({
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ id: event.id, patch }),
             });
+
+            if (handleUnauthorized(response)) return;
 
             if (!response.ok) {
                 setErr(await response.text());
@@ -407,6 +429,8 @@ export default function AdminEventDetailClient({
                 body: formData,
             });
 
+            if (handleUnauthorized(uploadResponse)) return;
+
             if (!uploadResponse.ok) {
                 setErr(await uploadResponse.text());
                 return;
@@ -461,6 +485,8 @@ export default function AdminEventDetailClient({
                     body: JSON.stringify(assetPayload),
                 }
             );
+
+            if (handleUnauthorized(attachResponse)) return;
 
             if (!attachResponse.ok) {
                 const attachError = await attachResponse.text();
@@ -564,7 +590,9 @@ export default function AdminEventDetailClient({
                     }
                 );
 
-                if (!response.ok) {
+                if (handleUnauthorized(response)) return;
+
+            if (!response.ok) {
                     alert(await response.text());
                     return;
                 }
@@ -605,6 +633,8 @@ export default function AdminEventDetailClient({
                 }
             );
 
+            if (handleUnauthorized(response)) return;
+
             if (!response.ok) {
                 alert(await response.text());
                 return;
@@ -631,6 +661,8 @@ export default function AdminEventDetailClient({
                 }
             );
 
+            if (handleUnauthorized(unlinkResponse)) return;
+
             if (!unlinkResponse.ok) {
                 alert(await unlinkResponse.text());
                 return;
@@ -644,6 +676,8 @@ export default function AdminEventDetailClient({
                     body: JSON.stringify({ resourceId }),
                 }
             );
+
+            if (handleUnauthorized(deleteResponse)) return;
 
             if (!deleteResponse.ok) {
                 alert(
@@ -880,7 +914,9 @@ export default function AdminEventDetailClient({
                                 }
                             );
 
-                            if (!response.ok) {
+                            if (handleUnauthorized(response)) return;
+
+            if (!response.ok) {
                                 alert(await response.text());
                                 return;
                             }

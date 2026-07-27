@@ -30,7 +30,24 @@ export default function ResourcesFrame({
   return (
     <div className={styles.container}>
       <aside className={styles.sidebar}>
-        <div className={styles.sidebarHeader}>카테고리</div>
+        <div className={styles.sidebarHeader}>
+          <div>카테고리</div>
+          <form action="/api/admin/logout" method="post" style={{ marginTop: 8 }}>
+            <button
+              type="submit"
+              style={{
+                border: "1px solid #ddd",
+                borderRadius: 8,
+                padding: "6px 9px",
+                background: "#fff",
+                cursor: "pointer",
+                fontSize: 12,
+              }}
+            >
+              로그아웃
+            </button>
+          </form>
+        </div>
 
         <nav className={styles.nav}>
           {NAV.map((item) => {
