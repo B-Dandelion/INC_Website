@@ -35,9 +35,9 @@ export default async function ProjectReportPage({
   // 역할별 분리
   const poster = assets.find((a) => a.role === "poster_ko") ?? null;
 
-  // 사진(현수막/행사 사진) - 지금은 photo 1개만 들어가도 OK
-  const photos = assets.filter((a) => a.role === "photo");
-  const heroPhoto = photos[0] ?? null;
+  const photos = assets
+    .filter((a) => a.role === "photo" && a.resources?.id)
+    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
 
   // 자료(교수님 발표자료) : slide로 통일해서 넣었으니 그대로 뽑기
   const slides = assets
@@ -118,24 +118,36 @@ export default async function ProjectReportPage({
             <section id="photo" className={styles.section}>
               <div className={styles.sectionTitle}>사진</div>
 
-              {heroPhoto?.resources?.id ? (
-                <div className={styles.photoLarge}>
-                  <div className={styles.photoLabel}>행사 사진</div>
-                  <a
-                    href={`/api/resources/go?id=${heroPhoto.resources.id}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className={styles.photoLink}
-                  >
-                    <img
-                      src={`/api/resources/go?id=${heroPhoto.resources.id}`}
-                      alt={heroPhoto.resources.title ?? "photo"}
-                    />
-                  </a>
-                </div>
-              ) : (
+              {photos.length === 0 ? (
                 <div className={styles.card}>
                   <div className={styles.muted}>등록된 사진이 없습니다.</div>
+                </div>
+              ) : (
+                <div className={styles.photoGrid}>
+                  {photos.map((photo, index) => {
+                    const resource = photo.resources;
+                    if (!resource?.id) return null;
+
+                    const href = `/api/resources/go?id=${resource.id}`;
+                    const label =
+                      resource.title ??
+                      resource.original_filename ??
+                      `행사 사진 ${index + 1}`;
+
+                    return (
+                      <a
+                        key={`${resource.id}-${index}`}
+                        className={styles.photoItem}
+                        href={href}
+                        target="_blank"
+                        rel="noreferrer"
+                        title={`${label} 크게 보기`}
+                      >
+                        <img src={href} alt={label} loading="lazy" />
+                        <div className={styles.photoCaption}>{label}</div>
+                      </a>
+                    );
+                  })}
                 </div>
               )}
             </section>
