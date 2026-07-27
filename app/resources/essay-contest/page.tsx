@@ -2,6 +2,7 @@
 import Link from "next/link";
 import ResourcesFrame from "@/components/resources/ResourcesFrame";
 import SectionTabs from "@/components/resources/SectionTabs";
+import EventPoster from "@/components/resources/EventPoster";
 import styles from "./essayContest.module.css";
 import { fetchEvents, fetchEventAssets } from "@/lib/eventsDb";
 
@@ -63,7 +64,6 @@ export default async function EssayContestPage({
 
   const selectedEvent = events.find((e) => e.id === selectedEventId) ?? null;
   const assets = selectedEventId ? await fetchEventAssets(selectedEventId) : [];
-  console.log("assets roles sample:", assets.map(a => [a.role, a.award, a.person_en, a.person_ko]).slice(0, 20));
 
   // posters
   const posterKo = assets.find((a) => a.role === "poster_ko") ?? null;
@@ -192,17 +192,13 @@ export default async function EssayContestPage({
                   <div className={styles.posterLabel}>국문</div>
                   <div className={styles.posterWrap}>
                     <div className={styles.posterInner}>
-                      {posterKo?.resources?.id ? (
-                        <img
-                          src={`/api/resources/go?id=${posterKo.resources.id}`}
-                          alt={posterKo.resources.title ?? "poster_ko"}
-                          className={styles.posterImg}
-                        />
-                      ) : (
-                        <div className={styles.card}>
-                          <div className={styles.muted}>국문 포스터가 없습니다.</div>
-                        </div>
-                      )}
+                      <EventPoster
+                        asset={posterKo}
+                        emptyText="국문 포스터가 없습니다."
+                        alt="국문 포스터"
+                        imageClassName={styles.posterImg}
+                        emptyClassName={styles.card}
+                      />
                     </div>
                   </div>
                 </div>
@@ -211,17 +207,13 @@ export default async function EssayContestPage({
                   <div className={styles.posterLabel}>영문</div>
                   <div className={styles.posterWrap}>
                     <div className={styles.posterInner}>
-                      {posterEn?.resources?.id ? (
-                        <img
-                          src={`/api/resources/go?id=${posterEn.resources.id}`}
-                          alt={posterEn.resources.title ?? "poster_en"}
-                          className={styles.posterImg}
-                        />
-                      ) : (
-                        <div className={styles.card}>
-                          <div className={styles.muted}>영문 포스터가 없습니다.</div>
-                        </div>
-                      )}
+                      <EventPoster
+                        asset={posterEn}
+                        emptyText="영문 포스터가 없습니다."
+                        alt="영문 포스터"
+                        imageClassName={styles.posterImg}
+                        emptyClassName={styles.card}
+                      />
                     </div>
                   </div>
                 </div>

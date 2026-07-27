@@ -463,7 +463,22 @@ export default function AdminEventDetailClient({
             );
 
             if (!attachResponse.ok) {
-                setErr(await attachResponse.text());
+                const attachError = await attachResponse.text();
+
+                const cleanupResponse = await fetch(
+                    "/api/admin/resources/delete",
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ resourceId }),
+                    }
+                );
+
+                const cleanupMessage = cleanupResponse.ok
+                    ? "방금 업로드된 미연결 자료는 정리했습니다."
+                    : "방금 업로드된 자료 정리에 실패했습니다. 관리자 자료 목록을 확인해 주세요.";
+
+                setErr(`${attachError}\n${cleanupMessage}`);
                 return;
             }
 

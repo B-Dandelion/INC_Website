@@ -3,6 +3,7 @@ import styles from "./seminars.module.css";
 import { fetchEvents, fetchEventAssets } from "@/lib/eventsDb";
 import ResourcesFrame from "@/components/resources/ResourcesFrame";
 import SectionTabs from "@/components/resources/SectionTabs";
+import EventPoster from "@/components/resources/EventPoster";
 
 function fmtDate(dateStr?: string | null) {
   return dateStr ?? "";
@@ -135,21 +136,13 @@ export default async function SeminarsPage({
                 <div className={styles.sectionTitle}>포스터</div>
                 <div className={styles.posterWrap}>
                   <div className={styles.posterInner}>
-                    {poster?.resources ? (
-                      <img
-                        src={`/api/resources/go?id=${poster.resources.id}`}
-                        alt={
-                          poster.resources.title ?? "poster"
-                        }
-                        className={styles.posterImg}
-                      />
-                    ) : (
-                      <div className={styles.card}>
-                        <div className={styles.muted}>
-                          포스터가 없습니다.
-                        </div>
-                      </div>
-                    )}
+                    <EventPoster
+                      asset={poster}
+                      emptyText="포스터가 없습니다."
+                      alt="세미나 포스터"
+                      imageClassName={styles.posterImg}
+                      emptyClassName={styles.card}
+                    />
                   </div>
                 </div>
               </section>

@@ -2,6 +2,7 @@
 import Link from "next/link";
 import ResourcesFrame from "@/components/resources/ResourcesFrame";
 import SectionTabs from "@/components/resources/SectionTabs";
+import EventPoster from "@/components/resources/EventPoster";
 import styles from "./projectReport.module.css";
 import { fetchEvents, fetchEventAssets } from "@/lib/eventsDb";
 
@@ -97,21 +98,17 @@ export default async function ProjectReportPage({
             <section id="poster" className={styles.section}>
               <div className={styles.sectionTitle}>포스터</div>
 
-              {poster?.resources?.id ? (
-                <div className={styles.posterWrap}>
-                  <div className={styles.posterInner}>
-                    <img
-                      src={`/api/resources/go?id=${poster.resources.id}`}
-                      alt={poster.resources.title ?? "poster"}
-                      className={styles.posterImg}
-                    />
-                  </div>
+              <div className={styles.posterWrap}>
+                <div className={styles.posterInner}>
+                  <EventPoster
+                    asset={poster}
+                    emptyText="포스터가 없습니다."
+                    alt="과제 보고회 포스터"
+                    imageClassName={styles.posterImg}
+                    emptyClassName={styles.card}
+                  />
                 </div>
-              ) : (
-                <div className={styles.card}>
-                  <div className={styles.muted}>포스터가 없습니다.</div>
-                </div>
-              )}
+              </div>
             </section>
 
             {/* 사진 */}
