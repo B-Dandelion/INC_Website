@@ -1,4 +1,3 @@
-// app/resources/lecture/page.tsx
 import ResourcesFrame from "@/components/resources/ResourcesFrame";
 import ResourceBoard, { type BoardItem } from "@/components/resources/ResourceBoard";
 import styles from "./lecture.module.css";
@@ -11,7 +10,6 @@ function norm(p: string) {
 function groupNameOf(r: ResourceRow, boardSlug: string) {
   const sp = r.source_path ? norm(r.source_path) : "";
   const parts = sp.split("/").filter(Boolean);
-  // lecture/<강연명>/...
   if (parts[0] !== boardSlug) return "기타";
   return parts[1] ?? "기타";
 }
@@ -36,8 +34,6 @@ function toBoardItem(r: ResourceRow): BoardItem {
 export default async function LecturePage() {
   const boardSlug = "lecture";
   const rows = await fetchResources({ boardSlug, page: 1, pageSize: 1000 });
-
-  // 그룹핑: 강연명 -> { images, files }
   const groups = new Map<string, { images: ResourceRow[]; files: ResourceRow[] }>();
 
   for (const r of rows ?? []) {
@@ -48,17 +44,17 @@ export default async function LecturePage() {
     else g.files.push(r);
   }
 
-const collator = new Intl.Collator("ko-KR", { numeric: true, sensitivity: "base" });
-// 이름순(숫자 포함 자연정렬) - 2025 1월 -> 2025 11월
-const sorted = [...groups.entries()].sort((a, b) => collator.compare(a[0], b[0]));
+  const collator = new Intl.Collator("ko-KR", { numeric: true, sensitivity: "base" });
+  const sorted = [...groups.entries()].sort((a, b) => collator.compare(a[0], b[0]));
 
   return (
     <ResourcesFrame activeKey="lecture">
       <div className={styles.content}>
-        <div className={styles.hero}>
+        <header className={styles.hero}>
+          <div className={styles.eyebrow}>Lecture archive</div>
           <h1 className={styles.h1}>강연자료</h1>
-          <div className={styles.meta}>강연별로 묶어서 표시합니다. (열기 버튼 클릭 시 새 창)</div>
-        </div>
+          <div className={styles.meta}>강연별 사진과 자료를 한 곳에서 확인할 수 있습니다.</div>
+        </header>
 
         {sorted.length === 0 ? (
           <div className={styles.card}>
@@ -67,15 +63,20 @@ const sorted = [...groups.entries()].sort((a, b) => collator.compare(a[0], b[0])
         ) : (
           <div className={styles.groups}>
             {sorted.map(([name, g]) => {
-              // 그룹 내부 정렬(원하면 source_path 순으로)
               g.images.sort((a, b) => (a.source_path ?? "").localeCompare(b.source_path ?? ""));
               g.files.sort((a, b) => (a.source_path ?? "").localeCompare(b.source_path ?? ""));
-
               const fileItems = g.files.map(toBoardItem);
 
               return (
                 <section key={name} className={styles.groupCard}>
-                  <div className={styles.groupTitle}>{name}</div>
+                  <div className={styles.groupHeader}>
+                    <div className={styles.groupTitle}>{name}</div>
+                    <div className={styles.groupMeta}>
+                      {g.images.length > 0 ? `사진 ${g.images.length}` : ""}
+                      {g.images.length > 0 && fileItems.length > 0 ? " · " : ""}
+                      {fileItems.length > 0 ? `자료 ${fileItems.length}` : ""}
+                    </div>
+                  </div>
 
                   {g.images.length > 0 ? (
                     <>
@@ -95,7 +96,6 @@ const sorted = [...groups.entries()].sort((a, b) => collator.compare(a[0], b[0])
                               rel="noreferrer"
                               title={caption}
                             >
-                              {/* Next/Image 안 쓰고 img로: 설정 필요 없고, src가 same-origin이라 안전 */}
                               <img className={styles.thumbImg} src={src} alt={caption} loading="lazy" />
                               <div className={styles.thumbCap}>{caption}</div>
                             </a>
