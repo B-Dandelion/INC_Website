@@ -11,7 +11,6 @@ import ResourcesMegaMenu from "@/components/header/ResourcesMegaMenu";
 
 export default function Header() {
   const pathname = usePathname();
-  const [lang, setLang] = useState<"KOR" | "ENG">("KOR");
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
@@ -47,34 +46,18 @@ export default function Header() {
             </Link>
           </nav>
 
-          <form action="/resources/search" method="get" className="relative w-[220px]">
+          <form action="/search" method="get" className="relative w-[230px]" role="search">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
               name="q"
-              type="text"
-              placeholder="자료 검색"
+              type="search"
+              aria-label="사이트 검색"
+              placeholder="사이트 검색"
               className="h-9 w-full rounded-md border border-slate-300 bg-white pl-9 pr-3 text-sm text-slate-800 outline-none transition focus:border-[#2B6CA3] focus:ring-2 focus:ring-[#2B6CA3]/10"
             />
           </form>
 
-          <div className="flex items-center gap-4 border-l border-slate-200 pl-5">
-            <div className="flex items-center gap-2 text-xs font-semibold tracking-wide">
-              <button
-                type="button"
-                onClick={() => setLang("KOR")}
-                className={lang === "KOR" ? "text-[#174A7E]" : "text-slate-400 hover:text-slate-600"}
-              >
-                KOR
-              </button>
-              <span className="text-slate-300">/</span>
-              <button
-                type="button"
-                onClick={() => setLang("ENG")}
-                className={lang === "ENG" ? "text-[#174A7E]" : "text-slate-400 hover:text-slate-600"}
-              >
-                ENG
-              </button>
-            </div>
+          <div className="border-l border-slate-200 pl-5">
             <AuthButton />
           </div>
         </div>
@@ -119,25 +102,16 @@ export default function Header() {
               </div>
             </div>
 
-            <form action="/resources/search" method="get" className="relative mt-5">
+            <form action="/search" method="get" className="relative mt-5" role="search">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <input
                 name="q"
-                type="text"
-                placeholder="자료 검색"
+                type="search"
+                aria-label="사이트 검색"
+                placeholder="자료·공지·이벤트 검색"
                 className="h-10 w-full rounded-md border border-slate-300 bg-white pl-9 pr-3 text-sm outline-none"
               />
             </form>
-
-            <div className="mt-5 flex items-center gap-2 text-xs font-semibold tracking-wide">
-              <button type="button" onClick={() => setLang("KOR")} className={lang === "KOR" ? "text-[#174A7E]" : "text-slate-400"}>
-                KOR
-              </button>
-              <span className="text-slate-300">/</span>
-              <button type="button" onClick={() => setLang("ENG")} className={lang === "ENG" ? "text-[#174A7E]" : "text-slate-400"}>
-                ENG
-              </button>
-            </div>
           </div>
         </div>
       ) : null}
