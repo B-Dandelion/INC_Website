@@ -17,6 +17,7 @@ export default async function NoticeListPage({
   const fetchedRows = await fetchNotices({ page, pageSize: pageSize + 1 });
   const rows = fetchedRows.slice(0, pageSize);
   const hasNext = fetchedRows.length > pageSize;
+  const hasPrev = page > 1;
 
   const items: NoticeBoardItem[] = rows.map((n) => ({
     id: n.id,
@@ -26,9 +27,9 @@ export default async function NoticeListPage({
     href: `/notice/${n.id}`,
   }));
 
-  const hasPrev = page > 1;
-
-  const sideItems = rows.slice(0, 10).map((n) => ({
+  // 사이드바는 현재 페이지와 관계없이 항상 최신 공지를 보여준다.
+  const latestRows = page === 1 ? rows.slice(0, 10) : await fetchNotices({ page: 1, pageSize: 10 });
+  const sideItems = latestRows.map((n) => ({
     id: n.id,
     title: n.pinned ? `📌 ${n.title}` : n.title,
     posted_at: n.posted_at ?? "-",
@@ -50,27 +51,29 @@ export default async function NoticeListPage({
           <NoticeBoard items={items} />
         )}
 
-        <div className={styles.pager}>
-          {hasPrev ? (
-            <a className={styles.pagerBtn} href={`/notice?page=${page - 1}`} aria-label="이전" title="이전">
-              ‹
-            </a>
-          ) : (
-            <span className={styles.pagerBtn} style={{ visibility: "hidden" }}>
-              ‹
-            </span>
-          )}
+        {items.length > 0 ? (
+          <div className={styles.pager} aria-label="공지사항 페이지 이동">
+            {hasPrev ? (
+              <a className={styles.pagerBtn} href={`/notice?page=${page - 1}`}>
+                ← 이전
+              </a>
+            ) : (
+              <span className={`${styles.pagerBtn} ${styles.pagerDisabled}`}>← 이전</span>
+            )}
 
-          {hasNext ? (
-            <a className={styles.pagerBtn} href={`/notice?page=${page + 1}`} aria-label="다음" title="다음">
-              ›
-            </a>
-          ) : (
-            <span className={styles.pagerBtn} style={{ visibility: "hidden" }}>
-              ›
+            <span className={styles.pageIndicator} aria-label={`현재 ${page}페이지`}>
+              {page}
             </span>
-          )}
-        </div>
+
+            {hasNext ? (
+              <a className={styles.pagerBtn} href={`/notice?page=${page + 1}`}>
+                다음 →
+              </a>
+            ) : (
+              <span className={`${styles.pagerBtn} ${styles.pagerDisabled}`}>다음 →</span>
+            )}
+          </div>
+        ) : null}
       </div>
     </NoticeFrame>
   );
