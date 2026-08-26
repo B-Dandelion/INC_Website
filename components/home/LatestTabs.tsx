@@ -51,7 +51,7 @@ export default function LatestTabs({
               {tab === "notice" ? "공지사항" : "자료실"}
             </div>
             <Link
-              href={tab === "notice" ? "/notices" : "/resources"}
+              href={tab === "notice" ? "/notice" : "/resources"}
               className="text-sm font-bold text-[#2563EB] hover:underline"
             >
               더보기 →

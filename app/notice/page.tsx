@@ -13,7 +13,10 @@ export default async function NoticeListPage({
   const page = Math.max(1, Number(sp.page ?? "1") || 1);
   const pageSize = 50;
 
-  const rows = await fetchNotices({ page, pageSize });
+  // 한 건을 더 조회해 다음 페이지가 실제로 존재하는지 판별한다.
+  const fetchedRows = await fetchNotices({ page, pageSize: pageSize + 1 });
+  const rows = fetchedRows.slice(0, pageSize);
+  const hasNext = fetchedRows.length > pageSize;
 
   const items: NoticeBoardItem[] = rows.map((n) => ({
     id: n.id,
@@ -24,7 +27,6 @@ export default async function NoticeListPage({
   }));
 
   const hasPrev = page > 1;
-  const hasNext = rows.length === pageSize;
 
   const sideItems = rows.slice(0, 10).map((n) => ({
     id: n.id,

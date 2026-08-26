@@ -13,7 +13,7 @@ export type NoticeRow = {
 export async function fetchNotices(args?: { page?: number; pageSize?: number }) {
   const supabase = createSupabaseServerClient();
   const page = Math.max(1, args?.page ?? 1);
-  const pageSize = Math.min(100, Math.max(10, args?.pageSize ?? 30));
+  const pageSize = Math.min(100, Math.max(1, args?.pageSize ?? 30));
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
