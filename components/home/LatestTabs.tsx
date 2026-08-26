@@ -87,16 +87,16 @@ export default function LatestTabs({
         </div>
 
         <aside className="border border-slate-200 bg-[#EEF4FA] p-6">
-          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#2B6CA3]">INC Event</p>
-          <h3 className="mt-3 text-lg font-semibold leading-7 text-slate-950">INC Open Forum (온라인) - 사전등록</h3>
+          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#2B6CA3]">INC Archive</p>
+          <h3 className="mt-3 text-lg font-semibold leading-7 text-slate-950">INC 자료 아카이브</h3>
           <p className="mt-3 text-sm leading-6 text-slate-600">
-            일정과 신청 안내는 상세 페이지에서 확인할 수 있습니다.
+            ATM, 강연자료, 기고문 등 INC의 주요 자료를 카테고리별로 확인할 수 있습니다.
           </p>
           <Link
-            href="/events"
+            href="/resources"
             className="mt-7 inline-flex items-center gap-1.5 border-b border-[#174A7E] pb-1 text-sm font-semibold text-[#174A7E] transition hover:text-[#103A66]"
           >
-            행사 보기
+            자료실 둘러보기
             <ArrowRight className="h-4 w-4" />
           </Link>
         </aside>
