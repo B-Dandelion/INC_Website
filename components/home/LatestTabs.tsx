@@ -1,17 +1,31 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, CalendarDays } from "lucide-react";
 import { useState } from "react";
 
 type Item = { id: string; title: string; date: string; href: string };
+type FeaturedEvent = {
+  id: string;
+  title: string;
+  summary: string;
+  startDate: string;
+  endDate: string;
+};
+
+function periodLabel(startDate: string, endDate: string) {
+  if (!startDate) return "일정 미정";
+  return endDate && endDate !== startDate ? `${startDate} ~ ${endDate}` : startDate;
+}
 
 export default function LatestTabs({
   notices,
   resources,
+  featuredEvent,
 }: {
   notices: Item[];
   resources: Item[];
+  featuredEvent: FeaturedEvent | null;
 }) {
   const [tab, setTab] = useState<"notice" | "resource">("notice");
   const items = tab === "notice" ? notices : resources;
@@ -86,20 +100,39 @@ export default function LatestTabs({
           </ul>
         </div>
 
-        <aside className="border border-slate-200 bg-[#EEF4FA] p-6">
-          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#2B6CA3]">INC Archive</p>
-          <h3 className="mt-3 text-lg font-semibold leading-7 text-slate-950">INC 자료 아카이브</h3>
-          <p className="mt-3 text-sm leading-6 text-slate-600">
-            ATM, 강연자료, 기고문 등 INC의 주요 자료를 카테고리별로 확인할 수 있습니다.
-          </p>
-          <Link
-            href="/resources"
-            className="mt-7 inline-flex items-center gap-1.5 border-b border-[#174A7E] pb-1 text-sm font-semibold text-[#174A7E] transition hover:text-[#103A66]"
-          >
-            자료실 둘러보기
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </aside>
+        {featuredEvent ? (
+          <aside className="border border-slate-200 bg-[#EEF4FA] p-6">
+            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#2B6CA3]">Featured Event</p>
+            <h3 className="mt-3 text-lg font-semibold leading-7 text-slate-950">{featuredEvent.title}</h3>
+            <div className="mt-3 flex items-center gap-1.5 text-xs font-medium tabular-nums text-slate-500">
+              <CalendarDays className="h-3.5 w-3.5" />
+              {periodLabel(featuredEvent.startDate, featuredEvent.endDate)}
+            </div>
+            <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-600">{featuredEvent.summary}</p>
+            <Link
+              href={`/events/${featuredEvent.id}`}
+              className="mt-7 inline-flex items-center gap-1.5 border-b border-[#174A7E] pb-1 text-sm font-semibold text-[#174A7E] transition hover:text-[#103A66]"
+            >
+              행사 보기
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </aside>
+        ) : (
+          <aside className="border border-slate-200 bg-[#EEF4FA] p-6">
+            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#2B6CA3]">INC Events</p>
+            <h3 className="mt-3 text-lg font-semibold leading-7 text-slate-950">행사 · 이벤트</h3>
+            <p className="mt-3 text-sm leading-6 text-slate-600">
+              INC에서 진행하거나 안내하는 주요 행사와 참여 정보를 확인할 수 있습니다.
+            </p>
+            <Link
+              href="/events"
+              className="mt-7 inline-flex items-center gap-1.5 border-b border-[#174A7E] pb-1 text-sm font-semibold text-[#174A7E] transition hover:text-[#103A66]"
+            >
+              이벤트 보기
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </aside>
+        )}
       </div>
     </section>
   );
