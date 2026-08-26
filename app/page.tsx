@@ -2,7 +2,7 @@ import Link from "next/link";
 import LatestTabs from "@/components/home/LatestTabs";
 import { RESOURCE_BOARDS } from "@/lib/resourceBoards";
 import { fetchPublicResources } from "@/lib/resourcesDb";
-import { fetchHomepagePromotion } from "@/lib/eventsDb";
+import { fetchHomepagePromotion } from "@/lib/promotionalEventsDb";
 import Image from "next/image";
 import { fetchNotices } from "@/lib/noticesDb";
 import { ArrowRight } from "lucide-react";
