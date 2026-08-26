@@ -22,7 +22,7 @@ export default function SearchResultList({ rows }: { rows: Row[] }) {
             <div className={styles.title}>{r.title}</div>
             {r.subtitle ? <div className={styles.sub}>{r.subtitle}</div> : null}
           </div>
-          <div className={styles.right}><span className={styles.open}>열기</span></div>
+          <div className={styles.right}><span className={styles.open}>↗</span></div>
         </a>
       ))}
     </div>
