@@ -13,23 +13,40 @@ export default async function AdminResourcesHome() {
           alignItems: "center",
           justifyContent: "space-between",
           gap: 12,
+          flexWrap: "wrap",
         }}
       >
         <p style={{ opacity: 0.7, marginTop: 6 }}>카테고리를 선택하세요.</p>
-        <form action="/api/admin/logout" method="post">
-          <button
-            type="submit"
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <Link
+            href="/admin-x7k3p9/notices"
             style={{
-              border: "1px solid #ddd",
+              border: "1px solid #cbd5e1",
               borderRadius: 8,
               padding: "7px 10px",
               background: "#fff",
-              cursor: "pointer",
+              color: "#0f172a",
+              textDecoration: "none",
+              fontWeight: 800,
             }}
           >
-            로그아웃
-          </button>
-        </form>
+            공지사항 관리
+          </Link>
+          <form action="/api/admin/logout" method="post">
+            <button
+              type="submit"
+              style={{
+                border: "1px solid #ddd",
+                borderRadius: 8,
+                padding: "7px 10px",
+                background: "#fff",
+                cursor: "pointer",
+              }}
+            >
+              로그아웃
+            </button>
+          </form>
+        </div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 12, marginTop: 16 }}>
