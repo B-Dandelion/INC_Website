@@ -47,33 +47,8 @@ export type EventAssetRow = {
   } | null;
 };
 
-const PUBLIC_EVENT_SELECT = [
-  "id",
-  "category",
-  "subtype",
-  "series_year",
-  "title_ko",
-  "title_en",
-  "event_date",
-  "period_end",
-  "location_ko",
-  "location_en",
-  "start_time",
-  "end_time",
-  "topic_ko",
-  "topic_en",
-  "audience_ko",
-  "audience_en",
-  "contact_name",
-  "contact_email",
-  "contact_phone",
-  "summary_ko",
-  "content_ko",
-  "homepage_featured",
-  "cta_label",
-  "cta_url",
-  "visibility",
-].join(",");
+const PUBLIC_EVENT_SELECT =
+  "id,category,subtype,series_year,title_ko,title_en,event_date,period_end,location_ko,location_en,start_time,end_time,topic_ko,topic_en,audience_ko,audience_en,contact_name,contact_email,contact_phone,summary_ko,content_ko,homepage_featured,cta_label,cta_url,visibility" as const;
 
 export async function fetchEvents(params: {
   category:
@@ -109,7 +84,7 @@ export async function fetchEvents(params: {
 
   if (error) throw error;
 
-  return (data ?? []) as EventRow[];
+  return (data ?? []) as unknown as EventRow[];
 }
 
 export async function fetchPromotionEvents() {
@@ -127,7 +102,7 @@ export async function fetchPromotionEventById(eventId: string) {
     .maybeSingle();
 
   if (error) throw error;
-  return (data ?? null) as EventRow | null;
+  return (data ?? null) as unknown as EventRow | null;
 }
 
 export async function fetchHomepagePromotion(today: string) {
@@ -143,7 +118,7 @@ export async function fetchHomepagePromotion(today: string) {
 
   if (error) throw error;
 
-  const rows = (data ?? []) as EventRow[];
+  const rows = (data ?? []) as unknown as EventRow[];
   return (
     rows.find((event) => {
       const end = event.period_end ?? event.event_date;
