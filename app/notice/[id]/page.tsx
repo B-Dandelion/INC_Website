@@ -3,6 +3,7 @@ import Link from "next/link";
 import styles from "@/components/resources/SimpleListPage.module.css";
 import NoticeFrame from "@/components/notices/NoticeFrame";
 import { fetchNoticeById, fetchNotices } from "@/lib/noticesDb";
+import { getLocale } from "@/lib/i18n";
 import { notFound } from "next/navigation";
 
 export default async function NoticeDetailPage({
@@ -10,6 +11,8 @@ export default async function NoticeDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const locale = await getLocale();
+  const en = locale === "en";
   const { id } = await params;
   const nid = Number(id);
   if (!Number.isFinite(nid) || nid <= 0) return notFound();
@@ -17,7 +20,6 @@ export default async function NoticeDetailPage({
   const row = await fetchNoticeById(nid);
   if (!row) return notFound();
 
-  // sidebar 최신 10개
   const latest = await fetchNotices({ page: 1, pageSize: 10 });
   const sideItems = latest.map((n) => ({
     id: n.id,
@@ -30,19 +32,14 @@ export default async function NoticeDetailPage({
       <div className={styles.content}>
         <div className={styles.hero}>
           <h1 className={styles.h1}>{row.title}</h1>
-          {/* '게시' 제거: 날짜만 */}
           <div className={styles.meta}>{row.posted_at ?? "-"}</div>
         </div>
 
         <div className={styles.card}>
-          <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.7, color: "#0f172a" }}>
-            {row.content}
-          </div>
-
-          {/* 목록 버튼: 본문 아래로 */}
+          <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.7, color: "#0f172a" }}>{row.content}</div>
           <div style={{ marginTop: 18 }}>
-            <Link href="/notice" style={{ textDecoration: "none", color: "#2563eb", fontWeight: 900 }}>
-              ← 목록으로
+            <Link href="/notice" style={{ textDecoration: "none", color: "#174a7e", fontWeight: 800 }}>
+              ← {en ? "Back to notices" : "목록으로"}
             </Link>
           </div>
         </div>
