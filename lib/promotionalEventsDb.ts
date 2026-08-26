@@ -5,6 +5,7 @@ export type PromotionEventRow = {
   title_ko: string;
   summary_ko: string | null;
   content_ko: string | null;
+  topic_ko: string | null;
   event_date: string | null;
   period_end: string | null;
   start_time: string | null;
@@ -21,7 +22,7 @@ export type PromotionEventRow = {
 };
 
 const PROMOTION_SELECT =
-  "id,title_ko,summary_ko,content_ko,event_date,period_end,start_time,end_time,location_ko,audience_ko,contact_name,contact_email,contact_phone,cta_label,cta_url,homepage_featured,visibility" as const;
+  "id,title_ko,summary_ko,content_ko,topic_ko,event_date,period_end,start_time,end_time,location_ko,audience_ko,contact_name,contact_email,contact_phone,cta_label,cta_url,homepage_featured,visibility" as const;
 
 export async function fetchPromotionEvents() {
   const supabase = createSupabaseServerClient();
