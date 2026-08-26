@@ -39,6 +39,12 @@ export default function Header() {
             >
               공지사항
             </Link>
+            <Link
+              href="/events"
+              className={`transition-colors hover:text-[#174A7E] ${pathname.startsWith("/events") ? "text-[#174A7E]" : ""}`}
+            >
+              행사·이벤트
+            </Link>
           </nav>
 
           <form action="/resources/search" method="get" className="relative w-[220px]">
@@ -96,6 +102,9 @@ export default function Header() {
               </Link>
               <Link href="/notice" className="border-b border-slate-100 py-3 text-sm font-semibold text-slate-900">
                 공지사항
+              </Link>
+              <Link href="/events" className="border-b border-slate-100 py-3 text-sm font-semibold text-slate-900">
+                행사·이벤트
               </Link>
             </div>
 
