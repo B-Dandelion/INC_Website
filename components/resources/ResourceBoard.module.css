@@ -1,18 +1,96 @@
-.board { display: grid; gap: 10px; }
+.board {
+  display: block;
+  overflow: hidden;
+  border: 1px solid var(--border, #dce1e8);
+  background: var(--surface, #fff);
+}
+
 .row {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 14px 16px; border-radius: 14px; background: #fff;
-  border: 1px solid rgba(37,99,235,.18);
-  text-decoration: none; color: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 72px;
+  padding: 15px 18px;
+  border-bottom: 1px solid #edf0f3;
+  color: inherit;
+  text-decoration: none;
+  transition: background 140ms ease;
 }
-.row:hover { background: rgba(37,99,235,.06); border-color: rgba(37,99,235,.28); }
-.left { min-width: 0; }
-.title { font-weight: 900; color: #0f172a; }
-.sub { margin-top: 4px; font-size: 12px; color: #64748b; }
-.right { display: inline-flex; gap: 10px; align-items: center; flex-shrink: 0; }
-.meta { font-size: 12px; color: #475569; font-weight: 800; }
+
+.row:last-child {
+  border-bottom: 0;
+}
+
+.row:hover {
+  background: #f8fafc;
+}
+
+.left {
+  min-width: 0;
+}
+
+.title {
+  overflow: hidden;
+  color: #172033;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.45;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sub {
+  margin-top: 4px;
+  color: #7a8495;
+  font-size: 12px;
+}
+
+.right {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 14px;
+}
+
+.meta {
+  color: #7a8495;
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
 .open {
-  font-size: 12px; font-weight: 900; color: #fff; background: #2563eb;
-  padding: 7px 10px; border-radius: 999px;
+  border-bottom: 1px solid transparent;
+  color: #174a7e;
+  font-size: 12px;
+  font-weight: 700;
 }
-.empty { padding: 18px; border-radius: 14px; background:#fff; border:1px solid #eee; color:#64748b; }
+
+.row:hover .open {
+  border-bottom-color: #174a7e;
+}
+
+.empty {
+  padding: 32px 18px;
+  border: 1px solid var(--border, #dce1e8);
+  background: #fff;
+  color: #7a8495;
+  font-size: 14px;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .row {
+    align-items: flex-start;
+    padding: 14px;
+  }
+
+  .right {
+    gap: 8px;
+  }
+
+  .meta {
+    display: none;
+  }
+}

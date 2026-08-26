@@ -15,8 +15,6 @@ export default async function SeminarsPage({
   searchParams: Promise<{ sub?: string; event?: string }>;
 }) {
   const sp = await searchParams;
-
-  // sub 기본값은 international
   const sub = sp.sub === "domestic" ? "domestic" : "international";
 
   const events = await fetchEvents({ category: "seminar", subtype: sub });
@@ -26,39 +24,36 @@ export default async function SeminarsPage({
       ? sp.event
       : events[0]?.id) ?? null;
 
-  const assets = selectedEventId
-    ? await fetchEventAssets(selectedEventId)
-    : [];
-  const selectedEvent =
-    events.find((e) => e.id === selectedEventId) ?? null;
+  const assets = selectedEventId ? await fetchEventAssets(selectedEventId) : [];
+  const selectedEvent = events.find((e) => e.id === selectedEventId) ?? null;
 
   const poster =
     assets.find((a) => a.role === "poster_ko") ??
     assets.find((a) => a.role === "poster_en") ??
     null;
-
-  const timetable =
-    assets.find((a) => a.role === "timetable") ?? null;
+  const timetable = assets.find((a) => a.role === "timetable") ?? null;
   const photos = assets.filter((a) => a.role === "photo");
   const slides = assets.filter((a) => a.role === "slide");
 
-  // 세미나 선택됐을 때만 펼쳐질 서브메뉴(국내/국제 + 행사 리스트)
+  const availableTabs = [
+    poster ? { id: "poster", label: "포스터" } : null,
+    timetable?.resources ? { id: "timetable", label: "시간표" } : null,
+    photos.length > 0 ? { id: "photo", label: "사진" } : null,
+    slides.length > 0 ? { id: "materials", label: "자료" } : null,
+  ].filter(Boolean) as { id: string; label: string }[];
+
   const sidebarSubmenu = (
     <div className={styles.sidebarSub}>
       <div className={styles.segment}>
         <Link
-          href={`/resources/seminar?sub=domestic`}
-          className={`${styles.segBtn} ${
-            sub === "domestic" ? styles.segActive : ""
-          }`}
+          href="/resources/seminar?sub=domestic"
+          className={`${styles.segBtn} ${sub === "domestic" ? styles.segActive : ""}`}
         >
           국내
         </Link>
         <Link
-          href={`/resources/seminar?sub=international`}
-          className={`${styles.segBtn} ${
-            sub === "international" ? styles.segActive : ""
-          }`}
+          href="/resources/seminar?sub=international"
+          className={`${styles.segBtn} ${sub === "international" ? styles.segActive : ""}`}
         >
           국제
         </Link>
@@ -76,16 +71,10 @@ export default async function SeminarsPage({
               <Link
                 key={e.id}
                 href={`/resources/seminar?sub=${sub}&event=${e.id}`}
-                className={`${styles.eventItem} ${
-                  active ? styles.eventActive : ""
-                }`}
+                className={`${styles.eventItem} ${active ? styles.eventActive : ""}`}
               >
-                <div className={styles.eventDate}>
-                  {fmtDate(e.event_date)}
-                </div>
-                <div className={styles.eventName}>
-                  {e.title_ko}
-                </div>
+                <div className={styles.eventDate}>{fmtDate(e.event_date)}</div>
+                <div className={styles.eventName}>{e.title_ko}</div>
               </Link>
             );
           })
@@ -95,99 +84,68 @@ export default async function SeminarsPage({
   );
 
   return (
-    <ResourcesFrame
-      activeKey="seminar"
-      sidebarSubmenu={sidebarSubmenu}
-    >
-      {/* RIGHT */}
+    <ResourcesFrame activeKey="seminar" sidebarSubmenu={sidebarSubmenu}>
       <div className={styles.right}>
         <div className={styles.content}>
           <div className={styles.hero}>
-            <h1 className={styles.h1}>
-              {selectedEvent?.title_ko ?? "세미나"}
-            </h1>
-
-            <div className={styles.meta}>
-              {selectedEvent?.event_date
-                ? selectedEvent.event_date
-                : ""}
-            </div>
-
-            <SectionTabs
-              items={[
-                { id: "poster", label: "포스터" },
-                { id: "timetable", label: "시간표" },
-                { id: "photo", label: "사진" },
-                { id: "materials", label: "자료" },
-              ]}
-            />
+            <div className={styles.eyebrow}>Seminar</div>
+            <h1 className={styles.h1}>{selectedEvent?.title_ko ?? "세미나"}</h1>
+            {selectedEvent?.event_date ? (
+              <div className={styles.meta}>{selectedEvent.event_date}</div>
+            ) : null}
+            {availableTabs.length > 0 ? <SectionTabs items={availableTabs} /> : null}
           </div>
 
           {!selectedEventId ? (
             <div className={styles.card}>
-              <div className={styles.muted}>
-                좌측에서 세미나를 선택해 주세요.
-              </div>
+              <div className={styles.muted}>좌측에서 세미나를 선택해 주세요.</div>
+            </div>
+          ) : availableTabs.length === 0 ? (
+            <div className={styles.emptyState}>
+              <strong>등록된 세부 자료가 없습니다.</strong>
+              <span>행사 정보가 추가되면 이 영역에 바로 표시됩니다.</span>
             </div>
           ) : (
             <>
-              {/* 포스터 */}
-              <section id="poster" className={styles.section}>
-                <div className={styles.sectionTitle}>포스터</div>
-                <div className={styles.posterWrap}>
-                  <div className={styles.posterInner}>
-                    <EventPoster
-                      asset={poster}
-                      emptyText="포스터가 없습니다."
-                      alt="세미나 포스터"
-                      imageClassName={styles.posterImg}
-                      emptyClassName={styles.card}
-                    />
+              {poster ? (
+                <section id="poster" className={styles.section}>
+                  <div className={styles.sectionTitle}>포스터</div>
+                  <div className={styles.posterWrap}>
+                    <div className={styles.posterInner}>
+                      <EventPoster
+                        asset={poster}
+                        emptyText=""
+                        alt="세미나 포스터"
+                        imageClassName={styles.posterImg}
+                        emptyClassName={styles.card}
+                      />
+                    </div>
                   </div>
-                </div>
-              </section>
+                </section>
+              ) : null}
 
-              {/* 시간표 */}
-              <section
-                id="timetable"
-                className={styles.section}
-              >
-                <div className={styles.sectionTitle}>
-                  시간표
-                </div>
-                <div className={styles.card}>
-                  {timetable?.resources ? (
-                    <a
-                      href={`/api/resources/go?id=${timetable.resources.id}`}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      시간표 다운로드 (
-                      {timetable.resources
-                        .original_filename ??
+              {timetable?.resources ? (
+                <section id="timetable" className={styles.section}>
+                  <div className={styles.sectionTitle}>시간표</div>
+                  <a
+                    className={styles.fileLink}
+                    href={`/api/resources/go?id=${timetable.resources.id}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <span>시간표 다운로드</span>
+                    <small>
+                      {timetable.resources.original_filename ??
                         timetable.resources.title ??
                         "file"}
-                      )
-                    </a>
-                  ) : (
-                    <div className={styles.muted}>
-                      시간표가 없습니다.
-                    </div>
-                  )}
-                </div>
-              </section>
+                    </small>
+                  </a>
+                </section>
+              ) : null}
 
-              {/* 사진 */}
-              <section id="photo" className={styles.section}>
-                <div className={styles.sectionTitle}>사진</div>
-
-                {photos.length === 0 ? (
-                  <div className={styles.card}>
-                    <div className={styles.muted}>
-                      등록된 사진이 없습니다.
-                    </div>
-                  </div>
-                ) : (
+              {photos.length > 0 ? (
+                <section id="photo" className={styles.section}>
+                  <div className={styles.sectionTitle}>사진</div>
                   <div className={styles.photoGrid}>
                     {photos.map((photo, index) => {
                       const resource = photo.resources;
@@ -212,60 +170,44 @@ export default async function SeminarsPage({
                             alt={label}
                             loading="lazy"
                           />
-                          <div className={styles.photoCaption}>
-                            {label}
-                          </div>
+                          <div className={styles.photoCaption}>{label}</div>
                         </a>
                       );
                     })}
                   </div>
-                )}
-              </section>
+                </section>
+              ) : null}
 
-              {/* 자료 */}
-              <section
-                id="materials"
-                className={styles.section}
-              >
-                <div className={styles.sectionTitle}>자료</div>
-                <div className={styles.card}>
-                  {slides.length === 0 ? (
-                    <div className={styles.muted}>
-                      등록된 자료가 없습니다.
-                    </div>
-                  ) : (
-                    <ul
-                      style={{
-                        margin: 0,
-                        paddingLeft: 18,
-                      }}
-                    >
-                      {slides.map((s) => {
-                        const r = s.resources;
-                        if (!r) return null;
+              {slides.length > 0 ? (
+                <section id="materials" className={styles.section}>
+                  <div className={styles.sectionTitle}>자료</div>
+                  <div className={styles.materialList}>
+                    {slides.map((s) => {
+                      const r = s.resources;
+                      if (!r) return null;
 
-                        const label =
-                          s.item_title_ko ??
-                          r.title ??
-                          r.original_filename ??
-                          `자료 ${r.id}`;
+                      const label =
+                        s.item_title_ko ??
+                        r.title ??
+                        r.original_filename ??
+                        `자료 ${r.id}`;
 
-                        return (
-                          <li key={r.id}>
-                            <a
-                              href={`/api/resources/go?id=${r.id}`}
-                              target="_blank"
-                              rel="noreferrer"
-                            >
-                              {label}
-                            </a>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
-                </div>
-              </section>
+                      return (
+                        <a
+                          key={r.id}
+                          className={styles.materialItem}
+                          href={`/api/resources/go?id=${r.id}`}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          <span>{label}</span>
+                          <span aria-hidden>↗</span>
+                        </a>
+                      );
+                    })}
+                  </div>
+                </section>
+              ) : null}
             </>
           )}
         </div>

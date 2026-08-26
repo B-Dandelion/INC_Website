@@ -11,10 +11,13 @@ const supabase = supabaseBrowser();
 
 type ProfileRow = { role: string | null; approved: boolean | null };
 
+const controlClass =
+  "inline-flex h-9 items-center gap-2 rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50";
+
 export default function AuthButton() {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [approved, setApproved] = useState<boolean | null>(null); // null=모름(로딩/미조회)
+  const [approved, setApproved] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
 
   const router = useRouter();
@@ -106,7 +109,7 @@ export default function AuthButton() {
       localStorage.removeItem("inc_last_at");
       try {
         new BroadcastChannel("inc-auth").postMessage({ type: "logout" });
-      } catch { }
+      } catch {}
       setUser(null);
       setIsAdmin(false);
       setApproved(null);
@@ -120,10 +123,7 @@ export default function AuthButton() {
 
   if (loading) {
     return (
-      <button
-        className="px-4 py-2 rounded-full border border-gray-200 text-gray-400"
-        disabled
-      >
+      <button className={`${controlClass} cursor-not-allowed text-slate-400`} disabled>
         로그인
       </button>
     );
@@ -131,64 +131,55 @@ export default function AuthButton() {
 
   if (!user) {
     return (
-      <Link
-        href={loginHref}
-        className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 hover:bg-gray-50"
-      >
-        <LogIn className="w-4 h-4" />
+      <Link href={loginHref} className={controlClass}>
+        <LogIn className="h-4 w-4" />
         로그인
       </Link>
     );
   }
 
-  // 로그인은 됐는데 승인 대기인 상태
   const isPending = approved === false;
 
   return (
     <div className="inline-flex items-center gap-2">
       <details ref={detailsRef} className="relative">
-        <summary className="inline-flex items-center gap-2 px-3 py-2 rounded-full border border-gray-200 hover:bg-gray-50 cursor-pointer select-none [&::-webkit-details-marker]:hidden">
-          <Shield className="w-4 h-4 text-blue-600" />
-          <span className="text-sm text-gray-700 max-w-[140px] truncate">
-            {displayName}
-          </span>
-
-          {isPending && (
-            <span className="ml-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs text-amber-700 ring-1 ring-amber-200">
+        <summary className={`${controlClass} cursor-pointer select-none [&::-webkit-details-marker]:hidden`}>
+          <Shield className="h-4 w-4 text-[#174A7E]" />
+          <span className="max-w-[140px] truncate">{displayName}</span>
+          {isPending ? (
+            <span className="ml-1 border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[11px] font-bold text-amber-700">
               승인대기
             </span>
-          )}
-
-          <span className="text-gray-400 text-xs">▾</span>
+          ) : null}
+          <span className="text-xs text-slate-400">▾</span>
         </summary>
 
-        <div className="absolute right-0 mt-2 w-52 rounded-xl border border-gray-200 bg-white shadow-lg overflow-hidden z-50">
-          {isPending && (
+        <div className="absolute right-0 z-50 mt-2 w-52 overflow-hidden rounded-md border border-slate-200 bg-white shadow-[0_12px_32px_rgba(15,23,42,0.12)]">
+          {isPending ? (
             <Link
               href="/pending"
               onClick={closeMenu}
-              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              className="block border-b border-slate-100 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
             >
               승인 대기 안내
             </Link>
-          )}
+          ) : null}
 
-          {!isPending && isAdmin && (
+          {!isPending && isAdmin ? (
             <Link
               href="/admin/upload"
               onClick={closeMenu}
-              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              className="block border-b border-slate-100 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
             >
               자료 업로드
             </Link>
-          )}
+          ) : null}
 
           <button
             onClick={signOut}
-
-            className="w-full text-left inline-flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            className="inline-flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="h-4 w-4" />
             로그아웃
           </button>
         </div>

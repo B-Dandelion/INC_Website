@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { LockKeyhole } from "lucide-react";
 
 export default function AdminGate() {
   const [pw, setPw] = useState("");
@@ -40,7 +41,7 @@ export default function AdminGate() {
           out?.error ??
             (res.status === 401
               ? "비밀번호가 올바르지 않습니다."
-              : `로그인 처리에 실패했습니다. (HTTP ${res.status})`)
+              : `로그인 처리에 실패했습니다. (HTTP ${res.status})`),
         );
         return;
       }
@@ -55,53 +56,46 @@ export default function AdminGate() {
   }
 
   return (
-    <main style={{ maxWidth: 420, margin: "80px auto", padding: 16 }}>
-      <h1 style={{ fontSize: 22, fontWeight: 700 }}>Admin</h1>
-      <p style={{ opacity: 0.7, marginTop: 8 }}>
-        관리자 비밀번호를 입력하세요.
-      </p>
-
-      {sessionExpired ? (
-        <div
-          style={{
-            marginTop: 12,
-            padding: 10,
-            borderRadius: 8,
-            background: "#fff7ed",
-            color: "#9a3412",
-            fontSize: 14,
-          }}
-        >
-          관리자 세션이 만료되었습니다. 다시 로그인해 주세요.
+    <main className="mx-auto flex min-h-[620px] max-w-7xl items-start justify-center px-5 py-16 md:px-6 md:py-24">
+      <section className="w-full max-w-[430px] border border-slate-200 bg-white p-7 shadow-[0_14px_40px_rgba(15,23,42,0.06)] md:p-8">
+        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[#EEF4FA] text-[#174A7E]">
+          <LockKeyhole className="h-5 w-5" />
         </div>
-      ) : null}
 
-      <form
-        onSubmit={onSubmit}
-        style={{ marginTop: 16, display: "grid", gap: 10 }}
-      >
-        <input
-          type="password"
-          value={pw}
-          onChange={(e) => setPw(e.target.value)}
-          placeholder="Password"
-          autoComplete="current-password"
-          style={{ padding: 10, border: "1px solid #ddd", borderRadius: 8 }}
-        />
-        <button
-          type="submit"
-          disabled={loading || !pw}
-          style={{
-            padding: 10,
-            borderRadius: 8,
-            border: "1px solid #ddd",
-            cursor: loading || !pw ? "not-allowed" : "pointer",
-          }}
-        >
-          {loading ? "확인 중..." : "입장"}
-        </button>
-        {err ? <div style={{ color: "crimson" }}>{err}</div> : null}
-      </form>
+        <p className="mt-6 text-[11px] font-bold uppercase tracking-[0.16em] text-[#2B6CA3]">INC Administration</p>
+        <h1 className="mt-2 text-2xl font-semibold tracking-[-0.025em] text-slate-950">관리자 로그인</h1>
+        <p className="mt-2 text-sm leading-6 text-slate-500">관리자 비밀번호를 입력해 관리 화면으로 이동하세요.</p>
+
+        {sessionExpired ? (
+          <div className="mt-5 border border-amber-200 bg-amber-50 px-3.5 py-3 text-sm leading-5 text-amber-800">
+            관리자 세션이 만료되었습니다. 다시 로그인해 주세요.
+          </div>
+        ) : null}
+
+        <form onSubmit={onSubmit} className="mt-7 grid gap-3">
+          <label className="grid gap-2 text-sm font-semibold text-slate-700">
+            비밀번호
+            <input
+              type="password"
+              value={pw}
+              onChange={(e) => setPw(e.target.value)}
+              placeholder="Password"
+              autoComplete="current-password"
+              className="h-11 rounded-md border border-slate-300 bg-white px-3.5 text-sm text-slate-900 outline-none transition focus:border-[#2B6CA3] focus:ring-2 focus:ring-[#2B6CA3]/10"
+            />
+          </label>
+
+          <button
+            type="submit"
+            disabled={loading || !pw}
+            className="mt-2 inline-flex h-11 items-center justify-center rounded-md border border-[#174A7E] bg-[#174A7E] px-4 text-sm font-semibold text-white transition hover:bg-[#103A66] disabled:cursor-not-allowed disabled:opacity-45"
+          >
+            {loading ? "확인 중..." : "관리자 화면 입장"}
+          </button>
+
+          {err ? <div className="mt-1 text-sm font-medium text-red-700">{err}</div> : null}
+        </form>
+      </section>
     </main>
   );
 }
