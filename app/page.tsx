@@ -3,6 +3,7 @@ import LatestTabs from "@/components/home/LatestTabs";
 import { RESOURCE_BOARDS } from "@/lib/resourceBoards";
 import { fetchPublicResources } from "@/lib/resourcesDb";
 import { fetchHomepagePromotion } from "@/lib/promotionalEventsDb";
+import { getLocale } from "@/lib/i18n";
 import Image from "next/image";
 import { fetchNotices } from "@/lib/noticesDb";
 import { ArrowRight } from "lucide-react";
@@ -17,10 +18,13 @@ function todayInKorea() {
 }
 
 export default async function HomePage() {
+  const locale = await getLocale();
+  const en = locale === "en";
+
   const allResources = await fetchPublicResources();
   const latestResources = (allResources ?? []).slice(0, 5).map((r: any, idx: number) => ({
     id: String(r.id ?? r.resource_id ?? r.slug ?? `res-${idx}`),
-    title: r.title ?? "제목 없음",
+    title: r.title ?? (en ? "Untitled" : "제목 없음"),
     date: (r.posted_at ?? r.published_at ?? r.created_at ?? "").toString().slice(0, 10),
     href: r.id ? `/api/resources/go?id=${r.id}` : "/resources",
   }));
@@ -38,7 +42,7 @@ export default async function HomePage() {
     ? {
         id: promotion.id,
         title: promotion.title_ko,
-        summary: promotion.summary_ko ?? "행사 상세 내용과 참여 정보를 확인해 주세요.",
+        summary: promotion.summary_ko ?? (en ? "View event details and participation information." : "행사 상세 내용과 참여 정보를 확인해 주세요."),
         startDate: promotion.event_date ?? "",
         endDate: promotion.period_end ?? "",
       }
@@ -64,11 +68,11 @@ export default async function HomePage() {
             <p className="m-0 text-[12px] font-bold uppercase tracking-[0.18em] text-white/70">
               International Nuclear Cooperation
             </p>
-            <h1 className="mt-5 text-5xl font-black tracking-[-0.055em] text-white md:text-7xl">
-              INC
-            </h1>
+            <h1 className="mt-5 text-5xl font-black tracking-[-0.055em] text-white md:text-7xl">INC</h1>
             <p className="mt-5 max-w-[610px] text-base leading-7 text-white/85 md:text-lg">
-              한국 원자력 연구 및 국제 협력 네트워크를 이끄는 INC 공식 홈페이지입니다.
+              {en
+                ? "The official INC website connecting nuclear research and international cooperation networks in Korea."
+                : "한국 원자력 연구 및 국제 협력 네트워크를 이끄는 INC 공식 홈페이지입니다."}
             </p>
 
             <div className="mt-8 flex flex-wrap gap-2.5">
@@ -76,14 +80,14 @@ export default async function HomePage() {
                 href="/notice"
                 className="inline-flex h-11 items-center gap-2 rounded-md bg-white px-4 text-sm font-bold text-slate-900 shadow-sm transition hover:bg-slate-100"
               >
-                공지사항
+                {en ? "Notices" : "공지사항"}
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
                 href="/resources"
                 className="inline-flex h-11 items-center gap-2 rounded-md border border-white bg-white px-4 text-sm font-bold text-slate-900 shadow-sm transition hover:bg-slate-100"
               >
-                자료실
+                {en ? "Resources" : "자료실"}
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
@@ -96,10 +100,10 @@ export default async function HomePage() {
           <div className="flex items-end justify-between gap-4 border-b border-slate-300 pb-4">
             <div>
               <p className="text-[12px] font-bold uppercase tracking-[0.16em] text-[#2B6CA3]">Resources</p>
-              <h2 className="mt-1 text-[26px] font-semibold tracking-[-0.025em] text-slate-950">자료 카테고리</h2>
+              <h2 className="mt-1 text-[26px] font-semibold tracking-[-0.025em] text-slate-950">{en ? "Resource Categories" : "자료 카테고리"}</h2>
             </div>
             <Link href="/resources" className="hidden items-center gap-1 text-[15px] font-semibold text-slate-600 hover:text-[#174A7E] sm:inline-flex">
-              전체 자료실
+              {en ? "All Resources" : "전체 자료실"}
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
@@ -113,9 +117,9 @@ export default async function HomePage() {
                   index % 4 !== 3 ? "lg:border-r" : ""
                 } ${index % 2 === 0 ? "sm:border-r" : ""} border-b last:border-b-0`}
               >
-                <div className="text-[17px] font-semibold leading-7 text-slate-900 group-hover:text-[#174A7E]">{b.label}</div>
+                <div className="text-[17px] font-semibold leading-7 text-slate-900 group-hover:text-[#174A7E]">{en ? b.labelEn : b.label}</div>
                 <div className="mt-5 inline-flex items-center gap-1 text-[13px] font-semibold text-slate-500 group-hover:text-[#174A7E]">
-                  바로가기
+                  {en ? "Open" : "바로가기"}
                   <ArrowRight className="h-4 w-4" />
                 </div>
               </Link>
@@ -123,7 +127,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <LatestTabs notices={latestNotices} resources={latestResources} featuredEvent={featuredEvent} />
+        <LatestTabs locale={locale} notices={latestNotices} resources={latestResources} featuredEvent={featuredEvent} />
       </div>
     </main>
   );
