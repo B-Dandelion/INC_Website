@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, CalendarDays, MapPin } from "lucide-react";
 import { fetchPromotionEvents } from "@/lib/promotionalEventsDb";
+import { getLocale } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -13,8 +14,8 @@ function todayInKorea() {
   }).format(new Date());
 }
 
-function periodLabel(start?: string | null, end?: string | null) {
-  if (!start) return "일정 미정";
+function periodLabel(start: string | null | undefined, end: string | null | undefined, en: boolean) {
+  if (!start) return en ? "Schedule TBD" : "일정 미정";
   return end && end !== start ? `${start} ~ ${end}` : start;
 }
 
@@ -22,7 +23,15 @@ function eventEnd(start?: string | null, end?: string | null) {
   return end ?? start ?? "9999-12-31";
 }
 
-function EventList({ events, ended }: { events: Awaited<ReturnType<typeof fetchPromotionEvents>>; ended: boolean }) {
+function EventList({
+  events,
+  ended,
+  en,
+}: {
+  events: Awaited<ReturnType<typeof fetchPromotionEvents>>;
+  ended: boolean;
+  en: boolean;
+}) {
   if (events.length === 0) return null;
 
   return (
@@ -43,11 +52,11 @@ function EventList({ events, ended }: { events: Awaited<ReturnType<typeof fetchP
                   : "border-[#BDD2E6] bg-[#EEF4FA] text-[#174A7E]"
               }`}
             >
-              {ended ? "종료" : "진행 · 예정"}
+              {ended ? (en ? "Ended" : "종료") : en ? "Ongoing · Upcoming" : "진행 · 예정"}
             </span>
             <div className="mt-2 flex items-center gap-1.5 text-xs tabular-nums text-slate-500">
               <CalendarDays className="h-3.5 w-3.5" />
-              {periodLabel(event.event_date, event.period_end)}
+              {periodLabel(event.event_date, event.period_end, en)}
             </div>
           </div>
 
@@ -67,7 +76,7 @@ function EventList({ events, ended }: { events: Awaited<ReturnType<typeof fetchP
           </div>
 
           <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#174A7E]">
-            자세히
+            {en ? "Details" : "자세히"}
             <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" />
           </span>
         </Link>
@@ -77,6 +86,8 @@ function EventList({ events, ended }: { events: Awaited<ReturnType<typeof fetchP
 }
 
 export default async function EventsPage() {
+  const locale = await getLocale();
+  const en = locale === "en";
   const events = await fetchPromotionEvents();
   const today = todayInKorea();
 
@@ -93,9 +104,9 @@ export default async function EventsPage() {
       <section className="border-b border-slate-200 bg-white">
         <div className="mx-auto max-w-6xl px-5 py-12 md:px-6 md:py-16">
           <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#2B6CA3]">INC Events</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-[-0.035em] text-slate-950 md:text-4xl">행사 · 이벤트</h1>
+          <h1 className="mt-2 text-3xl font-semibold tracking-[-0.035em] text-slate-950 md:text-4xl">{en ? "Events" : "행사 · 이벤트"}</h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500 md:text-[15px]">
-            INC에서 진행하거나 안내하는 주요 행사와 참여 정보를 확인할 수 있습니다.
+            {en ? "View major INC events and participation information." : "INC에서 진행하거나 안내하는 주요 행사와 참여 정보를 확인할 수 있습니다."}
           </p>
         </div>
       </section>
@@ -103,7 +114,7 @@ export default async function EventsPage() {
       <section className="mx-auto max-w-6xl px-5 py-10 md:px-6 md:py-14">
         {events.length === 0 ? (
           <div className="border border-slate-200 bg-white px-5 py-14 text-center text-sm text-slate-400">
-            등록된 이벤트가 없습니다.
+            {en ? "There are no events to display." : "등록된 이벤트가 없습니다."}
           </div>
         ) : (
           <div className="space-y-12">
@@ -111,12 +122,12 @@ export default async function EventsPage() {
               <section>
                 <div className="mb-4 flex items-end justify-between border-b border-slate-300 pb-4">
                   <div>
-                    <h2 className="text-lg font-semibold text-slate-900">진행 · 예정 이벤트</h2>
-                    <p className="mt-1 text-sm text-slate-500">가까운 일정부터 표시합니다.</p>
+                    <h2 className="text-lg font-semibold text-slate-900">{en ? "Ongoing & Upcoming" : "진행 · 예정 이벤트"}</h2>
+                    <p className="mt-1 text-sm text-slate-500">{en ? "Displayed by the nearest upcoming date." : "가까운 일정부터 표시합니다."}</p>
                   </div>
-                  <span className="text-xs font-medium tabular-nums text-slate-400">{upcoming.length}건</span>
+                  <span className="text-xs font-medium tabular-nums text-slate-400">{upcoming.length}{en ? " items" : "건"}</span>
                 </div>
-                <EventList events={upcoming} ended={false} />
+                <EventList events={upcoming} ended={false} en={en} />
               </section>
             ) : null}
 
@@ -124,12 +135,12 @@ export default async function EventsPage() {
               <section>
                 <div className="mb-4 flex items-end justify-between border-b border-slate-300 pb-4">
                   <div>
-                    <h2 className="text-lg font-semibold text-slate-900">지난 이벤트</h2>
-                    <p className="mt-1 text-sm text-slate-500">최근 종료된 행사부터 표시합니다.</p>
+                    <h2 className="text-lg font-semibold text-slate-900">{en ? "Past Events" : "지난 이벤트"}</h2>
+                    <p className="mt-1 text-sm text-slate-500">{en ? "Most recently ended events appear first." : "최근 종료된 행사부터 표시합니다."}</p>
                   </div>
-                  <span className="text-xs font-medium tabular-nums text-slate-400">{past.length}건</span>
+                  <span className="text-xs font-medium tabular-nums text-slate-400">{past.length}{en ? " items" : "건"}</span>
                 </div>
-                <EventList events={past} ended />
+                <EventList events={past} ended en={en} />
               </section>
             ) : null}
           </div>
