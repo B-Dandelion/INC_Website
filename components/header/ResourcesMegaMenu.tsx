@@ -4,11 +4,13 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { ArrowRight, X } from "lucide-react";
 import { resourceCategories } from "@/lib/resourceCategories";
+import type { Locale } from "@/lib/i18n";
 
-export default function ResourcesMegaMenu() {
+export default function ResourcesMegaMenu({ locale = "ko" }: { locale?: Locale }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const closeTimerRef = useRef<number | null>(null);
+  const en = locale === "en";
 
   const clearCloseTimer = () => {
     if (closeTimerRef.current) {
@@ -69,7 +71,7 @@ export default function ResourcesMegaMenu() {
         onFocus={openMenu}
         onClick={() => setOpen((v) => !v)}
       >
-        자료실
+        {en ? "Resources" : "자료실"}
         <span className={`text-[10px] text-slate-400 transition-transform ${open ? "rotate-180" : ""}`}>▾</span>
       </button>
 
@@ -83,13 +85,13 @@ export default function ResourcesMegaMenu() {
           <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
             <div>
               <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#2B6CA3]">Resources</p>
-              <div className="mt-1 text-sm font-semibold text-slate-900">자료실 카테고리</div>
+              <div className="mt-1 text-sm font-semibold text-slate-900">{en ? "Resource Categories" : "자료실 카테고리"}</div>
             </div>
             <button
               type="button"
               onClick={closeMenu}
               className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-500 transition hover:bg-slate-50 hover:text-slate-800"
-              aria-label="메뉴 닫기"
+              aria-label={en ? "Close menu" : "메뉴 닫기"}
             >
               <X className="h-4 w-4" />
             </button>
@@ -103,20 +105,22 @@ export default function ResourcesMegaMenu() {
                 className="group flex min-h-[58px] items-center justify-between gap-4 border-b border-r border-slate-100 px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 hover:text-[#174A7E]"
                 onClick={closeMenu}
               >
-                <span className="truncate">{item.label}</span>
+                <span className="truncate">{en ? item.labelEn : item.label}</span>
                 <ArrowRight className="h-3.5 w-3.5 shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-[#174A7E]" />
               </Link>
             ))}
           </div>
 
           <div className="flex flex-col gap-3 border-t border-slate-200 bg-slate-50/70 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="text-xs text-slate-500">필요한 자료를 찾기 어렵다면 상단 검색을 이용해보세요.</div>
+            <div className="text-xs text-slate-500">
+              {en ? "Use the site search if you are having trouble finding a resource." : "필요한 자료를 찾기 어렵다면 상단 검색을 이용해보세요."}
+            </div>
             <Link
               href="/resources"
               className="inline-flex items-center gap-1 text-xs font-semibold text-[#174A7E] hover:underline"
               onClick={closeMenu}
             >
-              자료실 전체보기
+              {en ? "View all resources" : "자료실 전체보기"}
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
