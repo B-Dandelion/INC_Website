@@ -60,7 +60,7 @@ export default async function HomePage() {
               </Link>
               <Link
                 href="/resources"
-                className="inline-flex h-11 items-center gap-2 rounded-md border border-white/70 bg-[#0B2239]/75 px-4 text-sm font-bold text-white shadow-sm backdrop-blur-[2px] transition hover:bg-[#0B2239]/90"
+                className="inline-flex h-11 items-center gap-2 rounded-md border border-white bg-white px-4 text-sm font-bold text-slate-900 shadow-sm transition hover:bg-slate-100"
               >
                 자료실
                 <ArrowRight className="h-4 w-4" />
