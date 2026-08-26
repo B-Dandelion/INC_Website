@@ -53,7 +53,6 @@ function readNoticeFields(formData: FormData) {
     content,
     posted_at: postedAt,
     pinned,
-    visibility: "public" as const,
   };
 }
 
@@ -68,7 +67,10 @@ export async function createNoticeAction(formData: FormData) {
   await requireAdminOrThrow();
   const payload = readNoticeFields(formData);
 
-  const { error } = await supabaseService().from("notices").insert(payload);
+  const { error } = await supabaseService()
+    .from("notices")
+    .insert({ ...payload, visibility: "public" });
+
   if (error) throw new Error(`공지사항 등록 실패: ${error.message}`);
 
   refreshNoticePages();
