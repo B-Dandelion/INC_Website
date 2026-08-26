@@ -95,10 +95,10 @@ export default async function HomePage() {
         <section>
           <div className="flex items-end justify-between gap-4 border-b border-slate-300 pb-4">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#2B6CA3]">Resources</p>
-              <h2 className="mt-1 text-2xl font-semibold tracking-[-0.025em] text-slate-950">자료 카테고리</h2>
+              <p className="text-[12px] font-bold uppercase tracking-[0.16em] text-[#2B6CA3]">Resources</p>
+              <h2 className="mt-1 text-[26px] font-semibold tracking-[-0.025em] text-slate-950">자료 카테고리</h2>
             </div>
-            <Link href="/resources" className="hidden items-center gap-1 text-sm font-semibold text-slate-600 hover:text-[#174A7E] sm:inline-flex">
+            <Link href="/resources" className="hidden items-center gap-1 text-[15px] font-semibold text-slate-600 hover:text-[#174A7E] sm:inline-flex">
               전체 자료실
               <ArrowRight className="h-4 w-4" />
             </Link>
@@ -109,14 +109,14 @@ export default async function HomePage() {
               <Link
                 key={b.slug}
                 href={`/resources/${b.slug}`}
-                className={`group min-h-[128px] border-slate-200 p-5 transition hover:bg-[#F7FAFC] ${
+                className={`group min-h-[136px] border-slate-200 p-6 transition hover:bg-[#F7FAFC] ${
                   index % 4 !== 3 ? "lg:border-r" : ""
                 } ${index % 2 === 0 ? "sm:border-r" : ""} border-b last:border-b-0`}
               >
-                <div className="text-[15px] font-semibold leading-6 text-slate-900 group-hover:text-[#174A7E]">{b.label}</div>
-                <div className="mt-5 inline-flex items-center gap-1 text-xs font-semibold text-slate-500 group-hover:text-[#174A7E]">
+                <div className="text-[17px] font-semibold leading-7 text-slate-900 group-hover:text-[#174A7E]">{b.label}</div>
+                <div className="mt-5 inline-flex items-center gap-1 text-[13px] font-semibold text-slate-500 group-hover:text-[#174A7E]">
                   바로가기
-                  <ArrowRight className="h-3.5 w-3.5" />
+                  <ArrowRight className="h-4 w-4" />
                 </div>
               </Link>
             ))}
