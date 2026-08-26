@@ -5,6 +5,7 @@ import SectionTabs from "@/components/resources/SectionTabs";
 import EventPoster from "@/components/resources/EventPoster";
 import styles from "./essayContest.module.css";
 import { fetchEvents, fetchEventAssets } from "@/lib/eventsDb";
+import { getLocale } from "@/lib/i18n";
 
 const BASE = "/resources/essay-contest";
 
@@ -39,32 +40,25 @@ function pickBetter(cur: any, next: any) {
   const curIsPdf = curName.endsWith(".pdf");
   const nextIsPdf = nextName.endsWith(".pdf");
   if (curIsPdf !== nextIsPdf) return nextIsPdf ? next : cur;
-
   const curSort = cur?.sort_order ?? 0;
   const nextSort = next?.sort_order ?? 0;
   if (curSort !== nextSort) return nextSort < curSort ? next : cur;
-
   const curId = cur?.resources?.id ?? 0;
   const nextId = next?.resources?.id ?? 0;
   return nextId < curId ? next : cur;
 }
 
-export default async function EssayContestPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ event?: string }>;
-}) {
+export default async function EssayContestPage({ searchParams }: { searchParams: Promise<{ event?: string }> }) {
+  const locale = await getLocale();
+  const en = locale === "en";
   const sp = await searchParams;
   const events = await fetchEvents({ category: "essay_contest" });
-
-  const selectedEventId =
-    (sp.event && events.some((e) => e.id === sp.event) ? sp.event : events[0]?.id) ?? null;
+  const selectedEventId = (sp.event && events.some((e) => e.id === sp.event) ? sp.event : events[0]?.id) ?? null;
   const selectedEvent = events.find((e) => e.id === selectedEventId) ?? null;
   const assets = selectedEventId ? await fetchEventAssets(selectedEventId) : [];
 
   const posterKo = assets.find((a) => a.role === "poster_ko") ?? null;
   const posterEn = assets.find((a) => a.role === "poster_en") ?? null;
-
   const rawAwardDocs = assets.filter((a) => a.role === "award_doc");
   const awardDocByPerson = new Map<string, any>();
   for (const d of rawAwardDocs) {
@@ -88,12 +82,8 @@ export default async function EssayContestPage({
   }
 
   const photos = assets.filter((a) => a.role === "photo" && a?.resources?.id);
-  const groupPhoto =
-    photos.find((p) => norm(p.person_en) === "all") ??
-    photos.find((p) => (p?.resources?.original_filename ?? "").toLowerCase() === "all.jpg") ??
-    null;
+  const groupPhoto = photos.find((p) => norm(p.person_en) === "all") ?? photos.find((p) => (p?.resources?.original_filename ?? "").toLowerCase() === "all.jpg") ?? null;
   const otherPhotos = photos.filter((p) => p !== groupPhoto);
-
   const winnerNameSet = new Set(awardDocs.map((d) => norm(d.person_en ?? d.person_ko)));
   const candidates = assets.filter((a) => {
     if (a.role !== "slide") return false;
@@ -101,13 +91,11 @@ export default async function EssayContestPage({
     if (!personKey || winnerNameSet.has(personKey) || isAiStatement(a) || !a?.resources?.id) return false;
     return true;
   });
-
   const bestByPerson = new Map<string, any>();
   for (const a of candidates) {
     const key = norm(a.person_en ?? a.person_ko);
     bestByPerson.set(key, pickBetter(bestByPerson.get(key), a));
   }
-
   const materialItems = Array.from(bestByPerson.values()).sort((a, b) => {
     const an = (a.person_en ?? a.person_ko ?? "").toLowerCase();
     const bn = (b.person_en ?? b.person_ko ?? "").toLowerCase();
@@ -119,32 +107,19 @@ export default async function EssayContestPage({
   const hasPhotos = photos.length > 0;
   const hasMaterials = materialItems.length > 0;
   const tabs = [
-    hasPoster ? { id: "poster", label: "포스터" } : null,
-    hasWinners ? { id: "winners", label: "수상자" } : null,
-    hasPhotos ? { id: "photo", label: "사진" } : null,
-    hasMaterials ? { id: "materials", label: "자료" } : null,
+    hasPoster ? { id: "poster", label: en ? "Poster" : "포스터" } : null,
+    hasWinners ? { id: "winners", label: en ? "Winners" : "수상자" } : null,
+    hasPhotos ? { id: "photo", label: en ? "Photos" : "사진" } : null,
+    hasMaterials ? { id: "materials", label: en ? "Entries" : "자료" } : null,
   ].filter((item): item is { id: string; label: string } => Boolean(item));
 
   const sidebarSubmenu = (
     <div className={styles.submenu}>
       <div className={styles.eventList}>
-        {events.length === 0 ? (
-          <div className={styles.muted} style={{ padding: 10 }}>등록된 행사가 없습니다.</div>
-        ) : (
-          events.map((e) => {
-            const active = e.id === selectedEventId;
-            return (
-              <Link
-                key={e.id}
-                href={`${BASE}?event=${e.id}`}
-                className={`${styles.eventItem} ${active ? styles.eventActive : ""}`}
-              >
-                <div className={styles.eventDate}>{fmtPeriod(e.event_date, e.period_end)}</div>
-                <div className={styles.eventName}>{e.title_ko ?? "행사"}</div>
-              </Link>
-            );
-          })
-        )}
+        {events.length === 0 ? <div className={styles.muted} style={{ padding: 10 }}>{en ? "No contests are registered." : "등록된 행사가 없습니다."}</div> : events.map((e) => {
+          const active = e.id === selectedEventId;
+          return <Link key={e.id} href={`${BASE}?event=${e.id}`} className={`${styles.eventItem} ${active ? styles.eventActive : ""}`}><div className={styles.eventDate}>{fmtPeriod(e.event_date, e.period_end)}</div><div className={styles.eventName}>{e.title_ko ?? (en ? "Contest" : "행사")}</div></Link>;
+        })}
       </div>
     </div>
   );
@@ -154,143 +129,59 @@ export default async function EssayContestPage({
       <div className={styles.content}>
         <div className={styles.hero}>
           <div className={styles.eyebrow}>Essay Contest Archive</div>
-          <h1 className={styles.h1}>{selectedEvent?.title_ko ?? "에세이 경진대회"}</h1>
+          <h1 className={styles.h1}>{selectedEvent?.title_ko ?? (en ? "Essay Contest" : "에세이 경진대회")}</h1>
           {selectedEvent ? <div className={styles.meta}>{fmtPeriod(selectedEvent.event_date, selectedEvent.period_end)}</div> : null}
           {tabs.length > 0 ? <SectionTabs items={tabs} /> : null}
         </div>
 
-        {!selectedEventId ? (
-          <div className={styles.card}><div className={styles.muted}>좌측에서 행사를 선택해 주세요.</div></div>
-        ) : (
+        {!selectedEventId ? <div className={styles.card}><div className={styles.muted}>{en ? "Select a contest from the sidebar." : "좌측에서 행사를 선택해 주세요."}</div></div> : (
           <>
-            {hasPoster ? (
-              <section id="poster" className={styles.section}>
-                <div className={styles.sectionTitle}>포스터</div>
-                <div className={styles.posterGrid}>
-                  {posterKo?.resources?.id ? (
-                    <div className={styles.posterBlock}>
-                      <div className={styles.posterLabel}>국문</div>
-                      <div className={styles.posterWrap}>
-                        <div className={styles.posterInner}>
-                          <EventPoster asset={posterKo} emptyText="" alt="국문 포스터" imageClassName={styles.posterImg} emptyClassName={styles.card} />
-                        </div>
-                      </div>
+            {hasPoster ? <section id="poster" className={styles.section}>
+              <div className={styles.sectionTitle}>{en ? "Poster" : "포스터"}</div>
+              <div className={styles.posterGrid}>
+                {posterKo?.resources?.id ? <div className={styles.posterBlock}><div className={styles.posterLabel}>{en ? "Korean" : "국문"}</div><div className={styles.posterWrap}><div className={styles.posterInner}><EventPoster asset={posterKo} emptyText="" alt={en ? "Korean poster" : "국문 포스터"} imageClassName={styles.posterImg} emptyClassName={styles.card} /></div></div></div> : null}
+                {posterEn?.resources?.id ? <div className={styles.posterBlock}><div className={styles.posterLabel}>{en ? "English" : "영문"}</div><div className={styles.posterWrap}><div className={styles.posterInner}><EventPoster asset={posterEn} emptyText="" alt={en ? "English poster" : "영문 포스터"} imageClassName={styles.posterImg} emptyClassName={styles.card} /></div></div></div> : null}
+              </div>
+            </section> : null}
+
+            {hasWinners ? <section id="winners" className={styles.section}>
+              <div className={styles.sectionTitle}>{en ? "Winners" : "수상자"}</div>
+              <div className={styles.winnerGrid}>
+                {awardDocs.map((w, idx) => {
+                  const person = (w.person_en ?? w.person_ko ?? "").trim() || (en ? "Winner" : "수상자");
+                  const personKey = norm(person);
+                  const photoAsset = photoByPerson.get(personKey) ?? winnerPhotos.find((p) => { const pk = norm(p.person_en ?? p.person_ko); return pk && (personKey.includes(pk) || pk.includes(personKey)); }) ?? null;
+                  const docId = w.resources?.id ?? null;
+                  const photoId = photoAsset?.resources?.id ?? null;
+                  const docUrl = docId ? `/api/resources/go?id=${docId}` : null;
+                  const photoUrl = photoId ? `/api/resources/go?id=${photoId}` : null;
+                  return <div key={`${docId ?? personKey ?? idx}`} className={styles.winnerCard}>
+                    <div className={styles.winnerInfo}>
+                      <span className={styles.badge}>{w.award ?? (en ? "Award" : "수상")}</span>
+                      {docUrl ? <a className={styles.winnerNameLink} href={docUrl} target="_blank" rel="noreferrer" title={en ? "Open entry (PDF)" : "응모작(PDF) 열기"}>{person}</a> : <div className={styles.winnerNameText}>{person}</div>}
+                      <div className={styles.winnerSub}>{docUrl ? <a className={styles.winnerMiniLink} href={docUrl} target="_blank" rel="noreferrer">{en ? "Open entry" : "응모작 열기"} ↗</a> : <span className={styles.muted}>{en ? "No document" : "문서 없음"}</span>}</div>
                     </div>
-                  ) : null}
-                  {posterEn?.resources?.id ? (
-                    <div className={styles.posterBlock}>
-                      <div className={styles.posterLabel}>영문</div>
-                      <div className={styles.posterWrap}>
-                        <div className={styles.posterInner}>
-                          <EventPoster asset={posterEn} emptyText="" alt="영문 포스터" imageClassName={styles.posterImg} emptyClassName={styles.card} />
-                        </div>
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-              </section>
-            ) : null}
+                    <div className={styles.winnerPhotoLarge}>{photoUrl ? <a href={photoUrl} target="_blank" rel="noreferrer" title={en ? "Open original photo" : "사진 원본 열기"}><img src={photoUrl} alt={person} /></a> : <div className={styles.winnerPhotoEmpty}>{en ? "No photo" : "사진 없음"}</div>}</div>
+                  </div>;
+                })}
+              </div>
+            </section> : null}
 
-            {hasWinners ? (
-              <section id="winners" className={styles.section}>
-                <div className={styles.sectionTitle}>수상자</div>
-                <div className={styles.winnerGrid}>
-                  {awardDocs.map((w, idx) => {
-                    const person = (w.person_en ?? w.person_ko ?? "").trim() || "수상자";
-                    const personKey = norm(person);
-                    const photoAsset =
-                      photoByPerson.get(personKey) ??
-                      winnerPhotos.find((p) => {
-                        const pk = norm(p.person_en ?? p.person_ko);
-                        return pk && (personKey.includes(pk) || pk.includes(personKey));
-                      }) ??
-                      null;
-                    const docId = w.resources?.id ?? null;
-                    const photoId = photoAsset?.resources?.id ?? null;
-                    const docUrl = docId ? `/api/resources/go?id=${docId}` : null;
-                    const photoUrl = photoId ? `/api/resources/go?id=${photoId}` : null;
+            {hasPhotos ? <section id="photo" className={styles.section}>
+              <div className={styles.sectionTitle}>{en ? "Photos" : "사진"}</div>
+              {groupPhoto?.resources?.id ? <div className={styles.photoLarge}><div className={styles.photoLabel}>{en ? "Group Photo" : "단체 사진"}</div><img src={`/api/resources/go?id=${groupPhoto.resources.id}`} alt={groupPhoto.resources.title ?? "group_photo"} /></div> : null}
+              {otherPhotos.length > 0 ? <div className={styles.photoGrid}>{otherPhotos.map((p) => { const rid = p?.resources?.id; if (!rid) return null; const title = p.resources?.title ?? p.resources?.original_filename ?? "photo"; return <a key={rid} className={styles.photoThumb} href={`/api/resources/go?id=${rid}`} target="_blank" rel="noreferrer" title={title}><img src={`/api/resources/go?id=${rid}`} alt={title} /></a>; })}</div> : null}
+            </section> : null}
 
-                    return (
-                      <div key={`${docId ?? personKey ?? idx}`} className={styles.winnerCard}>
-                        <div className={styles.winnerInfo}>
-                          <span className={styles.badge}>{w.award ?? "수상"}</span>
-                          {docUrl ? (
-                            <a className={styles.winnerNameLink} href={docUrl} target="_blank" rel="noreferrer" title="응모작(PDF) 열기">{person}</a>
-                          ) : (
-                            <div className={styles.winnerNameText}>{person}</div>
-                          )}
-                          <div className={styles.winnerSub}>
-                            {docUrl ? (
-                              <a className={styles.winnerMiniLink} href={docUrl} target="_blank" rel="noreferrer">응모작 열기 ↗</a>
-                            ) : (
-                              <span className={styles.muted}>문서 없음</span>
-                            )}
-                          </div>
-                        </div>
-                        <div className={styles.winnerPhotoLarge}>
-                          {photoUrl ? (
-                            <a href={photoUrl} target="_blank" rel="noreferrer" title="사진 원본 열기"><img src={photoUrl} alt={person} /></a>
-                          ) : (
-                            <div className={styles.winnerPhotoEmpty}>사진 없음</div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-            ) : null}
+            {hasMaterials ? <section id="materials" className={styles.section}>
+              <div className={styles.sectionTitle}>{en ? "Entries" : "자료"}</div>
+              <div className={styles.board}>
+                <div className={styles.boardHead}><div>No</div><div>{en ? "Participant" : "지원자"}</div><div>{en ? "Open" : "열기"}</div></div>
+                {materialItems.map((a, i) => { const person = (a.person_en ?? a.person_ko ?? "").trim() || (en ? "Anonymous" : "익명"); const r = a.resources; if (!r?.id) return null; return <div key={`${r.id}`} className={styles.boardRow}><div className={styles.boardNo}>{i + 1}</div><div className={styles.boardTitle}><a href={`/api/resources/go?id=${r.id}`} target="_blank" rel="noreferrer">{person}</a></div><div className={styles.boardAction}><a className={styles.boardBtn} href={`/api/resources/go?id=${r.id}`} target="_blank" rel="noreferrer">PDF ↗</a></div></div>; })}
+              </div>
+            </section> : null}
 
-            {hasPhotos ? (
-              <section id="photo" className={styles.section}>
-                <div className={styles.sectionTitle}>사진</div>
-                {groupPhoto?.resources?.id ? (
-                  <div className={styles.photoLarge}>
-                    <div className={styles.photoLabel}>단체 사진</div>
-                    <img src={`/api/resources/go?id=${groupPhoto.resources.id}`} alt={groupPhoto.resources.title ?? "group_photo"} />
-                  </div>
-                ) : null}
-                {otherPhotos.length > 0 ? (
-                  <div className={styles.photoGrid}>
-                    {otherPhotos.map((p) => {
-                      const rid = p?.resources?.id;
-                      if (!rid) return null;
-                      const title = p.resources?.title ?? p.resources?.original_filename ?? "photo";
-                      return (
-                        <a key={rid} className={styles.photoThumb} href={`/api/resources/go?id=${rid}`} target="_blank" rel="noreferrer" title={title}>
-                          <img src={`/api/resources/go?id=${rid}`} alt={title} />
-                        </a>
-                      );
-                    })}
-                  </div>
-                ) : null}
-              </section>
-            ) : null}
-
-            {hasMaterials ? (
-              <section id="materials" className={styles.section}>
-                <div className={styles.sectionTitle}>자료</div>
-                <div className={styles.board}>
-                  <div className={styles.boardHead}><div>No</div><div>지원자</div><div>열기</div></div>
-                  {materialItems.map((a, i) => {
-                    const person = (a.person_en ?? a.person_ko ?? "").trim() || "익명";
-                    const r = a.resources;
-                    if (!r?.id) return null;
-                    return (
-                      <div key={`${r.id}`} className={styles.boardRow}>
-                        <div className={styles.boardNo}>{i + 1}</div>
-                        <div className={styles.boardTitle}><a href={`/api/resources/go?id=${r.id}`} target="_blank" rel="noreferrer">{person}</a></div>
-                        <div className={styles.boardAction}><a className={styles.boardBtn} href={`/api/resources/go?id=${r.id}`} target="_blank" rel="noreferrer">PDF ↗</a></div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-            ) : null}
-
-            {!hasPoster && !hasWinners && !hasPhotos && !hasMaterials ? (
-              <div className={styles.card}><div className={styles.muted}>이 행사에 등록된 공개 자료가 없습니다.</div></div>
-            ) : null}
+            {!hasPoster && !hasWinners && !hasPhotos && !hasMaterials ? <div className={styles.card}><div className={styles.muted}>{en ? "No public materials are registered for this contest." : "이 행사에 등록된 공개 자료가 없습니다."}</div></div> : null}
           </>
         )}
       </div>
