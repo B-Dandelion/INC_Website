@@ -8,16 +8,27 @@ import { supabaseBrowser } from "@/lib/supabase/browser";
 
 const supabase = supabaseBrowser();
 
+function safeNextPath(value: string | null) {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) return "/";
+  return value;
+}
+
+function loginErrorMessage(message?: string) {
+  const value = (message ?? "").toLowerCase();
+  if (value.includes("invalid login credentials")) return "이메일 또는 비밀번호를 확인해 주세요.";
+  if (value.includes("email not confirmed")) return "이메일 인증을 완료한 후 로그인해 주세요.";
+  return "로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.";
+}
+
 export default function LoginClient() {
   const router = useRouter();
   const sp = useSearchParams();
 
-  const nextPath = sp.get("next") || "/";
+  const nextPath = safeNextPath(sp.get("next"));
   const signupHref = `/auth/signup?next=${encodeURIComponent(nextPath)}`;
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -26,108 +37,108 @@ export default function LoginClient() {
     setErrorMsg(null);
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
 
-    if (error) {
-      setErrorMsg(error.message);
-      return;
-    }
-
-    const { data: userData } = await supabase.auth.getUser();
-    const uid = userData.user?.id;
-
-    if (uid) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("approved")
-        .eq("id", uid)
-        .single();
-
-      if (!profile?.approved) {
-        router.replace("/pending");
+      if (error) {
+        setErrorMsg(loginErrorMessage(error.message));
         return;
       }
+
+      const { data: userData } = await supabase.auth.getUser();
+      const uid = userData.user?.id;
+
+      if (uid) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("approved")
+          .eq("id", uid)
+          .single();
+
+        if (!profile?.approved) {
+          router.replace("/pending");
+          return;
+        }
+      }
+
+      localStorage.setItem("inc_login_at", String(Date.now()));
+      localStorage.setItem("inc_last_at", String(Date.now()));
+
+      router.replace(nextPath);
+      router.refresh();
+    } catch {
+      setErrorMsg("로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+    } finally {
+      setLoading(false);
     }
-
-    localStorage.setItem("inc_login_at", String(Date.now()));
-    localStorage.setItem("inc_last_at", String(Date.now()));
-
-    router.replace(nextPath);
-    router.refresh();
   }
 
   return (
-    <main className="min-h-[calc(100vh-120px)] bg-gradient-to-b from-blue-50 to-white px-4 py-12">
+    <main className="min-h-[calc(100vh-72px)] bg-[#F6F7F9] px-5 py-12 md:py-16">
       <div className="mx-auto w-full max-w-md">
-        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm">
-          <div className="px-8 pt-8 pb-6">
-            <div className="flex items-center justify-center">
-              <Image src="/inc_logo.png" alt="INC" width={150} height={56} priority />
+        <div className="border border-slate-200 bg-white p-6 md:p-8">
+          <div className="flex justify-center">
+            <Image src="/inc_logo.png" alt="INC" width={148} height={56} priority />
+          </div>
+
+          <div className="mt-7 border-b border-slate-200 pb-5 text-center">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#2B6CA3]">Member Login</p>
+            <h1 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-slate-950">로그인</h1>
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              승인된 계정은 회원 전용 자료를 이용할 수 있습니다.
+            </p>
+          </div>
+
+          <form onSubmit={onSubmit} className="mt-6 grid gap-4">
+            <label className="grid gap-1.5">
+              <span className="text-sm font-semibold text-slate-700">이메일</span>
+              <input
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="h-11 rounded-md border border-slate-300 px-3 text-sm text-slate-900 outline-none transition focus:border-[#2B6CA3] focus:ring-2 focus:ring-[#2B6CA3]/10"
+                required
+              />
+            </label>
+
+            <label className="grid gap-1.5">
+              <span className="text-sm font-semibold text-slate-700">비밀번호</span>
+              <input
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="h-11 rounded-md border border-slate-300 px-3 text-sm text-slate-900 outline-none transition focus:border-[#2B6CA3] focus:ring-2 focus:ring-[#2B6CA3]/10"
+                required
+              />
+            </label>
+
+            {errorMsg ? (
+              <div role="alert" className="border border-red-200 bg-red-50 px-3 py-2.5 text-sm leading-6 text-red-700">
+                {errorMsg}
+              </div>
+            ) : null}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="mt-1 h-11 rounded-md bg-[#174A7E] text-sm font-bold text-white transition hover:bg-[#103A66] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {loading ? "로그인 중..." : "로그인"}
+            </button>
+
+            <div className="mt-2 flex items-center justify-between gap-4 border-t border-slate-100 pt-4 text-sm">
+              <span className="text-slate-500">계정이 없으신가요?</span>
+              <Link href={signupHref} className="font-semibold text-[#174A7E] hover:underline">
+                회원가입
+              </Link>
             </div>
 
-            <h1 className="mt-6 text-center text-xl font-extrabold text-gray-900">로그인</h1>
-            <p className="mt-2 text-center text-sm text-gray-600">
-              승인된 계정만 자료 업로드 및 비공개 자료 접근이 가능합니다.
-            </p>
-
-            <form onSubmit={onSubmit} className="mt-6 grid gap-4">
-              <label className="grid gap-1">
-                <span className="text-sm font-medium text-gray-700">Email</span>
-                <input
-                  type="email"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="h-11 rounded-xl border border-gray-300 px-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                  required
-                />
-              </label>
-
-              <label className="grid gap-1">
-                <span className="text-sm font-medium text-gray-700">Password</span>
-                <input
-                  type="password"
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="h-11 rounded-xl border border-gray-300 px-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                  required
-                />
-              </label>
-
-              {errorMsg && (
-                <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                  {errorMsg}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="mt-1 h-11 rounded-xl bg-blue-600 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
-              >
-                {loading ? "Signing in..." : "Sign in"}
-              </button>
-
-              <div className="mt-4 flex items-center justify-between text-sm">
-                <span className="text-slate-600">계정이 없으신가요?</span>
-                <Link href={signupHref} className="font-semibold text-blue-600 hover:text-blue-700">
-                  회원가입
-                </Link>
-              </div>
-
-              <div className="mt-2 flex items-center justify-between text-sm text-gray-600">
-                <Link href={nextPath} className="hover:text-blue-600">
-                  돌아가기
-                </Link>
-              </div>
-            </form>
-          </div>
-
-          <div className="rounded-b-2xl border-t border-gray-200 bg-gray-50 px-8 py-4 text-xs text-gray-600">
-            관리자 계정으로 로그인하면 상단 메뉴에서 관리자 기능(예: 업로드)로 이동할 수 있게 확장 가능합니다.
-          </div>
+            <Link href={nextPath} className="text-center text-sm font-medium text-slate-500 transition hover:text-[#174A7E]">
+              ← 이전 페이지로 돌아가기
+            </Link>
+          </form>
         </div>
       </div>
     </main>
