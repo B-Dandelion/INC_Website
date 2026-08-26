@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, CalendarDays, MapPin } from "lucide-react";
-import { fetchPromotionEvents } from "@/lib/eventsDb";
+import { fetchPromotionEvents } from "@/lib/promotionalEventsDb";
 
 export const dynamic = "force-dynamic";
 
