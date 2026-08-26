@@ -11,11 +11,12 @@ import {
   UserRound,
 } from "lucide-react";
 import { fetchPromotionEventById } from "@/lib/promotionalEventsDb";
+import { getLocale } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
-function periodLabel(start?: string | null, end?: string | null) {
-  if (!start) return "일정 미정";
+function periodLabel(start: string | null | undefined, end: string | null | undefined, en: boolean) {
+  if (!start) return en ? "Schedule TBD" : "일정 미정";
   return end && end !== start ? `${start} ~ ${end}` : start;
 }
 
@@ -29,6 +30,8 @@ export default async function EventDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const locale = await getLocale();
+  const en = locale === "en";
   const { id } = await params;
   const event = await fetchPromotionEventById(id);
 
@@ -46,7 +49,7 @@ export default async function EventDetailPage({
             className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 transition hover:text-[#174A7E]"
           >
             <ArrowLeft className="h-4 w-4" />
-            이벤트 목록
+            {en ? "Event list" : "이벤트 목록"}
           </Link>
 
           <p className="mt-8 text-[11px] font-bold uppercase tracking-[0.16em] text-[#2B6CA3]">INC Event</p>
@@ -63,28 +66,30 @@ export default async function EventDetailPage({
         <article className="min-w-0">
           {event.content_ko ? (
             <div className="border-t border-slate-300 pt-6">
-              <h2 className="text-lg font-semibold text-slate-900">행사 안내</h2>
+              <h2 className="text-lg font-semibold text-slate-900">{en ? "Event Information" : "행사 안내"}</h2>
               <div className="mt-4 whitespace-pre-wrap text-[15px] leading-8 text-slate-700">{event.content_ko}</div>
             </div>
           ) : event.topic_ko ? (
             <div className="border-t border-slate-300 pt-6">
-              <h2 className="text-lg font-semibold text-slate-900">주요 내용</h2>
+              <h2 className="text-lg font-semibold text-slate-900">{en ? "Highlights" : "주요 내용"}</h2>
               <div className="mt-4 whitespace-pre-wrap text-[15px] leading-8 text-slate-700">{event.topic_ko}</div>
             </div>
           ) : (
-            <div className="border-t border-slate-300 pt-6 text-sm text-slate-400">상세 안내가 준비 중입니다.</div>
+            <div className="border-t border-slate-300 pt-6 text-sm text-slate-400">
+              {en ? "Detailed information is being prepared." : "상세 안내가 준비 중입니다."}
+            </div>
           )}
 
           {event.audience_ko ? (
             <div className="mt-10 border-t border-slate-200 pt-6">
-              <h2 className="text-base font-semibold text-slate-900">참여 대상</h2>
+              <h2 className="text-base font-semibold text-slate-900">{en ? "Audience" : "참여 대상"}</h2>
               <p className="mt-3 text-sm leading-7 text-slate-600">{event.audience_ko}</p>
             </div>
           ) : null}
 
           {hasContact ? (
             <div className="mt-10 border-t border-slate-200 pt-6">
-              <h2 className="text-base font-semibold text-slate-900">문의</h2>
+              <h2 className="text-base font-semibold text-slate-900">{en ? "Contact" : "문의"}</h2>
               <div className="mt-4 grid gap-2 text-sm text-slate-600">
                 {event.contact_name ? (
                   <div className="flex items-center gap-2"><UserRound className="h-4 w-4 text-slate-400" />{event.contact_name}</div>
@@ -104,21 +109,21 @@ export default async function EventDetailPage({
 
         <aside>
           <div className="border border-slate-200 bg-white p-5">
-            <h2 className="text-sm font-semibold text-slate-900">행사 정보</h2>
+            <h2 className="text-sm font-semibold text-slate-900">{en ? "Event Details" : "행사 정보"}</h2>
             <dl className="mt-5 grid gap-4 text-sm">
               <div>
-                <dt className="flex items-center gap-1.5 text-xs font-semibold text-slate-400"><CalendarDays className="h-3.5 w-3.5" />일정</dt>
-                <dd className="mt-1.5 leading-6 text-slate-700">{periodLabel(event.event_date, event.period_end)}</dd>
+                <dt className="flex items-center gap-1.5 text-xs font-semibold text-slate-400"><CalendarDays className="h-3.5 w-3.5" />{en ? "Date" : "일정"}</dt>
+                <dd className="mt-1.5 leading-6 text-slate-700">{periodLabel(event.event_date, event.period_end, en)}</dd>
               </div>
               {time ? (
                 <div>
-                  <dt className="flex items-center gap-1.5 text-xs font-semibold text-slate-400"><Clock3 className="h-3.5 w-3.5" />시간</dt>
+                  <dt className="flex items-center gap-1.5 text-xs font-semibold text-slate-400"><Clock3 className="h-3.5 w-3.5" />{en ? "Time" : "시간"}</dt>
                   <dd className="mt-1.5 leading-6 text-slate-700">{time}</dd>
                 </div>
               ) : null}
               {event.location_ko ? (
                 <div>
-                  <dt className="flex items-center gap-1.5 text-xs font-semibold text-slate-400"><MapPin className="h-3.5 w-3.5" />장소</dt>
+                  <dt className="flex items-center gap-1.5 text-xs font-semibold text-slate-400"><MapPin className="h-3.5 w-3.5" />{en ? "Location" : "장소"}</dt>
                   <dd className="mt-1.5 leading-6 text-slate-700">{event.location_ko}</dd>
                 </div>
               ) : null}
@@ -131,7 +136,7 @@ export default async function EventDetailPage({
                 rel={event.cta_url.startsWith("http") ? "noreferrer" : undefined}
                 className="mt-6 inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-[#174A7E] px-4 text-sm font-bold text-white transition hover:bg-[#103A66]"
               >
-                {event.cta_label || "자세히 보기"}
+                {event.cta_label || (en ? "Learn more" : "자세히 보기")}
                 <ArrowUpRight className="h-4 w-4" />
               </a>
             ) : null}
