@@ -1,10 +1,11 @@
 // components/notices/NoticeFrame.tsx
 import Link from "next/link";
 import styles from "@/components/resources/resourcesFrame.module.css";
+import { getLocale } from "@/lib/i18n";
 
 type SideItem = { id: number; title: string; posted_at: string };
 
-export default function NoticeFrame({
+export default async function NoticeFrame({
   sideItems,
   activeId,
   children,
@@ -13,14 +14,15 @@ export default function NoticeFrame({
   activeId?: number | null;
   children: React.ReactNode;
 }) {
+  const locale = await getLocale();
+  const en = locale === "en";
+
   return (
     <div className={styles.container}>
       <aside className={styles.sidebar}>
-        <div className={styles.sidebarHeader}>공지사항</div>
+        <div className={styles.sidebarHeader}>{en ? "Notices" : "공지사항"}</div>
 
         <nav className={styles.nav}>
-
-          {/* 최신 공지 10개 */}
           {sideItems.map((n) => {
             const active = activeId === n.id;
             return (
