@@ -1,169 +1,199 @@
-.footer { width: 100%; }
+.footer {
+  width: 100%;
+}
 
-/* 상단: 더 밝은(연한) 다크 + 은은한 블루 톤 */
 .top {
-  background: #0b1220; /* 또는 #0f172a */
-  color: #e5e7eb;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid #263549;
+  background: #111c2b;
+  color: #d6dce5;
 }
 
-.container{
-  max-width:1100px;
-  margin:0 auto;
-  padding:44px 16px;
-  display:grid;
+.container {
+  display: grid;
   grid-template-columns: 360px 1fr;
-  gap:32px;
+  gap: 48px;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 48px 24px 44px;
 }
 
-.brandCol{ min-width:0; }
-
-/* 로고 */
-.brandRow{
-  display:flex;
-  align-items:center;
-  gap:14px;
+.brandCol {
+  min-width: 0;
 }
 
-.logoWrap{
-  position:relative;
-  width:56px;
-  height:56px;
-  border-radius:999px;
-  overflow:hidden;
-
-  /* 파일이 흰 배경이면 이게 자연스럽게 받쳐줌 */
-  background:#ffffff;
-
-  border:1px solid rgba(255,255,255,0.18);
-  box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+.brandRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
 
-/* 이미지가 동그라미 안에 예쁘게 들어가게 */
-.logoImg{
-  object-fit: cover;  /* 꽉 차게 */
+.logoWrap {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 7px;
+  background: #fff;
 }
 
-.brandText{ min-width:0; }
-
-.brandName{
-  font-weight:800;
-  font-size:16px;
-  color:#ffffff;
-  line-height:1.1;
+.logoImg {
+  object-fit: cover;
 }
 
-.brandSub{
-  margin-top:2px;
-  font-size:12px;
-  color:rgba(229,231,235,0.78);
+.brandText {
+  min-width: 0;
 }
 
-.contact{
-  margin-top:14px;
-  font-size:13px;
-  line-height:1.7;
-  color:rgba(229,231,235,0.82);
+.brandName {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.2;
 }
 
-.contactLine{ margin-top:4px; }
-
-.contactEmail{
-  display:inline-block;
-  margin-top:6px;
-  color:#93c5fd;
-  text-decoration:none;
-}
-.contactEmail:hover{
-  color:#bfdbfe;
-  text-decoration:underline;
+.brandSub {
+  margin-top: 3px;
+  color: #97a3b4;
+  font-size: 12px;
 }
 
-.cols{
-  display:grid;
+.contact {
+  margin-top: 18px;
+  color: #aeb7c4;
+  font-size: 13px;
+  line-height: 1.75;
+}
+
+.contactLine {
+  margin-top: 4px;
+}
+
+.contactEmail {
+  display: inline-block;
+  margin-top: 7px;
+  color: #c7d8e9;
+  text-decoration: none;
+}
+
+.contactEmail:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.cols {
+  display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap:28px;
+  gap: 34px;
 }
 
-.colTitle{
-  font-weight:800;
-  font-size:14px;
-  color:#ffffff;
-  margin-bottom:12px;
+.colTitle {
+  margin-bottom: 13px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
 }
 
-.colLink{
-  display:block;
-  padding:6px 0;
-  font-size:13px;
-  color:rgba(229,231,235,0.82);
-  text-decoration:none;
-}
-.colLink:hover{
-  color:#ffffff;
+.colLink {
+  display: block;
+  padding: 5px 0;
+  color: #aeb7c4;
+  font-size: 13px;
+  text-decoration: none;
+  transition: color 140ms ease;
 }
 
-.miniText{
-  font-size:13px;
-  line-height:1.7;
-  color:rgba(229,231,235,0.78);
+.colLink:hover {
+  color: #fff;
 }
 
-.primaryBtn{
-  display:inline-flex;
-  margin-top:12px;
-  padding:10px 14px;
-  border-radius:10px;
-  background:#2563eb; /* 브랜드 블루 */
-  color:#ffffff;
-  font-weight:800;
-  font-size:13px;
-  text-decoration:none;
-}
-.primaryBtn:hover{ background:#1d4ed8; }
-
-/* 최하단: 브랜드 블루로 확 분리 */
-.bottom{
-  background:#2563eb; /* #2563EB */
-  border-top:1px solid rgba(255,255,255,0.18);
-  color:rgba(255,255,255,0.92);
+.miniText {
+  color: #aeb7c4;
+  font-size: 13px;
+  line-height: 1.7;
 }
 
-.containerBottom{
-  max-width:1100px;
-  margin:0 auto;
-  padding:12px 16px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  flex-wrap:wrap;
+.primaryBtn {
+  display: inline-flex;
+  margin-top: 13px;
+  padding: 9px 12px;
+  border: 1px solid #436b91;
+  border-radius: 5px;
+  background: transparent;
+  color: #eef5fb;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
 }
 
-.bottomLeft{ font-size:12px; }
-
-.bottomRight{
-  display:flex;
-  gap:14px;
-  flex-wrap:wrap;
+.primaryBtn:hover {
+  border-color: #6f91b2;
+  background: rgba(255, 255, 255, 0.04);
 }
 
-.bottomLink{
-  font-size:12px;
-  color:rgba(255,255,255,0.92);
-  text-decoration:none;
-}
-.bottomLink:hover{
-  text-decoration:underline;
-  color:#ffffff;
+.bottom {
+  border-top: 1px solid #263549;
+  background: #0c1623;
+  color: #9ca8b7;
 }
 
-/* responsive */
-@media (max-width: 900px){
-  .container{ grid-template-columns:1fr; }
-  .cols{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.containerBottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 13px 24px;
+  flex-wrap: wrap;
 }
-@media (max-width: 560px){
-  .cols{ grid-template-columns:1fr; }
-  .logoWrap{ width:160px; height:52px; }
+
+.bottomLeft {
+  font-size: 11px;
+}
+
+.bottomRight {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.bottomLink {
+  color: #9ca8b7;
+  font-size: 11px;
+  text-decoration: none;
+}
+
+.bottomLink:hover {
+  color: #fff;
+}
+
+@media (max-width: 900px) {
+  .container {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+
+  .cols {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .container {
+    padding: 38px 18px;
+  }
+
+  .cols {
+    grid-template-columns: 1fr;
+  }
+
+  .logoWrap {
+    width: 52px;
+    height: 52px;
+  }
+
+  .containerBottom {
+    padding-inline: 18px;
+  }
 }
