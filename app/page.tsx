@@ -36,31 +36,31 @@ export default async function HomePage() {
             className="object-cover object-[50%_35%]"
           />
         </div>
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,24,42,0.86)_0%,rgba(8,24,42,0.60)_42%,rgba(8,24,42,0.12)_76%,rgba(8,24,42,0.02)_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,24,42,0.88)_0%,rgba(8,24,42,0.62)_42%,rgba(8,24,42,0.14)_76%,rgba(8,24,42,0.03)_100%)]" />
 
         <div className="relative mx-auto w-full max-w-7xl px-5 py-16 md:px-6">
           <div className="max-w-[680px]">
             <p className="m-0 text-[12px] font-bold uppercase tracking-[0.18em] text-white/70">
               International Nuclear Cooperation
             </p>
-            <h1 className="mt-5 text-5xl font-semibold tracking-[-0.04em] text-white md:text-7xl">
+            <h1 className="mt-5 text-5xl font-black tracking-[-0.055em] text-white md:text-7xl">
               INC
             </h1>
-            <p className="mt-5 max-w-[610px] text-base leading-7 text-white/82 md:text-lg">
+            <p className="mt-5 max-w-[610px] text-base leading-7 text-white/85 md:text-lg">
               한국 원자력 연구 및 국제 협력 네트워크를 이끄는 INC 공식 홈페이지입니다.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-2.5">
               <Link
                 href="/notice"
-                className="inline-flex h-11 items-center gap-2 rounded-md bg-white px-4 text-sm font-bold text-slate-900 transition hover:bg-slate-100"
+                className="inline-flex h-11 items-center gap-2 rounded-md bg-white px-4 text-sm font-bold text-slate-900 shadow-sm transition hover:bg-slate-100"
               >
                 공지사항
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
                 href="/resources"
-                className="inline-flex h-11 items-center gap-2 rounded-md border border-white/45 bg-white/5 px-4 text-sm font-bold text-white transition hover:bg-white/12"
+                className="inline-flex h-11 items-center gap-2 rounded-md border border-white/70 bg-[#0B2239]/75 px-4 text-sm font-bold text-white shadow-sm backdrop-blur-[2px] transition hover:bg-[#0B2239]/90"
               >
                 자료실
                 <ArrowRight className="h-4 w-4" />
