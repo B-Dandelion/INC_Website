@@ -4,7 +4,6 @@ import {
   Bell,
   CalendarDays,
   ChevronRight,
-  FileText,
   FolderOpen,
   MapPin,
   Search,
@@ -53,13 +52,17 @@ export default async function SearchPage({
   const sp = await searchParams;
   const q = typeof sp.q === "string" ? sp.q.trim() : "";
 
-  const [resourceRows, noticeRows, eventRows] = q
-    ? await Promise.all([
-        fetchResources({ q, page: 1, pageSize: 100 }),
-        fetchNotices({ page: 1, pageSize: 100 }),
-        fetchPromotionEvents(),
-      ])
-    : [[], [], []];
+  let resourceRows: Awaited<ReturnType<typeof fetchResources>> = [];
+  let noticeRows: Awaited<ReturnType<typeof fetchNotices>> = [];
+  let eventRows: Awaited<ReturnType<typeof fetchPromotionEvents>> = [];
+
+  if (q) {
+    [resourceRows, noticeRows, eventRows] = await Promise.all([
+      fetchResources({ q, page: 1, pageSize: 100 }),
+      fetchNotices({ page: 1, pageSize: 100 }),
+      fetchPromotionEvents(),
+    ]);
+  }
 
   const notices = q
     ? noticeRows.filter((notice) => includesQuery(q, notice.title, notice.content))
