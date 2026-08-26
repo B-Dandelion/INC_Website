@@ -2,9 +2,19 @@ import Link from "next/link";
 import LatestTabs from "@/components/home/LatestTabs";
 import { RESOURCE_BOARDS } from "@/lib/resourceBoards";
 import { fetchPublicResources } from "@/lib/resourcesDb";
+import { fetchHomepagePromotion } from "@/lib/eventsDb";
 import Image from "next/image";
 import { fetchNotices } from "@/lib/noticesDb";
 import { ArrowRight } from "lucide-react";
+
+function todayInKorea() {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
 
 export default async function HomePage() {
   const allResources = await fetchPublicResources();
@@ -22,6 +32,17 @@ export default async function HomePage() {
     date: (n.posted_at ?? "").toString().slice(0, 10),
     href: `/notice/${n.id}`,
   }));
+
+  const promotion = await fetchHomepagePromotion(todayInKorea());
+  const featuredEvent = promotion
+    ? {
+        id: promotion.id,
+        title: promotion.title_ko,
+        summary: promotion.summary_ko ?? "행사 상세 내용과 참여 정보를 확인해 주세요.",
+        startDate: promotion.event_date ?? "",
+        endDate: promotion.period_end ?? "",
+      }
+    : null;
 
   return (
     <main className="bg-[#F6F7F9]">
@@ -102,7 +123,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <LatestTabs notices={latestNotices} resources={latestResources} />
+        <LatestTabs notices={latestNotices} resources={latestResources} featuredEvent={featuredEvent} />
       </div>
     </main>
   );
