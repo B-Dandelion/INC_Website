@@ -10,7 +10,7 @@ import {
   Phone,
   UserRound,
 } from "lucide-react";
-import { fetchPromotionEventById } from "@/lib/eventsDb";
+import { fetchPromotionEventById } from "@/lib/promotionalEventsDb";
 
 export const dynamic = "force-dynamic";
 
