@@ -33,6 +33,8 @@ NEXT_PUBLIC_SITE_URL=https://inc-kings.vercel.app
 
 If Resend is not configured or delivery fails, the member review state is still saved. The admin member detail shows the notification status and supports retrying the result email.
 
+For Supabase Auth email confirmation, keep the hosted project's Auth URL Configuration aligned with the public site. The production Site URL should be `https://inc-kings.vercel.app`; add any Vercel preview URLs to the allowed redirect list only when preview email-confirmation testing is needed.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
