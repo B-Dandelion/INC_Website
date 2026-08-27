@@ -273,8 +273,8 @@ export default async function AdminUsersPage({
               const email = member.authEmail || member.email || "이메일 없음";
               const joinedAt = member.authCreatedAt || member.created_at;
               return (
-                <article key={member.id} className={index !== visible.length - 1 ? "border-b border-slate-100" : ""}>
-                  <div className="grid gap-4 px-5 py-5 lg:grid-cols-[minmax(220px,1.3fr)_minmax(220px,1fr)_150px_120px] lg:items-center">
+                <details key={member.id} className={index !== visible.length - 1 ? "border-b border-slate-100" : ""}>
+                  <summary className="grid cursor-pointer list-none gap-4 px-5 py-5 transition hover:bg-slate-50 lg:grid-cols-[minmax(220px,1.3fr)_minmax(220px,1fr)_150px_120px] lg:items-center [&::-webkit-details-marker]:hidden">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <strong className="truncate text-[15px] font-semibold text-slate-950">{member.name || "이름 미등록"}</strong>
@@ -301,82 +301,82 @@ export default async function AdminUsersPage({
                       <div className="mt-0.5 tabular-nums">{formatDateTime(joinedAt)}</div>
                     </div>
 
-                    <details className="group lg:text-right">
-                      <summary className="inline-flex h-9 cursor-pointer select-none items-center justify-center rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 [&::-webkit-details-marker]:hidden">
+                    <div className="lg:text-right">
+                      <span className="inline-flex h-9 items-center justify-center rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700">
                         상세 관리
+                      </span>
+                    </div>
+                  </summary>
+
+                  <div className="border-t border-slate-100 bg-slate-50/50 px-5 py-5">
+                    <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+                      <div>
+                        <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-400">Name</div>
+                        <div className="mt-1.5 text-sm font-semibold text-slate-800">{member.name || "미등록"}</div>
+                      </div>
+                      <div>
+                        <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-400">Affiliation</div>
+                        <div className="mt-1.5 text-sm text-slate-700">{member.affiliation || "미등록"}</div>
+                      </div>
+                      <div>
+                        <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-400">Phone</div>
+                        <div className="mt-1.5 text-sm text-slate-700">{member.phone || "미등록"}</div>
+                      </div>
+                      <div>
+                        <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-400">Last sign in</div>
+                        <div className="mt-1.5 text-sm tabular-nums text-slate-700">{formatDateTime(member.lastSignInAt)}</div>
+                      </div>
+                    </div>
+
+                    <div className="mt-5 flex flex-col justify-between gap-4 border-t border-slate-200 pt-5 md:flex-row md:items-end">
+                      <div>
+                        <div className="flex items-center gap-2 text-sm font-semibold text-slate-800">
+                          <ShieldCheck className="h-4 w-4 text-[#174A7E]" />
+                          이용 승인 관리
+                        </div>
+                        <p className="mt-1 text-xs leading-5 text-slate-400">승인된 회원만 회원 전용 자료를 이용할 수 있습니다.</p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {member.approved ? (
+                          <form action={revokeMemberApprovalAction}>
+                            <input type="hidden" name="id" value={member.id} />
+                            <button type="submit" className="h-9 rounded-md border border-amber-300 bg-white px-3 text-sm font-semibold text-amber-700 transition hover:bg-amber-50">
+                              승인 취소
+                            </button>
+                          </form>
+                        ) : (
+                          <form action={approveMemberAction}>
+                            <input type="hidden" name="id" value={member.id} />
+                            <button type="submit" className="h-9 rounded-md bg-[#174A7E] px-3 text-sm font-semibold text-white transition hover:bg-[#103A66]">
+                              회원 승인
+                            </button>
+                          </form>
+                        )}
+                      </div>
+                    </div>
+
+                    <details className="mt-5 border-t border-slate-200 pt-5">
+                      <summary className="inline-flex cursor-pointer select-none items-center gap-2 text-sm font-semibold text-red-700 [&::-webkit-details-marker]:hidden">
+                        <Trash2 className="h-4 w-4" />
+                        회원 삭제
                       </summary>
-
-                      <div className="col-span-full mt-4 border-t border-slate-100 pt-5 text-left lg:mt-5">
-                        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
-                          <div>
-                            <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-400">Name</div>
-                            <div className="mt-1.5 text-sm font-semibold text-slate-800">{member.name || "미등록"}</div>
-                          </div>
-                          <div>
-                            <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-400">Affiliation</div>
-                            <div className="mt-1.5 text-sm text-slate-700">{member.affiliation || "미등록"}</div>
-                          </div>
-                          <div>
-                            <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-400">Phone</div>
-                            <div className="mt-1.5 text-sm text-slate-700">{member.phone || "미등록"}</div>
-                          </div>
-                          <div>
-                            <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-400">Last sign in</div>
-                            <div className="mt-1.5 text-sm tabular-nums text-slate-700">{formatDateTime(member.lastSignInAt)}</div>
-                          </div>
-                        </div>
-
-                        <div className="mt-5 flex flex-col justify-between gap-4 border-t border-slate-100 pt-5 md:flex-row md:items-end">
-                          <div>
-                            <div className="flex items-center gap-2 text-sm font-semibold text-slate-800">
-                              <ShieldCheck className="h-4 w-4 text-[#174A7E]" />
-                              이용 승인 관리
-                            </div>
-                            <p className="mt-1 text-xs leading-5 text-slate-400">승인된 회원만 회원 전용 자료를 이용할 수 있습니다.</p>
-                          </div>
-                          <div className="flex flex-wrap gap-2">
-                            {member.approved ? (
-                              <form action={revokeMemberApprovalAction}>
-                                <input type="hidden" name="id" value={member.id} />
-                                <button type="submit" className="h-9 rounded-md border border-amber-300 bg-white px-3 text-sm font-semibold text-amber-700 transition hover:bg-amber-50">
-                                  승인 취소
-                                </button>
-                              </form>
-                            ) : (
-                              <form action={approveMemberAction}>
-                                <input type="hidden" name="id" value={member.id} />
-                                <button type="submit" className="h-9 rounded-md bg-[#174A7E] px-3 text-sm font-semibold text-white transition hover:bg-[#103A66]">
-                                  회원 승인
-                                </button>
-                              </form>
-                            )}
-                          </div>
-                        </div>
-
-                        <details className="mt-5 border-t border-slate-100 pt-5">
-                          <summary className="inline-flex cursor-pointer select-none items-center gap-2 text-sm font-semibold text-red-700 [&::-webkit-details-marker]:hidden">
-                            <Trash2 className="h-4 w-4" />
-                            회원 삭제
-                          </summary>
-                          <div className="mt-3 max-w-xl border border-red-200 bg-red-50 px-4 py-3">
-                            <p className="text-sm font-semibold text-red-800">삭제하면 이 회원의 로그인 계정도 함께 삭제됩니다.</p>
-                            <p className="mt-1 text-xs leading-5 text-red-700">복구 기능이 없으므로 탈퇴 요청이나 잘못 생성된 계정인 경우에만 사용하세요.</p>
-                            <form action={deleteMemberAction} className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                              <input type="hidden" name="id" value={member.id} />
-                              <label className="flex items-center gap-2 text-xs font-semibold text-red-800">
-                                <input type="checkbox" name="confirm_delete" required className="h-4 w-4 accent-red-700" />
-                                이 회원을 삭제하는 것을 확인합니다.
-                              </label>
-                              <button type="submit" className="h-9 shrink-0 rounded-md border border-red-300 bg-white px-3 text-sm font-semibold text-red-700 transition hover:bg-red-100">
-                                계정 삭제
-                              </button>
-                            </form>
-                          </div>
-                        </details>
+                      <div className="mt-3 max-w-xl border border-red-200 bg-red-50 px-4 py-3">
+                        <p className="text-sm font-semibold text-red-800">삭제하면 이 회원의 로그인 계정도 함께 삭제됩니다.</p>
+                        <p className="mt-1 text-xs leading-5 text-red-700">복구 기능이 없으므로 탈퇴 요청이나 잘못 생성된 계정인 경우에만 사용하세요.</p>
+                        <form action={deleteMemberAction} className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                          <input type="hidden" name="id" value={member.id} />
+                          <label className="flex items-center gap-2 text-xs font-semibold text-red-800">
+                            <input type="checkbox" name="confirm_delete" required className="h-4 w-4 accent-red-700" />
+                            이 회원을 삭제하는 것을 확인합니다.
+                          </label>
+                          <button type="submit" className="h-9 shrink-0 rounded-md border border-red-300 bg-white px-3 text-sm font-semibold text-red-700 transition hover:bg-red-100">
+                            계정 삭제
+                          </button>
+                        </form>
                       </div>
                     </details>
                   </div>
-                </article>
+                </details>
               );
             })}
           </div>
