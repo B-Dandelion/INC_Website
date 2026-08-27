@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { fetchBoards } from "@/lib/resourcesDb";
-import { ArrowRight, CalendarDays, FileText, LogOut, Megaphone } from "lucide-react";
+import { ArrowRight, CalendarDays, FileText, LogOut, Megaphone, UsersRound } from "lucide-react";
 
 export default async function AdminResourcesHome() {
   const boards = await fetchBoards();
@@ -12,10 +12,17 @@ export default async function AdminResourcesHome() {
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#2B6CA3]">INC Administration</p>
             <h1 className="mt-2 text-3xl font-semibold tracking-[-0.035em] text-slate-950">콘텐츠 관리</h1>
-            <p className="mt-2 text-sm text-slate-500">자료실, 공지사항, 이벤트를 관리할 수 있습니다.</p>
+            <p className="mt-2 text-sm text-slate-500">자료실, 공지사항, 이벤트와 회원을 관리할 수 있습니다.</p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href="/admin-x7k3p9/users"
+              className="inline-flex h-10 items-center gap-2 rounded-md border border-slate-300 bg-white px-3.5 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+            >
+              <UsersRound className="h-4 w-4" />
+              회원 관리
+            </Link>
             <Link
               href="/admin-x7k3p9/notices"
               className="inline-flex h-10 items-center gap-2 rounded-md border border-slate-300 bg-white px-3.5 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
