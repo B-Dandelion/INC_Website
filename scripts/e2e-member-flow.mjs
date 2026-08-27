@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 
+// Temporary build-time probe for the real signup -> approval -> login flow.
 function must(value, name) {
   if (!value) throw new Error(`Missing ${name}`);
   return value;
