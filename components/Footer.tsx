@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import styles from "./Footer.module.css";
+import type { Locale } from "@/lib/i18n";
 
 type PolicyLink = { label: string; href: string };
 
@@ -14,19 +15,20 @@ export default function Footer({
   policyLinks,
   orgName,
   contact,
+  locale = "ko",
 }: {
   policyLinks: PolicyLink[];
   orgName: string;
   contact?: FooterContact;
+  locale?: Locale;
 }) {
   const year = new Date().getFullYear();
+  const en = locale === "en";
 
   return (
     <footer className={styles.footer}>
-      {/* TOP */}
       <div className={styles.top}>
         <div className={styles.container}>
-          {/* 브랜드/연락처 */}
           <div className={styles.brandCol}>
             <div className={styles.brandRow}>
               <div className={styles.logoWrap}>
@@ -47,14 +49,10 @@ export default function Footer({
 
             <div className={styles.contact}>
               {contact?.addressLines?.length ? (
-                <div className={styles.contactLine}>
-                  {contact.addressLines.join(" · ")}
-                </div>
+                <div className={styles.contactLine}>{contact.addressLines.join(" · ")}</div>
               ) : null}
 
-              {contact?.phone ? (
-                <div className={styles.contactLine}>Tel: {contact.phone}</div>
-              ) : null}
+              {contact?.phone ? <div className={styles.contactLine}>Tel: {contact.phone}</div> : null}
 
               {contact?.email ? (
                 <a className={styles.contactEmail} href={`mailto:${contact.email}`}>
@@ -64,12 +62,11 @@ export default function Footer({
             </div>
           </div>
 
-          {/* 컬럼 */}
           <div className={styles.cols}>
             <div className={styles.col}>
               <div className={styles.colTitle}>Resources</div>
-              <Link className={styles.colLink} href="/resources">자료실</Link>
-              <Link className={styles.colLink} href="/contact">문의</Link>
+              <Link className={styles.colLink} href="/resources">{en ? "Resources" : "자료실"}</Link>
+              <Link className={styles.colLink} href="/contact">{en ? "Contact" : "문의"}</Link>
             </div>
 
             <div className={styles.col}>
@@ -84,18 +81,26 @@ export default function Footer({
             <div className={styles.col}>
               <div className={styles.colTitle}>Stay in Touch</div>
               <div className={styles.miniText}>
-                공지 및 자료 업데이트는 내부 승인 절차 후 게시됩니다.
-                <br />
-                급한 문의는 대표메일로 전달해주세요.
+                {en ? (
+                  <>
+                    Notices and resources are published after internal review.
+                    <br />For urgent inquiries, please contact us by email.
+                  </>
+                ) : (
+                  <>
+                    공지 및 자료 업데이트는 내부 승인 절차 후 게시됩니다.
+                    <br />급한 문의는 대표메일로 전달해주세요.
+                  </>
+                )}
               </div>
 
               {contact?.email ? (
                 <a className={styles.primaryBtn} href={`mailto:${contact.email}`}>
-                  이메일 문의
+                  {en ? "Email us" : "이메일 문의"}
                 </a>
               ) : (
                 <Link className={styles.primaryBtn} href="/contact">
-                  문의 페이지
+                  {en ? "Contact page" : "문의 페이지"}
                 </Link>
               )}
             </div>
@@ -103,12 +108,9 @@ export default function Footer({
         </div>
       </div>
 
-      {/* BOTTOM */}
       <div className={styles.bottom}>
         <div className={styles.containerBottom}>
-          <div className={styles.bottomLeft}>
-            © {year} {orgName}. All rights reserved.
-          </div>
+          <div className={styles.bottomLeft}>© {year} {orgName}. All rights reserved.</div>
           <div className={styles.bottomRight}>
             {policyLinks.slice(0, 4).map((x) => (
               <Link key={x.href} className={styles.bottomLink} href={x.href}>

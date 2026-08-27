@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import { LogIn, LogOut, Shield } from "lucide-react";
 import { supabaseBrowser } from "@/lib/supabase/browser";
+import type { Locale } from "@/lib/i18n";
 
 const supabase = supabaseBrowser();
 
@@ -14,11 +15,12 @@ type ProfileRow = { role: string | null; approved: boolean | null };
 const controlClass =
   "inline-flex h-9 items-center gap-2 rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50";
 
-export default function AuthButton() {
+export default function AuthButton({ locale = "ko" }: { locale?: Locale }) {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [approved, setApproved] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
+  const en = locale === "en";
 
   const router = useRouter();
   const pathname = usePathname();
@@ -32,8 +34,8 @@ export default function AuthButton() {
   const displayName = useMemo(() => {
     const email = user?.email ?? "";
     if (email.includes("@")) return email.split("@")[0];
-    return user?.user_metadata?.name || "account";
-  }, [user]);
+    return user?.user_metadata?.name || (en ? "account" : "계정");
+  }, [user, en]);
 
   function closeMenu() {
     detailsRef.current?.removeAttribute("open");
@@ -124,7 +126,7 @@ export default function AuthButton() {
   if (loading) {
     return (
       <button className={`${controlClass} cursor-not-allowed text-slate-400`} disabled>
-        로그인
+        {en ? "Log in" : "로그인"}
       </button>
     );
   }
@@ -133,7 +135,7 @@ export default function AuthButton() {
     return (
       <Link href={loginHref} className={controlClass}>
         <LogIn className="h-4 w-4" />
-        로그인
+        {en ? "Log in" : "로그인"}
       </Link>
     );
   }
@@ -148,7 +150,7 @@ export default function AuthButton() {
           <span className="max-w-[140px] truncate">{displayName}</span>
           {isPending ? (
             <span className="ml-1 border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[11px] font-bold text-amber-700">
-              승인대기
+              {en ? "Pending" : "승인대기"}
             </span>
           ) : null}
           <span className="text-xs text-slate-400">▾</span>
@@ -161,7 +163,7 @@ export default function AuthButton() {
               onClick={closeMenu}
               className="block border-b border-slate-100 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
             >
-              승인 대기 안내
+              {en ? "Approval status" : "승인 대기 안내"}
             </Link>
           ) : null}
 
@@ -171,7 +173,7 @@ export default function AuthButton() {
               onClick={closeMenu}
               className="block border-b border-slate-100 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
             >
-              자료 업로드
+              {en ? "Upload resources" : "자료 업로드"}
             </Link>
           ) : null}
 
@@ -180,7 +182,7 @@ export default function AuthButton() {
             className="inline-flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50"
           >
             <LogOut className="h-4 w-4" />
-            로그아웃
+            {en ? "Log out" : "로그아웃"}
           </button>
         </div>
       </details>

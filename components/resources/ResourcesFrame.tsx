@@ -1,24 +1,25 @@
 // components/resources/ResourcesFrame.tsx
 import Link from "next/link";
 import styles from "./resourcesFrame.module.css";
+import { getLocale } from "@/lib/i18n";
 
 export const NAV = [
-  { key: "atm", label: "ATM", href: "/resources/atm" },
-  { key: "heartbeat-of-atoms", label: "Heartbeat of Atoms", href: "/resources/heartbeat-of-atoms" },
-  { key: "lecture", label: "강연자료", href: "/resources/lecture" },
-  { key: "contribution", label: "기고문", href: "/resources/contribution" },
-  { key: "seminar", label: "세미나", href: "/resources/seminar" },
-  { key: "expert-opinion-report", label: "전문가 의견 보고서", href: "/resources/expert-opinion-report" },
-  { key: "essay-contest", label: "에세이 경진대회", href: "/resources/essay-contest" },
-  { key: "shortform-contest", label: "숏폼영상 공모전", href: "/resources/shortform-contest" },
-  { key: "midterm-report", label: "과제 보고회", href: "/resources/midterm-report" },
-  { key: "misc-reports", label: "기타 보고서", href: "/resources/misc-reports" },
-  { key: "workshop", label: "워크샵", href: "/resources/workshop" },
+  { key: "atm", label: "ATM", labelEn: "ATM", href: "/resources/atm" },
+  { key: "heartbeat-of-atoms", label: "Heartbeat of Atoms", labelEn: "Heartbeat of Atoms", href: "/resources/heartbeat-of-atoms" },
+  { key: "lecture", label: "강연자료", labelEn: "Lecture Materials", href: "/resources/lecture" },
+  { key: "contribution", label: "기고문", labelEn: "Contributions", href: "/resources/contribution" },
+  { key: "seminar", label: "세미나", labelEn: "Seminars", href: "/resources/seminar" },
+  { key: "expert-opinion-report", label: "전문가 의견 보고서", labelEn: "Expert Opinion Reports", href: "/resources/expert-opinion-report" },
+  { key: "essay-contest", label: "에세이 경진대회", labelEn: "Essay Contest", href: "/resources/essay-contest" },
+  { key: "shortform-contest", label: "숏폼영상 공모전", labelEn: "Short-form Video Contest", href: "/resources/shortform-contest" },
+  { key: "midterm-report", label: "과제 보고회", labelEn: "Project Progress Reports", href: "/resources/midterm-report" },
+  { key: "misc-reports", label: "기타 보고서", labelEn: "Other Reports", href: "/resources/misc-reports" },
+  { key: "workshop", label: "워크샵", labelEn: "Workshops", href: "/resources/workshop" },
 ] as const;
 
 export type ResourceNavKey = typeof NAV[number]["key"];
 
-export default function ResourcesFrame({
+export default async function ResourcesFrame({
   activeKey,
   sidebarSubmenu,
   children,
@@ -27,10 +28,13 @@ export default function ResourcesFrame({
   sidebarSubmenu?: React.ReactNode;
   children: React.ReactNode;
 }) {
+  const locale = await getLocale();
+  const en = locale === "en";
+
   return (
     <div className={styles.container}>
       <aside className={styles.sidebar}>
-        <div className={styles.sidebarHeader}>카테고리</div>
+        <div className={styles.sidebarHeader}>{en ? "Categories" : "카테고리"}</div>
 
         <nav className={styles.nav}>
           {NAV.map((item) => {
@@ -42,10 +46,9 @@ export default function ResourcesFrame({
                   href={item.href}
                   className={`${styles.navItem} ${active ? styles.navActive : ""}`}
                 >
-                  {item.label}
+                  {en ? item.labelEn : item.label}
                 </Link>
 
-                {/* 선택된 카테고리 바로 아래에 서브메뉴 펼침 */}
                 {active && sidebarSubmenu ? (
                   <div className={styles.submenuWrap}>{sidebarSubmenu}</div>
                 ) : null}

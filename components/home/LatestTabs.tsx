@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowRight, CalendarDays } from "lucide-react";
 import { useState } from "react";
+import type { Locale } from "@/lib/i18n";
 
 type Item = { id: string; title: string; date: string; href: string };
 type FeaturedEvent = {
@@ -13,8 +14,8 @@ type FeaturedEvent = {
   endDate: string;
 };
 
-function periodLabel(startDate: string, endDate: string) {
-  if (!startDate) return "일정 미정";
+function periodLabel(startDate: string, endDate: string, en: boolean) {
+  if (!startDate) return en ? "Schedule TBD" : "일정 미정";
   return endDate && endDate !== startDate ? `${startDate} ~ ${endDate}` : startDate;
 }
 
@@ -22,25 +23,30 @@ export default function LatestTabs({
   notices,
   resources,
   featuredEvent,
+  locale = "ko",
 }: {
   notices: Item[];
   resources: Item[];
   featuredEvent: FeaturedEvent | null;
+  locale?: Locale;
 }) {
   const [tab, setTab] = useState<"notice" | "resource">("notice");
   const items = tab === "notice" ? notices : resources;
   const visible = items.slice(0, 4);
+  const en = locale === "en";
 
   return (
     <section className="mt-16 md:mt-20">
       <div className="flex flex-col justify-between gap-5 border-b border-slate-300 pb-4 sm:flex-row sm:items-end">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#2B6CA3]">Latest updates</p>
-          <h2 className="mt-1 text-2xl font-semibold tracking-[-0.025em] text-slate-950">최근 소식</h2>
-          <p className="mt-1 text-sm text-slate-500">최근 등록된 공지사항과 자료를 확인할 수 있습니다.</p>
+          <h2 className="mt-1 text-2xl font-semibold tracking-[-0.025em] text-slate-950">{en ? "Latest Updates" : "최근 소식"}</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            {en ? "View recently posted notices and resources." : "최근 등록된 공지사항과 자료를 확인할 수 있습니다."}
+          </p>
         </div>
 
-        <div className="flex items-center gap-5" role="tablist" aria-label="최근 소식 구분">
+        <div className="flex items-center gap-5" role="tablist" aria-label={en ? "Latest updates category" : "최근 소식 구분"}>
           <button
             type="button"
             role="tab"
@@ -52,7 +58,7 @@ export default function LatestTabs({
                 : "border-transparent text-slate-400 hover:text-slate-700"
             }`}
           >
-            공지사항
+            {en ? "Notices" : "공지사항"}
           </button>
           <button
             type="button"
@@ -65,7 +71,7 @@ export default function LatestTabs({
                 : "border-transparent text-slate-400 hover:text-slate-700"
             }`}
           >
-            자료실
+            {en ? "Resources" : "자료실"}
           </button>
         </div>
       </div>
@@ -74,13 +80,13 @@ export default function LatestTabs({
         <div className="border border-slate-200 bg-white">
           <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
             <div className="text-sm font-semibold text-slate-900">
-              {tab === "notice" ? "공지사항" : "자료실"}
+              {tab === "notice" ? (en ? "Notices" : "공지사항") : en ? "Resources" : "자료실"}
             </div>
             <Link
               href={tab === "notice" ? "/notice" : "/resources"}
               className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 transition hover:text-[#174A7E]"
             >
-              전체보기
+              {en ? "View all" : "전체보기"}
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
@@ -95,7 +101,7 @@ export default function LatestTabs({
               </li>
             ))}
             {visible.length === 0 ? (
-              <li className="px-5 py-10 text-sm text-slate-400">표시할 항목이 없습니다.</li>
+              <li className="px-5 py-10 text-sm text-slate-400">{en ? "No items to display." : "표시할 항목이 없습니다."}</li>
             ) : null}
           </ul>
         </div>
@@ -106,29 +112,29 @@ export default function LatestTabs({
             <h3 className="mt-3 text-lg font-semibold leading-7 text-slate-950">{featuredEvent.title}</h3>
             <div className="mt-3 flex items-center gap-1.5 text-xs font-medium tabular-nums text-slate-500">
               <CalendarDays className="h-3.5 w-3.5" />
-              {periodLabel(featuredEvent.startDate, featuredEvent.endDate)}
+              {periodLabel(featuredEvent.startDate, featuredEvent.endDate, en)}
             </div>
             <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-600">{featuredEvent.summary}</p>
             <Link
               href={`/events/${featuredEvent.id}`}
               className="mt-7 inline-flex items-center gap-1.5 border-b border-[#174A7E] pb-1 text-sm font-semibold text-[#174A7E] transition hover:text-[#103A66]"
             >
-              행사 보기
+              {en ? "View event" : "행사 보기"}
               <ArrowRight className="h-4 w-4" />
             </Link>
           </aside>
         ) : (
           <aside className="border border-slate-200 bg-[#EEF4FA] p-6">
             <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#2B6CA3]">INC Events</p>
-            <h3 className="mt-3 text-lg font-semibold leading-7 text-slate-950">행사 · 이벤트</h3>
+            <h3 className="mt-3 text-lg font-semibold leading-7 text-slate-950">{en ? "Events" : "행사 · 이벤트"}</h3>
             <p className="mt-3 text-sm leading-6 text-slate-600">
-              INC에서 진행하거나 안내하는 주요 행사와 참여 정보를 확인할 수 있습니다.
+              {en ? "View major INC events and participation information." : "INC에서 진행하거나 안내하는 주요 행사와 참여 정보를 확인할 수 있습니다."}
             </p>
             <Link
               href="/events"
               className="mt-7 inline-flex items-center gap-1.5 border-b border-[#174A7E] pb-1 text-sm font-semibold text-[#174A7E] transition hover:text-[#103A66]"
             >
-              이벤트 보기
+              {en ? "View events" : "이벤트 보기"}
               <ArrowRight className="h-4 w-4" />
             </Link>
           </aside>
