@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node scripts/e2e-member-flow.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
