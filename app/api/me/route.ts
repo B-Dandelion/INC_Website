@@ -18,22 +18,24 @@ function supabaseFromAuthHeader(authHeader: string) {
 }
 
 type Role = "member" | "admin";
+type ReviewStatus = "pending" | "approved" | "rejected";
 
 export async function GET(req: Request) {
   const authHeader = req.headers.get("authorization") || "";
 
-  // 토큰 없으면: 비로그인으로 처리(200 OK)
   if (!authHeader.startsWith("Bearer ")) {
     return NextResponse.json({
       ok: true,
       isLoggedIn: false,
       approved: false,
       role: "member" as Role,
+      reviewStatus: "pending" as ReviewStatus,
+      rejectionReason: null,
+      reviewedAt: null,
       user: null,
     });
   }
 
-  // 토큰 검증
   const supabaseAuth = supabaseFromAuthHeader(authHeader);
   const { data: userData, error: userErr } = await supabaseAuth.auth.getUser();
   const user = userData?.user ?? null;
@@ -44,35 +46,54 @@ export async function GET(req: Request) {
       isLoggedIn: false,
       approved: false,
       role: "member" as Role,
+      reviewStatus: "pending" as ReviewStatus,
+      rejectionReason: null,
+      reviewedAt: null,
       user: null,
       error: "invalid token",
     });
   }
 
-  // profiles에서 role/approved 조회
   const { data: profile, error: profErr } = await supabaseAdmin
     .from("profiles")
-    .select("role, approved")
+    .select("role,approved,review_status,rejection_reason,reviewed_at")
     .eq("id", user.id)
-    .maybeSingle<{ role: Role; approved: boolean }>();
+    .maybeSingle<{
+      role: Role;
+      approved: boolean;
+      review_status: ReviewStatus | null;
+      rejection_reason: string | null;
+      reviewed_at: string | null;
+    }>();
 
   if (profErr || !profile) {
-    // 프로필 없으면 회원 취급(관리자 X)
     return NextResponse.json({
       ok: true,
       isLoggedIn: true,
       approved: false,
       role: "member" as Role,
+      reviewStatus: "pending" as ReviewStatus,
+      rejectionReason: null,
+      reviewedAt: null,
       user: { id: user.id, email: user.email ?? null },
       error: profErr?.message ?? "profile not found",
     });
   }
+
+  const reviewStatus: ReviewStatus = profile.approved
+    ? "approved"
+    : profile.review_status === "rejected"
+      ? "rejected"
+      : "pending";
 
   return NextResponse.json({
     ok: true,
     isLoggedIn: true,
     approved: profile.approved === true,
     role: (profile.role as Role) || ("member" as Role),
+    reviewStatus,
+    rejectionReason: profile.rejection_reason ?? null,
+    reviewedAt: profile.reviewed_at ?? null,
     user: { id: user.id, email: user.email ?? null },
   });
 }
