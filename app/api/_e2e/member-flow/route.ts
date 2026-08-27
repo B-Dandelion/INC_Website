@@ -6,12 +6,17 @@ import { supabaseService } from "@/lib/supabaseServer";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+function must(value: string | undefined, name: string) {
+  if (!value) throw new Error(`Missing ${name}`);
+  return value;
+}
+
 function anonClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? process.env.SUPABASE_ANON_KEY!,
-    { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } },
-  );
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? process.env.SUPABASE_ANON_KEY;
+  return createClient(must(url, "SUPABASE_URL"), must(key, "SUPABASE_ANON_KEY"), {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+  });
 }
 
 export async function GET(req: Request) {
@@ -63,7 +68,7 @@ export async function GET(req: Request) {
         pendingProfile.review_status === "pending" &&
         pendingProfile.name === "E2E 테스트 회원" &&
         pendingProfile.affiliation === "INC E2E Test" &&
-        pendingProfile.hidden_from_member_management === false
+        pendingProfile.hidden_from_member_management === false,
     );
     steps.push({ step: "profile-trigger", ok: profileCreated && profileCorrect, detail: pendingProfile ?? profileError?.message });
 
@@ -139,8 +144,12 @@ export async function GET(req: Request) {
     return NextResponse.json({ ok: steps.every((s) => s.ok), steps });
   } finally {
     if (userId) {
-      await service.auth.admin.deleteUser(userId).catch(() => undefined);
-      await service.from("profiles").delete().eq("id", userId).catch(() => undefined);
+      try {
+        await service.auth.admin.deleteUser(userId);
+      } catch {}
+      try {
+        await service.from("profiles").delete().eq("id", userId);
+      } catch {}
     }
   }
 }
