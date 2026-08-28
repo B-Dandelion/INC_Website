@@ -1,8 +1,10 @@
 import "./globals.css";
+import { Suspense } from "react";
 import { Analytics } from "@vercel/analytics/next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SessionGuard from "@/components/SessionGuard";
+import SiteAnalytics from "@/components/SiteAnalytics";
 import { getLocale } from "@/lib/i18n";
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -42,6 +44,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           }}
         />
         <Analytics />
+        <Suspense fallback={null}>
+          <SiteAnalytics />
+        </Suspense>
       </body>
     </html>
   );

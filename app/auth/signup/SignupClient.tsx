@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase/browser";
+import { trackSiteEvent } from "@/lib/siteAnalyticsClient";
 import type { Locale } from "@/lib/i18n";
 
 const supabase = supabaseBrowser();
@@ -72,6 +73,8 @@ export default function SignupClient({ locale = "ko" }: { locale?: Locale }) {
         }
         return;
       }
+
+      trackSiteEvent("signup", { path: "/auth/signup" });
 
       if (data.session) {
         setMsg(en ? "Registration completed. Your account is awaiting approval." : "회원가입이 완료되었습니다. 현재 승인 대기 상태입니다.");

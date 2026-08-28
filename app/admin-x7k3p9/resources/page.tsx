@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { fetchBoards } from "@/lib/resourcesDb";
-import { ArrowRight, CalendarDays, FileText, LogOut, Megaphone, UsersRound } from "lucide-react";
+import { ArrowRight, BarChart3, CalendarDays, FileText, LogOut, Megaphone, UsersRound } from "lucide-react";
 
 export default async function AdminResourcesHome() {
   const boards = await fetchBoards();
@@ -16,6 +16,13 @@ export default async function AdminResourcesHome() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href="/admin-x7k3p9/analytics"
+              className="inline-flex h-10 items-center gap-2 rounded-md border border-[#B9CCDE] bg-[#F4F8FC] px-3.5 text-sm font-semibold text-[#174A7E] transition hover:border-[#8EAFCB] hover:bg-[#EAF2F8]"
+            >
+              <BarChart3 className="h-4 w-4" />
+              웹 이용 분석
+            </Link>
             <Link
               href="/admin-x7k3p9/users"
               className="inline-flex h-10 items-center gap-2 rounded-md border border-slate-300 bg-white px-3.5 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
