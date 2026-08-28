@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { Readable } from "node:stream";
+import { recordSiteAnalyticsEvent } from "@/lib/siteAnalyticsServer";
 
 export const runtime = "nodejs";
 
@@ -11,7 +12,7 @@ type GoRow = {
   r2_key: string;
   original_filename: string;
   mime: string | null;
-  kind: string; // text로 받음
+  kind: string;
 };
 
 function sbAdmin() {
@@ -42,7 +43,6 @@ function contentDisposition(kind: string, filename: string) {
 }
 
 function toWeb(body: any) {
-  // GetObjectCommand Body가 Node Readable인 경우 web stream으로 변환
   if (body instanceof Readable) return Readable.toWeb(body);
   return body;
 }
@@ -57,15 +57,19 @@ export async function GET(req: Request) {
   }
 
   const sb = sbAdmin();
-
-  // RPC: 조회수 +1 하면서 row 가져오기
   const { data, error } = await sb.rpc("go_resource", { p_id: id });
   if (error) return new NextResponse(error.message, { status: 500 });
 
   const row = (Array.isArray(data) ? data[0] : null) as GoRow | null;
   if (!row?.r2_key) return new NextResponse("not found", { status: 404 });
 
-  // 1) presigned redirect 먼저 시도 (패키지 없으면 자동 fallback)
+  await recordSiteAnalyticsEvent({
+    request: req,
+    eventType: "download",
+    path: "/api/resources/go",
+    resourceId: row.id,
+  });
+
   try {
     const mod = await import("@aws-sdk/s3-request-presigner");
     const getSignedUrl: any = (mod as any).getSignedUrl;
@@ -82,7 +86,6 @@ export async function GET(req: Request) {
 
     return NextResponse.redirect(signed, 302);
   } catch {
-    // 2) fallback: 서버에서 스트리밍 다운로드
     try {
       const client = s3();
       const Bucket = bucketForKey(row.r2_key);

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { supabaseBrowser } from "@/lib/supabase/browser";
+import { trackSiteEvent } from "@/lib/siteAnalyticsClient";
 import type { Locale } from "@/lib/i18n";
 
 const supabase = supabaseBrowser();
@@ -46,6 +47,8 @@ export default function LoginClient({ locale = "ko" }: { locale?: Locale }) {
         setErrorMsg(loginErrorMessage(error.message, en));
         return;
       }
+
+      trackSiteEvent("login", { path: "/login" });
 
       const { data: userData } = await supabase.auth.getUser();
       const uid = userData.user?.id;
