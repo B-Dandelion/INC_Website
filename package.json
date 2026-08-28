@@ -13,6 +13,7 @@
     "@aws-sdk/s3-request-presigner": "^3.985.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.91.1",
+    "@vercel/analytics": "^2.0.1",
     "dotenv": "^17.2.4",
     "lucide-react": "^0.553.0",
     "mime-types": "^3.0.2",
