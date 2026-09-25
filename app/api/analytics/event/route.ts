@@ -18,6 +18,12 @@ function resolveReferrerHost(request: Request, referrer: unknown, isEntry: boole
   }
 }
 
+function safeCount(value: unknown) {
+  if (typeof value !== "number" || !Number.isInteger(value)) return null;
+  if (value < 0 || value > 10000) return null;
+  return value;
+}
+
 export async function POST(request: Request) {
   const fetchSite = request.headers.get("sec-fetch-site");
   if (fetchSite === "cross-site") return new NextResponse(null, { status: 204 });
@@ -44,6 +50,20 @@ export async function POST(request: Request) {
   const isEntry = body.isEntry === true;
   const referrerHost = resolveReferrerHost(request, body.referrer, isEntry);
 
+  const resultCount = safeCount(body.resultCount);
+  const resourceCount = safeCount(body.resourceCount);
+  const noticeCount = safeCount(body.noticeCount);
+  const eventCount = safeCount(body.eventCount);
+
+  const metadata: Record<string, unknown> = { entry: isEntry };
+  if (eventType === "search") {
+    if (resultCount !== null) metadata.result_count = resultCount;
+    if (resourceCount !== null) metadata.resource_count = resourceCount;
+    if (noticeCount !== null) metadata.notice_count = noticeCount;
+    if (eventCount !== null) metadata.event_count = eventCount;
+    if (resultCount !== null) metadata.zero_result = resultCount === 0;
+  }
+
   await recordSiteAnalyticsEvent({
     request,
     eventType: eventType as "page_view" | "search" | "login" | "signup",
@@ -51,7 +71,7 @@ export async function POST(request: Request) {
     path,
     searchQuery,
     referrerHost,
-    metadata: { entry: isEntry },
+    metadata,
   });
 
   return new NextResponse(null, { status: 204 });
