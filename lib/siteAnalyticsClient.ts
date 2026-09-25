@@ -30,6 +30,10 @@ export function trackSiteEvent(
     path?: string;
     searchQuery?: string | null;
     isEntry?: boolean;
+    resultCount?: number | null;
+    resourceCount?: number | null;
+    noticeCount?: number | null;
+    eventCount?: number | null;
   } = {},
 ) {
   if (typeof window === "undefined") return;
@@ -44,6 +48,10 @@ export function trackSiteEvent(
     path,
     searchQuery: options.searchQuery ?? null,
     isEntry: Boolean(options.isEntry),
+    resultCount: options.resultCount ?? null,
+    resourceCount: options.resourceCount ?? null,
+    noticeCount: options.noticeCount ?? null,
+    eventCount: options.eventCount ?? null,
     referrer: options.isEntry ? document.referrer : null,
   });
 
