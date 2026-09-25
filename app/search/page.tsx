@@ -86,6 +86,13 @@ export default async function SearchPage({
 
   return (
     <main className="min-h-screen bg-[#F6F7F9]">
+      <SearchAnalytics
+        query={q}
+        total={total}
+        resources={resourceRows.length}
+        notices={notices.length}
+        events={events.length}
+      />
       <section className="border-b border-slate-200 bg-white">
         <div className="mx-auto max-w-6xl px-5 py-11 md:px-6 md:py-14">
           <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#2B6CA3]">Search</p>
