@@ -12,7 +12,7 @@ import { fetchResources } from "@/lib/resourcesDb";
 import { fetchNotices } from "@/lib/noticesDb";
 import { fetchPromotionEvents } from "@/lib/promotionalEventsDb";
 import { RESOURCE_BOARDS } from "@/lib/resourceBoards";
-import { getLocale } from "@/lib/i18n";
+import { getLocale } from "@/lib/i18n";\nimport SearchAnalytics from "@/components/SearchAnalytics";
 
 export const dynamic = "force-dynamic";
 
