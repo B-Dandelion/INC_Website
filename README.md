@@ -129,7 +129,7 @@ INC_Website/
 │  ├─ events/               # event pages
 │  ├─ notice/               # notices
 │  ├─ auth/                 # login / signup
-│  └─ admin-x7k3p9/         # admin UI
+│  └─ <admin route>/        # admin UI (path omitted; admin role required)
 ├─ components/
 │  ├─ admin/
 │  ├─ home/
