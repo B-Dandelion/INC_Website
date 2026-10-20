@@ -1,15 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { trackSiteEvent } from "@/lib/siteAnalyticsClient";
 
 const ENTRY_KEY = "inc_analytics_entry_sent";
 
 export default function SiteAnalytics() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const searchString = searchParams.toString();
 
   useEffect(() => {
     if (!pathname) return;
@@ -24,12 +22,7 @@ export default function SiteAnalytics() {
     }
 
     trackSiteEvent("page_view", { path: pathname, isEntry });
-
-    if (pathname === "/search") {
-      const query = searchParams.get("q")?.trim();
-      if (query) trackSiteEvent("search", { path: pathname, searchQuery: query });
-    }
-  }, [pathname, searchString, searchParams]);
+  }, [pathname]);
 
   return null;
 }
