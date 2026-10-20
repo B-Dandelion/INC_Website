@@ -2,7 +2,18 @@
 
 > 기관의 발간물·세미나·워크숍·보고서 등 다양한 콘텐츠를 한곳에서 관리하고 공개 범위에 따라 제공하는 **권한 기반 콘텐츠 아카이브 웹사이트**입니다.
 
-[Live Site](https://inc-kings.vercel.app/) · [Repository](https://github.com/B-Dandelion/INC_Website)
+[Live Site](https://inc-kings.vercel.app/) · [Repository](https://github.com/B-Dandelion/INC_Website) · [Case Study](https://b-dandelion.github.io/portfolio/inc.html)
+
+### At a glance
+
+| | |
+| --- | --- |
+| 공개 | 2026-02 (Vercel) · 개발 2025-11 ~ 2026-09, 1인 개발 |
+| 관리 중인 자료 | 679건 · 게시판 11개 · 2022–2026 발간 |
+| 파일 형식 | PDF 526 · 이미지 104 · 영상 24 · 문서 16 · 슬라이드 9 |
+| 행사 아카이브 | 11건 · 포스터·발표자료 등 연결 자료 157건 |
+
+<sub>2026-10-20 운영 DB 기준이며 삭제 처리한 자료는 제외했습니다.</sub>
 
 ![INC Website](./public/hero_kings_overlay_1920x800.jpg)
 
@@ -98,7 +109,7 @@ DeleteObject rollback
 - 페이지네이션
 - 계층형 자료 분류
 - 공개/회원/관리자 자료 구분
-- 관리자 자료 등록·수정·삭제
+- 관리자 자료 등록·수정·삭제 (삭제는 행을 지우지 않고 `deleted_at`만 기록)
 - 파일 및 YouTube URL 등록
 - 공지·행사·회원 관리
 
