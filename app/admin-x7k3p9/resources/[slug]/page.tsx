@@ -1,10 +1,11 @@
-import { Upload } from "lucide-react";
-import ResourcesFrame, { NAV } from "@/components/resources/AdminResourcesFrame";
-import AdminEventsShell from "@/components/admin/AdminEventsShell";
+import { notFound, redirect } from "next/navigation";
+import { Plus, Upload } from "lucide-react";
+import ResourcesFrame, { NAV, eventHref, newEventHref } from "@/components/resources/AdminResourcesFrame";
 import ResourceFilters from "@/components/admin/resources/ResourceFilters";
 import ResourceTable from "@/components/admin/resources/ResourceTable";
 import { ButtonLink, EmptyState, PageHeader, Pagination } from "@/components/admin/ui";
-import { adminSlugToEventCategory } from "@/lib/eventCategoryMap";
+import { boardRule } from "@/lib/boardRules";
+import { fetchAdminEvents } from "@/lib/adminEventsDb";
 import { fetchAdminResources } from "@/lib/adminResourcesDb";
 
 const PAGE_SIZE = 30;
@@ -27,11 +28,36 @@ export default async function AdminBoardPage({
 }) {
   const { slug } = await params;
 
-  if (adminSlugToEventCategory(slug)) {
-    return <AdminEventsShell slug={slug} searchParams={searchParams} />;
+  const rule = boardRule(slug);
+  if (!rule) notFound();
+  const sp = await searchParams;
+
+  // Event boards have no list of their own: open the newest event, whose page
+  // keeps the full event list in the sidebar. Only an empty board stays here.
+  if (rule.type === "event") {
+    const subtype = rule.subtypes?.some((s) => s.value === sp.subtype) ? sp.subtype : rule.defaultSubtype;
+    const events = await fetchAdminEvents(rule.category, subtype);
+    if (events[0]) redirect(eventHref(slug, events[0].id));
+    return (
+      <ResourcesFrame activeKey={slug} subtype={subtype}>
+        <div className="grid gap-5">
+          <PageHeader eyebrow="자료실" title={rule.label} />
+          <div className="border border-slate-200 bg-white">
+            <EmptyState
+              title="아직 등록된 행사가 없습니다."
+              description="행사를 만든 뒤 포스터·사진·자료를 붙일 수 있습니다."
+              action={
+                <ButtonLink href={newEventHref(slug, subtype)} variant="primary" icon={<Plus className="h-4 w-4" aria-hidden="true" />}>
+                  새 행사 추가
+                </ButtonLink>
+              }
+            />
+          </div>
+        </div>
+      </ResourcesFrame>
+    );
   }
 
-  const sp = await searchParams;
   const page = Math.max(1, Number(sp.page ?? "1") || 1);
   const q = (sp.q ?? "").trim();
   const { rows, total } = await fetchAdminResources({

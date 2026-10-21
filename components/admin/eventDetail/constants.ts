@@ -1,4 +1,5 @@
 // Role and section definitions for the admin event detail screen.
+import { BOARD_RULES } from "@/lib/boardRules";
 
 export type RoleOption = {
     role: string;
@@ -15,44 +16,13 @@ export type RoleOption = {
  * DB 컬럼은 공통이지만, 관리자 UI와 저장 payload는 아래 설정에 따라
  * 행사 종류별로 필요한 값만 노출하고 저장합니다.
  */
-export const EVENT_ROLE_OPTIONS: Record<string, RoleOption[]> = {
-    "essay-contest": [
-        { role: "poster_ko", label: "포스터(국문)" },
-        { role: "poster_en", label: "포스터(영문)" },
-        { role: "award_doc", label: "수상 작품" },
-        { role: "winner_photo", label: "수상자 사진" },
-        { role: "photo", label: "행사 사진" },
-        { role: "slide", label: "응모작" },
-    ],
-    "shortform-contest": [
-        { role: "poster_ko", label: "포스터(국문)" },
-        { role: "poster_en", label: "포스터(영문)" },
-        { role: "award_doc", label: "수상 작품" },
-        { role: "winner_photo", label: "수상자 사진" },
-        { role: "photo", label: "행사 사진" },
-        { role: "slide", label: "응모작" },
-    ],
-    seminar: [
-        { role: "poster_ko", label: "포스터(국문)" },
-        { role: "poster_en", label: "포스터(영문)" },
-        { role: "timetable", label: "시간표" },
-        { role: "photo", label: "사진" },
-        { role: "slide", label: "자료" },
-    ],
-    workshop: [
-        { role: "poster_ko", label: "포스터(국문)" },
-        { role: "poster_en", label: "포스터(영문)" },
-        { role: "timetable", label: "시간표" },
-        { role: "photo", label: "사진" },
-        { role: "slide", label: "자료" },
-    ],
-    "midterm-report": [
-        { role: "poster_ko", label: "포스터(국문)" },
-        { role: "poster_en", label: "포스터(영문)" },
-        { role: "photo", label: "사진" },
-        { role: "slide", label: "자료" },
-    ],
-};
+// Derived from lib/boardRules.ts so the allowed roles live in one place.
+export const EVENT_ROLE_OPTIONS: Record<string, RoleOption[]> = Object.fromEntries(
+    BOARD_RULES.filter((rule) => rule.type === "event").map((rule) => [
+        rule.slug,
+        rule.slots.map((slot) => ({ role: slot.role, label: slot.label })),
+    ]),
+);
 
 export const CONTEST_SLUGS = new Set(["essay-contest", "shortform-contest"]);
 
