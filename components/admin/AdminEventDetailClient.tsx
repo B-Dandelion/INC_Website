@@ -26,6 +26,7 @@ import AssetRow from "./eventDetail/AssetRow";
 import { EVENT_ROLE_OPTIONS, CONTEST_SLUGS, SEMINAR_SECTIONS, FALLBACK_ROLE_LABELS } from "./eventDetail/constants";
 import { trimOrNull, handleUnauthorized, canonicalYoutubeUrl, fileAcceptForRole } from "./eventDetail/helpers";
 import { errorMessage } from "@/lib/errors";
+import { slotFor } from "@/lib/boardRules";
 import { Trash2 } from "lucide-react";
 import { Button, Card } from "./ui";
 import { useConfirm } from "./ui/ConfirmDialog";
@@ -754,6 +755,11 @@ export default function AdminEventDetailClient({
                                     )
                                 }
                             />
+                            {slotFor(slug, roleToAdd) ? (
+                                <span style={{ fontSize: 12, color: "#5f6b7c" }}>
+                                    {slotFor(slug, roleToAdd)?.hint}
+                                </span>
+                            ) : null}
                         </label>
                     )}
 

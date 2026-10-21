@@ -3,9 +3,12 @@ import ResourcesFrame, {
 } from "@/components/resources/AdminResourcesFrame";
 import styles from "@/components/resources/SimpleListPage.module.css";
 import { createClient } from "@supabase/supabase-js";
-import { fetchEventAssets } from "@/lib/eventsDb";
+import { fetchAdminEventAssets } from "@/lib/adminEventsDb";
 import AdminEventDetailClient, { type AdminEvent } from "@/components/admin/AdminEventDetailClient";
 import { adminSlugToEventCategory } from "@/lib/eventCategoryMap";
+import { eventBoardRule } from "@/lib/boardRules";
+import { ButtonLink, PageHeader } from "@/components/admin/ui";
+import { ExternalLink } from "lucide-react";
 
 export const runtime = "nodejs";
 
@@ -53,15 +56,31 @@ export default async function AdminEventDetailPage({
     );
   }
 
-  const assets = await fetchEventAssets(eventId);
+  const assets = await fetchAdminEventAssets(eventId);
+
+  const subtype = event.subtype ?? undefined;
+  // Where this event appears on the public site (public events only).
+  const publicHref =
+    slug === "seminar"
+      ? `/resources/seminar?sub=${subtype === "domestic" ? "domestic" : "international"}&event=${event.id}`
+      : `/resources/${slug}?event=${event.id}`;
+  const subtypeLabel = eventBoardRule(slug)?.subtypes?.find((s) => s.value === subtype)?.label;
 
   return (
-    <ResourcesFrame activeKey={slug}>
-      <div className={styles.content}>
-        <div className={styles.hero}>
-          <h1 className={styles.h1}>관리: {boardLabel}</h1>
-          <div className={styles.meta}>행사 상세 관리</div>
-        </div>
+    <ResourcesFrame activeKey={slug} activeEventId={event.id} subtype={subtype}>
+      <div className="grid gap-5">
+        <PageHeader
+          eyebrow={`자료실 · ${boardLabel}${subtypeLabel ? ` · ${subtypeLabel}` : ""}`}
+          title={event.title_ko || "제목 없음"}
+          description={event.visibility === "public" ? "공개 사이트에 보이는 행사입니다." : "공개 범위가 제한된 행사라 공개 사이트 목록에는 보이지 않습니다."}
+          actions={
+            event.visibility === "public" ? (
+              <ButtonLink href={publicHref} target="_blank" rel="noopener noreferrer" icon={<ExternalLink className="h-4 w-4" aria-hidden="true" />}>
+                공개 화면 보기
+              </ButtonLink>
+            ) : null
+          }
+        />
 
         <AdminEventDetailClient
           slug={slug}

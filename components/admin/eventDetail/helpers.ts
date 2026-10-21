@@ -1,5 +1,6 @@
 // Pure helpers shared by the admin event detail screen and its rows.
 import type { CSSProperties } from "react";
+import { slotFor } from "@/lib/boardRules";
 
 export function trimOrNull(value: string) {
     const trimmed = value.trim();
@@ -76,20 +77,9 @@ export function isVideoLike(mime?: string | null, filename?: string | null) {
     return ["mp4", "mov", "webm", "mkv"].includes(extOf(filename));
 }
 
+// Allowed file types per role come from lib/boardRules.ts.
 export function fileAcceptForRole(role: string, slug: string) {
-    if (["poster_ko", "poster_en"].includes(role)) {
-        return "image/*,.pdf,application/pdf";
-    }
-
-    if (["winner_photo", "photo"].includes(role)) {
-        return "image/*";
-    }
-
-    if (role === "slide" && slug === "shortform-contest") {
-        return "video/*,.pdf,application/pdf";
-    }
-
-    return undefined;
+    return slotFor(slug, role)?.accept;
 }
 
 export const miniBtnStyle: CSSProperties = {
