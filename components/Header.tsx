@@ -7,7 +7,7 @@ import AuthButton from "@/components/AuthButton";
 import LanguageToggle from "@/components/LanguageToggle";
 import { RESOURCE_BOARDS } from "@/lib/resourceBoards";
 import type { Locale } from "@/lib/i18n";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import ResourcesMegaMenu from "@/components/header/ResourcesMegaMenu";
 
@@ -16,9 +16,13 @@ export default function Header({ locale }: { locale: Locale }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const en = locale === "en";
 
-  useEffect(() => {
+  // Close the mobile menu when the route changes (adjust state during render
+  // instead of in an effect, so the page does not render twice).
+  const [menuPathname, setMenuPathname] = useState(pathname);
+  if (menuPathname !== pathname) {
+    setMenuPathname(pathname);
     setMobileOpen(false);
-  }, [pathname]);
+  }
 
   const resourceLinks = useMemo(
     () => RESOURCE_BOARDS.map((b) => ({ label: en ? b.labelEn : b.label, href: `/resources/${b.slug}` })),

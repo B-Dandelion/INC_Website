@@ -2,7 +2,7 @@
 import Link from "next/link";
 import ResourcesFrame from "@/components/resources/ResourcesFrame";
 import SectionTabs from "@/components/resources/SectionTabs";
-import { fetchEvents, fetchEventAssets } from "@/lib/eventsDb";
+import { fetchEvents, fetchEventAssets, type EventAssetRow } from "@/lib/eventsDb";
 import styles from "../essay-contest/essayContest.module.css";
 import { getLocale } from "@/lib/i18n";
 
@@ -17,7 +17,7 @@ function norm(s?: string | null) {
   return (s ?? "").trim().toLowerCase();
 }
 
-function isPdfAsset(asset: any) {
+function isPdfAsset(asset: EventAssetRow | null | undefined) {
   const mime = norm(asset?.resources?.mime);
   const filename = norm(asset?.resources?.original_filename);
   return mime === "application/pdf" || filename.endsWith(".pdf");
@@ -52,19 +52,19 @@ function YouTubePreview({ url, title }: { url: string; title: string }) {
   );
 }
 
-function PosterContent({ asset, alt, openLabel }: { asset: any; alt: string; openLabel: string }) {
-  const resourceId = asset?.resources?.id;
-  if (!resourceId) return null;
-  const href = `/api/resources/go?id=${resourceId}`;
+function PosterContent({ asset, alt, openLabel }: { asset: EventAssetRow | null | undefined; alt: string; openLabel: string }) {
+  const resource = asset?.resources;
+  if (!resource?.id) return null;
+  const href = `/api/resources/go?id=${resource.id}`;
   if (isPdfAsset(asset)) {
     return (
       <div className={styles.card} style={{ minHeight: 180, display: "grid", placeItems: "center", textAlign: "center", gap: 12 }}>
-        <div style={{ fontWeight: 700, color: "#263244" }}>{asset.resources.title ?? alt}</div>
+        <div style={{ fontWeight: 700, color: "#263244" }}>{resource.title ?? alt}</div>
         <a href={href} target="_blank" rel="noreferrer" className={styles.materialLink}>{openLabel}</a>
       </div>
     );
   }
-  return <img src={href} alt={asset.resources.title ?? alt} className={styles.posterImg} />;
+  return <img src={href} alt={resource.title ?? alt} className={styles.posterImg} decoding="async" />;
 }
 
 function awardRank(label?: string | null) {
@@ -93,7 +93,7 @@ export default async function ShortformContestPage({ searchParams }: { searchPar
     return rankDiff !== 0 ? rankDiff : (a.sort_order ?? 0) - (b.sort_order ?? 0);
   });
   const winnerPhotos = assets.filter((a) => a.role === "winner_photo");
-  const photoByPerson = new Map<string, any>();
+  const photoByPerson = new Map<string, EventAssetRow>();
   for (const p of winnerPhotos) {
     const key = norm(p.person_en ?? p.person_ko);
     if (key) photoByPerson.set(key, p);
@@ -158,7 +158,7 @@ export default async function ShortformContestPage({ searchParams }: { searchPar
                   return <div key={`${doc?.id ?? idx}`} className={styles.winnerCard} style={{ gridTemplateColumns: "1fr", gap: 18, alignItems: "stretch" }}>
                     <div className={styles.winnerTop} style={{ justifyContent: "center", textAlign: "center" }}><span className={styles.badge}>{w.award ?? (en ? "Award" : "수상")}</span><span className={styles.winnerName}>{person}</span></div>
                     <div className={styles.winnerBody} style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", alignItems: "center", gap: 20, width: "100%" }}>
-                      {photoResource?.id ? <div className={styles.winnerPhoto} style={{ width: 160, height: 160, flex: "0 0 160px" }}><a href={`/api/resources/go?id=${photoResource.id}`} target="_blank" rel="noreferrer" style={{ display: "block", width: "100%", height: "100%" }}><img src={`/api/resources/go?id=${photoResource.id}`} alt={photoResource.title ?? "winner_photo"} /></a></div> : null}
+                      {photoResource?.id ? <div className={styles.winnerPhoto} style={{ width: 160, height: 160, flex: "0 0 160px" }}><a href={`/api/resources/go?id=${photoResource.id}`} target="_blank" rel="noreferrer" style={{ display: "block", width: "100%", height: "100%" }}><img src={`/api/resources/go?id=${photoResource.id}`} alt={photoResource.title ?? "winner_photo"} loading="lazy" decoding="async" /></a></div> : null}
                       <div className={styles.winnerInfo} style={{ flex: "1 1 360px", width: "100%", maxWidth: 640, minWidth: 0, textAlign: "center" }}>
                         {doc?.source_path && youtubeVideoId(doc.source_path) ? <div style={{ display: "grid", gap: 12, width: "100%" }}>{w.item_title_ko || w.item_title_en ? <div style={{ fontWeight: 700, color: "#263244", wordBreak: "break-word" }}>{w.item_title_ko ?? w.item_title_en}</div> : null}<YouTubePreview url={doc.source_path} title={w.item_title_ko ?? w.item_title_en ?? `${person} ${en ? "winning entry" : "수상 작품"}`} /><a className={styles.winnerLink} href={doc.source_path} target="_blank" rel="noreferrer" style={{ justifySelf: "center" }}>{en ? "View on YouTube" : "유튜브에서 보기"}</a></div> : doc?.id ? <a className={styles.winnerLink} href={`/api/resources/go?id=${doc.id}`} target="_blank" rel="noreferrer">{en ? "Open entry" : "응모작 열기"}</a> : null}
                       </div>
@@ -170,8 +170,8 @@ export default async function ShortformContestPage({ searchParams }: { searchPar
 
             {hasPhotos ? <section id="photo" className={styles.section}>
               <div className={styles.sectionTitle}>{en ? "Photos" : "사진"}</div>
-              {groupPhoto?.resources?.id ? <div className={styles.photoLarge}><div className={styles.photoLabel}>{en ? "Group Photo" : "단체 사진"}</div><a href={`/api/resources/go?id=${groupPhoto.resources.id}`} target="_blank" rel="noreferrer"><img src={`/api/resources/go?id=${groupPhoto.resources.id}`} alt={groupPhoto.resources.title ?? "group_photo"} /></a></div> : null}
-              {otherPhotos.length > 0 ? <div className={styles.photoGrid}>{otherPhotos.map((p, i) => { const rid = p.resources?.id; if (!rid) return null; return <a key={`${rid}-${i}`} className={styles.photoThumb} href={`/api/resources/go?id=${rid}`} target="_blank" rel="noreferrer"><img src={`/api/resources/go?id=${rid}`} alt={p.resources?.title ?? "photo"} /></a>; })}</div> : null}
+              {groupPhoto?.resources?.id ? <div className={styles.photoLarge}><div className={styles.photoLabel}>{en ? "Group Photo" : "단체 사진"}</div><a href={`/api/resources/go?id=${groupPhoto.resources.id}`} target="_blank" rel="noreferrer"><img src={`/api/resources/go?id=${groupPhoto.resources.id}`} alt={groupPhoto.resources.title ?? "group_photo"} loading="lazy" decoding="async" /></a></div> : null}
+              {otherPhotos.length > 0 ? <div className={styles.photoGrid}>{otherPhotos.map((p, i) => { const rid = p.resources?.id; if (!rid) return null; return <a key={`${rid}-${i}`} className={styles.photoThumb} href={`/api/resources/go?id=${rid}`} target="_blank" rel="noreferrer"><img src={`/api/resources/go?id=${rid}`} alt={p.resources?.title ?? "photo"} loading="lazy" decoding="async" /></a>; })}</div> : null}
             </section> : null}
 
             {hasSubmissions ? <section id="materials" className={styles.section}>

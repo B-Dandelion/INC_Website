@@ -6,6 +6,24 @@ const sb = createClient(
   { auth: { persistSession: false } }
 );
 
+export type AdminResourceRow = {
+  id: number;
+  title: string | null;
+  kind: string | null;
+  posted_at: string | null;
+  published_at: string | null;
+  r2_key: string | null;
+  original_filename: string | null;
+  source_path: string | null;
+  note: string | null;
+  views_count: number | null;
+  created_at: string;
+  visibility: "public" | "member" | "admin";
+  mime: string | null;
+  size_bytes: number | null;
+  deleted_at: string | null;
+};
+
 export type AdminFetchResourcesArgs = {
   boardSlug: string;
   page?: number;
@@ -44,7 +62,8 @@ export async function fetchAdminResources({
     .is("deleted_at", null)
     .order(orderField, { ascending: false, nullsFirst: false })
     .order("id", { ascending: false })
-    .range(from, to);
+    .range(from, to)
+    .returns<AdminResourceRow[]>();
 
   if (error) throw new Error(error.message);
   return data ?? [];

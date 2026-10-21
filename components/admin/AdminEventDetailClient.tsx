@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from "react";
 import styles from "@/components/resources/SimpleListPage.module.css";
+import type { EventAssetRow } from "@/lib/eventsDb";
 
-type Event = {
+export type AdminEvent = {
     id: string;
     category: string;
     subtype: string | null;
@@ -19,23 +20,7 @@ type Event = {
     end_time: string | null;
 };
 
-type Asset = {
-    id: string;
-    role: string;
-    sort_order: number;
-    award: string | null;
-    person_ko: string | null;
-    person_en: string | null;
-    item_title_ko: string | null;
-    item_title_en: string | null;
-    resources: {
-        id: number;
-        title: string | null;
-        mime: string | null;
-        original_filename: string | null;
-        source_path: string | null;
-    } | null;
-};
+type Asset = EventAssetRow;
 
 type RoleOption = {
     role: string;
@@ -174,7 +159,7 @@ export default function AdminEventDetailClient({
     assets,
 }: {
     slug: string;
-    event: Event;
+    event: AdminEvent;
     assets: Asset[];
 }) {
     const [busy, setBusy] = useState(false);

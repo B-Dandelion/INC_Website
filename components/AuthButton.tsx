@@ -7,6 +7,7 @@ import type { User } from "@supabase/supabase-js";
 import { LogIn, LogOut, Shield } from "lucide-react";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import type { Locale } from "@/lib/i18n";
+import { isAbortError } from "@/lib/errors";
 
 const supabase = supabaseBrowser();
 
@@ -77,9 +78,9 @@ export default function AuthButton({ locale = "ko" }: { locale?: Locale }) {
         const nextUser = error ? null : (data.user ?? null);
         setUser(nextUser);
         await fetchAndSetProfile(nextUser);
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (!alive) return;
-        if (err?.name === "AbortError") return;
+        if (isAbortError(err)) return;
         setUser(null);
         setIsAdmin(false);
         setApproved(null);

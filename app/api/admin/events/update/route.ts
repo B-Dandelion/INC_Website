@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { requireAdminOrThrow } from "@/lib/requireAdmin";
 import { CACHE_TAGS, invalidatePublicCache } from "@/lib/publicCache";
+import { errorMessage, errorStatus } from "@/lib/errors";
 
 export const runtime = "nodejs";
 
@@ -24,7 +25,7 @@ export async function POST(req: Request) {
 
     if (!id) return NextResponse.json({ ok: false, error: "id required" }, { status: 400 });
 
-    const update: any = { updated_at: new Date().toISOString() };
+    const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
     for (const [k, v] of Object.entries(patch)) {
       if (ALLOWED.has(k)) update[k] = v;
     }
@@ -39,7 +40,7 @@ export async function POST(req: Request) {
 
     invalidatePublicCache(CACHE_TAGS.events);
     return NextResponse.json({ ok: true, event: data });
-  } catch (e: any) {
-    return NextResponse.json({ ok: false, error: String(e?.message ?? e) }, { status: e?.status ?? 500 });
+  } catch (e: unknown) {
+    return NextResponse.json({ ok: false, error: errorMessage(e) }, { status: errorStatus(e) });
   }
 }

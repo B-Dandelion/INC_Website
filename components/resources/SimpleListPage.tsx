@@ -59,7 +59,7 @@ export default async function SimpleListPage({
     ? hintEn ?? (isIssueBoard ? "Browse published issues by publication date and issue information." : "Select an item from the list to open the resource.")
     : hint ?? (isIssueBoard ? "발간 자료를 호수와 게시 정보 기준으로 확인할 수 있습니다." : "등록된 자료를 목록에서 선택해 확인할 수 있습니다.");
 
-  const boardItems: BoardItem[] = (rows ?? []).map((r: any) => {
+  const boardItems: BoardItem[] = (rows ?? []).map((r) => {
     const titleText = ((r.title ?? "").trim() || r.original_filename || (en ? "Resource" : "자료")).toString();
     const metaLine = isIssueBoard
       ? `${en ? "Published" : "발간"} ${r.published_at ?? "-"} · ${en ? "Views" : "조회"} ${r.views_count ?? 0}`

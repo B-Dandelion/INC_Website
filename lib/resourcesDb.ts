@@ -196,7 +196,8 @@ async function fetchResourcesUncached(args: FetchResourcesArgs) {
   const { data, error } = await q;
   if (error) throw new Error(error.message);
 
-  const rows = (data ?? []).map((r: any) => ({
+  type RawResourceRow = Omit<ResourceRow, "boards"> & { boards: BoardMini | BoardMini[] | null };
+  const rows = ((data ?? []) as unknown as RawResourceRow[]).map((r) => ({
     ...r,
     boards: normalizeBoard(r.boards),
   }));
@@ -223,18 +224,20 @@ async function fetchSourcePathsUncached(boardSlug: string): Promise<string[]> {
   if (error) throw new Error(error.message);
 
   const set = new Set<string>();
-  for (const row of data ?? []) {
-    const sp = (row as any).source_path as string | null;
+  for (const row of (data ?? []) as { source_path: string | null }[]) {
+    const sp = row.source_path;
     if (!sp) continue;
     set.add(sp);
   }
   return [...set].sort((a, b) => a.localeCompare(b));
 }
 
-export function buildSourcePathTree(boardSlug: string, sourcePaths: string[]) {
+export type SourcePathNode = { name: string; fullPath?: string; children: Map<string, SourcePathNode> };
+
+export function buildSourcePathTree(boardSlug: string, sourcePaths: string[]): SourcePathNode {
   // source_path: "seminar/국내세미나/...." 형태
   // 좌측에서는 boardSlug 다음부터 트리로 표시
-  type Node = { name: string; fullPath?: string; children: Map<string, Node> };
+  type Node = SourcePathNode;
 
   const root: Node = { name: boardSlug, children: new Map() };
 

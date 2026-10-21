@@ -1,5 +1,6 @@
 "use client";
 
+import type { AdminResourceRow } from "@/lib/adminResourcesDb";
 import { useState } from "react";
 import styles from "./ResourceBoard.module.css";
 
@@ -8,7 +9,7 @@ type AdminItem = {
   title: string;
   subtitle?: string;
   rightMeta?: string;
-  _raw?: any;
+  _raw?: Pick<AdminResourceRow, "note" | "published_at" | "kind" | "visibility">;
 };
 
 const ISSUE_BOARDS = new Set(["atm", "heartbeat-of-atoms"]);
@@ -87,7 +88,7 @@ export default function AdminResourceBoard({
       }
     }
 
-    const payload: any = {
+    const payload: Record<string, string | number | null> = {
       resourceId: item.id,
       title: nextTitle.trim(),
       note: nextNote,

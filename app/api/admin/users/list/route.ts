@@ -64,13 +64,14 @@ export async function GET(req: Request) {
     ? users.filter((u) => (u.email || "").toLowerCase().includes(q))
     : users;
 
+  type ProfileRow = { id: string; role: string; approved: boolean | null };
   const ids = filtered.map((u) => u.id);
   const { data: profs } = ids.length
     ? await supabaseAdmin.from("profiles").select("id, role, approved").in("id", ids)
-    : ({ data: [] as any[] } as any);
+    : { data: [] as ProfileRow[] };
 
   const profMap = new Map<string, { role: string; approved: boolean }>();
-  (profs ?? []).forEach((p: any) => profMap.set(p.id, { role: p.role, approved: p.approved === true }));
+  ((profs ?? []) as ProfileRow[]).forEach((p) => profMap.set(p.id, { role: p.role, approved: p.approved === true }));
 
   const out = filtered.map((u) => {
     const p = profMap.get(u.id);
@@ -78,7 +79,7 @@ export async function GET(req: Request) {
       id: u.id,
       email: u.email ?? null,
       createdAt: u.created_at ?? null,
-      lastSignInAt: (u.last_sign_in_at as any) ?? null,
+      lastSignInAt: u.last_sign_in_at ?? null,
       role: (p?.role as "member" | "admin") ?? "member",
       approved: p?.approved ?? false,
     };

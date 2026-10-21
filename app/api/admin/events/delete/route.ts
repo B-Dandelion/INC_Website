@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { requireAdminOrThrow } from "@/lib/requireAdmin";
 import { CACHE_TAGS, invalidatePublicCache } from "@/lib/publicCache";
+import { errorMessage, errorStatus } from "@/lib/errors";
 
 export const runtime = "nodejs";
 
@@ -25,7 +26,7 @@ export async function POST(req: Request) {
     if (aErr) return NextResponse.json({ ok: false, error: aErr.message }, { status: 500 });
 
     const resourceIds = Array.from(
-      new Set((assets ?? []).map((x: any) => Number(x.resource_id)).filter((n) => Number.isFinite(n) && n > 0))
+      new Set((assets ?? []).map((x: { resource_id: number | null }) => Number(x.resource_id)).filter((n) => Number.isFinite(n) && n > 0))
     );
 
     // 2) event_assets 삭제(연결 해제)
@@ -47,10 +48,10 @@ export async function POST(req: Request) {
 
     invalidatePublicCache(CACHE_TAGS.events, CACHE_TAGS.resources);
     return NextResponse.json({ ok: true, deleted_resources: resourceIds.length });
-  } catch (e: any) {
+  } catch (e: unknown) {
     return NextResponse.json(
-      { ok: false, error: String(e?.message ?? e) },
-      { status: e?.status ?? 500 }
+      { ok: false, error: errorMessage(e) },
+      { status: errorStatus(e) }
     );
   }
 }

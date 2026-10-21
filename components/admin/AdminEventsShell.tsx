@@ -31,14 +31,14 @@ export default async function AdminEventsShell({
 
   // seminar만 subtype 토글 사용
   const events = await fetchEvents({
-    category: map.category as any,
+    category: map.category,
     ...(slug === "seminar" && subtype ? { subtype } : {}),
   });
 
   const selectedEventId =
     (sp.event && events.some((e) => e.id === sp.event) ? sp.event : events[0]?.id) ?? null;
 
-  const boardLabel = NAV.find((x) => x.key === (slug as any))?.label ?? slug;
+  const boardLabel = NAV.find((x) => x.key === slug)?.label ?? slug;
 
   const sidebarSubmenu = (
     <div className={seminarStyles.sidebarSub}>
@@ -101,7 +101,7 @@ export default async function AdminEventsShell({
 
   return (
     <ResourcesFrame
-      activeKey={slug as any} sidebarSubmenu={sidebarSubmenu}>
+      activeKey={slug} sidebarSubmenu={sidebarSubmenu}>
       <div className={styles.content}>
         <div className={styles.hero}>
           <h1 className={styles.h1}>관리: {boardLabel}</h1>

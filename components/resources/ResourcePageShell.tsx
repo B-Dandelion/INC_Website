@@ -4,7 +4,7 @@ import styles from "./resources.module.css";
 import ResourceNav from "./ResourceNav";
 import ResourceSearchBar from "./ResourceSearchBar";
 import ResourceList from "./ResourceList";
-import type { BoardRow, ResourceRow } from "@/lib/resourcesDb";
+import type { BoardRow, ResourceRow, SourcePathNode } from "@/lib/resourcesDb";
 
 function buildHref(base: string, params: Record<string, string | undefined>) {
   const usp = new URLSearchParams();
@@ -32,7 +32,7 @@ export default function ResourcePageShell({
   title: string;
   rows: ResourceRow[];
   showBoardBadge?: boolean;
-  treeRoot?: any; // buildSourcePathTree 결과(Map 포함) 그대로 받음
+  treeRoot?: SourcePathNode; // buildSourcePathTree 결과
   q?: string;
   path?: string;
   page: number;

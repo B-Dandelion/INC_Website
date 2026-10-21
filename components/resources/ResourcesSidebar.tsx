@@ -1,7 +1,7 @@
 // components/resources/ResourcesSidebar.tsx
 import Link from "next/link";
 import styles from "./resources.module.css";
-import { BoardRow, buildSourcePathTree, isNestedBoard } from "@/lib/resourcesDb";
+import { type BoardRow, buildSourcePathTree, isNestedBoard, type SourcePathNode } from "@/lib/resourcesDb";
 
 function Tree({
   node,
@@ -9,7 +9,7 @@ function Tree({
   activePath,
   depth = 0,
 }: {
-  node: { name: string; fullPath?: string; children: Map<string, any> };
+  node: SourcePathNode;
   boardSlug: string;
   activePath?: string;
   depth?: number;
@@ -99,7 +99,7 @@ export default function ResourcesSidebar({
             {isActive && tree && tree.children.size > 0 ? (
               <div className={styles.subTree}>
                 <Tree
-                  node={tree as any}
+                  node={tree}
                   boardSlug={b.slug}
                   activePath={activePath}
                 />

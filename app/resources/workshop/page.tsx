@@ -3,7 +3,7 @@ import Link from "next/link";
 import ResourcesFrame from "@/components/resources/ResourcesFrame";
 import SectionTabs from "@/components/resources/SectionTabs";
 import styles from "./workshop.module.css";
-import { fetchEvents, fetchEventAssets } from "@/lib/eventsDb";
+import { fetchEvents, fetchEventAssets, type EventAssetRow } from "@/lib/eventsDb";
 import { getLocale } from "@/lib/i18n";
 
 const BASE = "/resources/workshop";
@@ -63,14 +63,14 @@ export default async function WorkshopPage({
     </div>
   );
 
-  const renderAssetAsMedia = (asset: any) => {
+  const renderAssetAsMedia = (asset: EventAssetRow) => {
     const r = asset?.resources;
     if (!r?.id) return null;
     const href = `/api/resources/go?id=${r.id}`;
     const title = r.title ?? r.original_filename ?? "file";
     return isImageLike(r.mime, r.original_filename) ? (
       <a className={styles.mediaWrap} href={href} target="_blank" rel="noreferrer" title={title}>
-        <img className={styles.mediaImg} src={href} alt={title} />
+        <img className={styles.mediaImg} src={href} alt={title} loading="lazy" decoding="async" />
       </a>
     ) : (
       <div className={styles.card}>
@@ -120,7 +120,7 @@ export default async function WorkshopPage({
                     const r = p.resources!;
                     const href = `/api/resources/go?id=${r.id}`;
                     const title = r.title ?? r.original_filename ?? "photo";
-                    return <a key={`${r.id ?? i}`} className={styles.photoThumb} href={href} target="_blank" rel="noreferrer" title={title}><img src={href} alt={title} /></a>;
+                    return <a key={`${r.id ?? i}`} className={styles.photoThumb} href={href} target="_blank" rel="noreferrer" title={title}><img src={href} alt={title} loading="lazy" decoding="async" /></a>;
                   })}
                 </div>
               </section>

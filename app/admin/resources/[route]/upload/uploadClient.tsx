@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { routeToBoardSlug } from "@/lib/routeMaps";
 import { createClient } from "@supabase/supabase-js";
+import { errorMessage } from "@/lib/errors";
 
 function extKind(fileName: string) {
   const ext = (fileName.split(".").pop() || "").toLowerCase();
@@ -90,8 +91,8 @@ export default function UploadClient({ route }: { route: string }) {
       setTitle("");
       setPublishedAt("");
       setNote("");
-    } catch (e: any) {
-      setMsg(String(e?.message ?? e));
+    } catch (e: unknown) {
+      setMsg(errorMessage(e));
     } finally {
       setBusy(false);
     }

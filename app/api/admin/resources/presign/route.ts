@@ -16,7 +16,7 @@ const r2 = new S3Client({
 });
 
 export async function POST(req: Request) {
-  const guard = await requireAdminOrThrow();
+  await requireAdminOrThrow();
   
   const body = await req.json().catch(() => ({}));
   const fileName = String(body.fileName ?? "").trim();

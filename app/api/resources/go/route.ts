@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { Readable } from "node:stream";
 import { recordSiteAnalyticsEvent } from "@/lib/siteAnalyticsServer";
+import { errorMessage } from "@/lib/errors";
 
 export const runtime = "nodejs";
 
@@ -42,9 +43,10 @@ function contentDisposition(kind: string, filename: string) {
   return `${inline ? "inline" : "attachment"}; filename="${safe}"`;
 }
 
-function toWeb(body: any) {
-  if (body instanceof Readable) return Readable.toWeb(body);
-  return body;
+// S3 returns a Node Readable on the server; Response needs a web stream.
+function toWeb(body: unknown): BodyInit {
+  if (body instanceof Readable) return Readable.toWeb(body) as unknown as ReadableStream<Uint8Array>;
+  return body as BodyInit;
 }
 
 export async function GET(req: Request) {
@@ -71,8 +73,7 @@ export async function GET(req: Request) {
   });
 
   try {
-    const mod = await import("@aws-sdk/s3-request-presigner");
-    const getSignedUrl: any = (mod as any).getSignedUrl;
+    const { getSignedUrl } = await import("@aws-sdk/s3-request-presigner");
 
     const client = s3();
     const Bucket = bucketForKey(row.r2_key);
@@ -98,9 +99,9 @@ export async function GET(req: Request) {
       headers.set("Content-Type", row.mime ?? "application/octet-stream");
       headers.set("Content-Disposition", contentDisposition(row.kind, row.original_filename));
 
-      return new NextResponse(toWeb(out.Body) as any, { status: 200, headers });
-    } catch (e: any) {
-      return new NextResponse(String(e?.message ?? e), { status: 500 });
+      return new NextResponse(toWeb(out.Body), { status: 200, headers });
+    } catch (e: unknown) {
+      return new NextResponse(errorMessage(e), { status: 500 });
     }
   }
 }

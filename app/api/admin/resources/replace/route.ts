@@ -7,6 +7,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { requireAdminOrThrow } from "@/lib/requireAdmin";
 import { CACHE_TAGS, invalidatePublicCache } from "@/lib/publicCache";
+import { errorMessage, errorStatus } from "@/lib/errors";
 
 export const runtime = "nodejs";
 
@@ -210,10 +211,8 @@ export async function POST(req: Request) {
             Key: resource.r2_key,
           })
         );
-      } catch (cleanupError: any) {
-        cleanupWarning = String(
-          cleanupError?.message ?? cleanupError
-        );
+      } catch (cleanupError: unknown) {
+        cleanupWarning = errorMessage(cleanupError);
       }
     }
 
@@ -225,11 +224,11 @@ export async function POST(req: Request) {
       newKey: key,
       cleanupWarning,
     });
-  } catch (e: any) {
-    const status = e?.status ?? 500;
+  } catch (e: unknown) {
+    const status = errorStatus(e);
 
     return NextResponse.json(
-      { ok: false, error: String(e?.message ?? e) },
+      { ok: false, error: errorMessage(e) },
       { status }
     );
   }

@@ -1,13 +1,12 @@
 // lib/requireAdmin.ts
 import { cookies } from "next/headers";
 import { adminCookie, verifyAdminCookieValue } from "@/lib/adminSession";
+import { HttpError } from "@/lib/errors";
 
 export async function requireAdminOrThrow() {
-  const jar = await cookies();      
+  const jar = await cookies();
   const v = jar.get(adminCookie.name)?.value;
   if (!verifyAdminCookieValue(v)) {
-    const err: any = new Error("Unauthorized");
-    err.status = 401;
-    throw err;
+    throw new HttpError(401, "Unauthorized");
   }
 }
