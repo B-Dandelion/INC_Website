@@ -4,7 +4,7 @@
 // non-deleted issues are served, so member-only files never become page text.
 import { unstable_cache } from "next/cache";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
-import { extractText, getDocumentProxy } from "unpdf";
+import { getDocumentProxy } from "unpdf";
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
 import { CACHE_TAGS } from "@/lib/publicCache";
 import { parseAtm, parseHeartbeat, type AtmIssue, type HeartbeatIssue } from "@/lib/publicationParse";
@@ -111,13 +111,27 @@ function r2() {
   });
 }
 
-async function readPdfPages(r2Key: string): Promise<string[]> {
+async function openPdf(r2Key: string) {
   const object = await r2().send(new GetObjectCommand({ Bucket: process.env.R2_PUBLIC_BUCKET!, Key: r2Key }));
-  const bytes = new Uint8Array(await object.Body!.transformToByteArray());
-  const pdf = await getDocumentProxy(bytes);
-  const { text } = await extractText(pdf, { mergePages: false });
-  return Array.isArray(text) ? text : [text];
+  return getDocumentProxy(new Uint8Array(await object.Body!.transformToByteArray()));
 }
+
+type Pdf = Awaited<ReturnType<typeof openPdf>>;
+
+// Same text as unpdf's extractText, but only for the pages asked for.
+async function pageTexts(pdf: Pdf, count: number) {
+  const pages: string[] = [];
+  for (let i = 1; i <= Math.min(count, pdf.numPages); i++) {
+    const content = await (await pdf.getPage(i)).getTextContent();
+    pages.push(content.items.map((it) => ("str" in it ? it.str + (it.hasEOL ? "\n" : "") : "")).join(""));
+  }
+  return pages;
+}
+
+// Heartbeat's column and table of contents sit in the first pages; reading
+// 12 of ~150-200 pages is what keeps a first view fast. Only older issues
+// without a contents page need the whole file (for their section headings).
+const HEARTBEAT_HEAD_PAGES = 12;
 
 export type IssueContent =
   | { kind: "atm"; atm: AtmIssue }
@@ -128,19 +142,33 @@ export type IssueContent =
 async function readIssueContentUncached(slug: PublicationSlug, r2Key: string): Promise<IssueContent> {
   if (!r2Key.toLowerCase().endsWith(".pdf")) return { kind: "none" };
   try {
-    const pages = await readPdfPages(r2Key);
-    if (slug === "atm") return { kind: "atm", atm: parseAtm(pages[0] ?? "") };
-    return { kind: "heartbeat", heartbeat: parseHeartbeat(pages) };
+    const pdf = await openPdf(r2Key);
+    if (slug === "atm") return { kind: "atm", atm: parseAtm((await pageTexts(pdf, 1))[0] ?? "") };
+    const head = await pageTexts(pdf, HEARTBEAT_HEAD_PAGES);
+    const parsed = parseHeartbeat(head);
+    const hasContents = parsed.toc.some((section) => section.items.length > 0);
+    if (hasContents || pdf.numPages <= HEARTBEAT_HEAD_PAGES) return { kind: "heartbeat", heartbeat: parsed };
+    return { kind: "heartbeat", heartbeat: parseHeartbeat(await pageTexts(pdf, pdf.numPages)) };
   } catch (error) {
     console.error("[publications] could not read PDF", r2Key, error);
     return { kind: "none" };
   }
 }
 
-export const readIssueContent = unstable_cache(readIssueContentUncached, ["publications:content:v1"], {
-  revalidate: 60 * 60 * 24 * 7,
-  tags: [CACHE_TAGS.resources],
+// A file's text never changes (a replaced file gets a new key), so the parsed
+// result is kept until the parser itself changes (bump the version then). It
+// has its own tag so routine admin edits, which expire the "resources" tag,
+// do not throw away work that took seconds to produce.
+export const readIssueContent = unstable_cache(readIssueContentUncached, ["publications:content:v2"], {
+  revalidate: false,
+  tags: ["publication-content"],
 });
+
+// Read a newly uploaded issue right away, so its first visitor gets a cached page.
+export async function warmIssueContent(boardSlug: string, r2Key: string | null | undefined) {
+  if (!r2Key || !isPublicationSlug(boardSlug)) return;
+  await readIssueContent(boardSlug, r2Key);
+}
 
 export async function fetchPublicationIssueIds() {
   const supabase = createSupabaseServerClient();

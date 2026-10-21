@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
+import { warmIssueContent } from "@/lib/publications";
 import { S3Client, HeadObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { createClient } from "@supabase/supabase-js";
 import { requireAdminOrThrow } from "@/lib/requireAdmin";
@@ -96,6 +97,8 @@ export async function POST(req: Request) {
     }
 
     invalidatePublicCache(CACHE_TAGS.resources);
+    // Visibility public only: member/admin files never become page text.
+    if (visibility === "public") after(() => warmIssueContent(boardSlug, key));
     return NextResponse.json({ ok: true, id: inserted.id });
   } catch (e: unknown) {
     return NextResponse.json({ ok: false, error: errorMessage(e) }, { status: errorStatus(e) });
