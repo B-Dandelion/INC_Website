@@ -3,6 +3,13 @@ import BoardHeader from "@/components/resources/BoardHeader";
 import DocumentCard from "@/components/resources/DocumentCard";
 import { fetchResources, type ResourceRow } from "@/lib/resourcesDb";
 import { getLocale } from "@/lib/i18n";
+import { makeMetadata } from "@/lib/seo";
+
+export const metadata = makeMetadata({
+  title: "강연자료",
+  description: "INC 강연별 발표 자료와 현장 사진을 최신 강연부터 모았습니다.",
+  path: "/resources/lecture",
+});
 
 function norm(p: string) {
   return p.replaceAll("\\", "/");

@@ -2,6 +2,12 @@ import { fetchEvents } from "@/lib/eventsDb";
 import { getLocale } from "@/lib/i18n";
 import { EventList } from "@/components/resources/events/EventParts";
 import StandardEventBoard from "@/components/resources/events/StandardEventBoard";
+import { eventBoardMetadata, seminarSub } from "@/lib/eventPages";
+
+export async function generateMetadata({ searchParams }: { searchParams: Promise<{ sub?: string; event?: string }> }) {
+  return eventBoardMetadata("seminar", await searchParams);
+}
+
 
 export default async function SeminarsPage({
   searchParams,
@@ -11,7 +17,7 @@ export default async function SeminarsPage({
   const locale = await getLocale();
   const en = locale === "en";
   const sp = await searchParams;
-  const sub = sp.sub === "domestic" ? "domestic" : "international";
+  const sub = await seminarSub(sp);
 
   const events = await fetchEvents({ category: "seminar", subtype: sub });
   const selectedId = (sp.event && events.some((e) => e.id === sp.event) ? sp.event : events[0]?.id) ?? null;
@@ -20,7 +26,7 @@ export default async function SeminarsPage({
     <EventList
       events={events}
       selectedId={selectedId}
-      href={(id) => `/resources/seminar?sub=${sub}&event=${id}`}
+      href={(id) => `/resources/seminar?event=${id}`}
       en={en}
       emptyText={en ? "No seminars are registered." : "등록된 세미나가 없습니다."}
       switcher={[

@@ -1,4 +1,11 @@
 import DocumentBoardPage from "@/components/resources/DocumentBoardPage";
+import { makeMetadata } from "@/lib/seo";
+
+export const metadata = makeMetadata({
+  title: "기고문",
+  description: "INC 구성원이 쓴 원자력·국제협력 기고문 원문 모음입니다.",
+  path: "/resources/contribution",
+});
 
 export default async function Page({ searchParams }: { searchParams: Promise<{ page?: string; q?: string }> }) {
   const sp = await searchParams;

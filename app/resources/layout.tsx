@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "자료실",
+  // An object with its own template so pages below keep the "… | INC" suffix.
+  title: { default: "자료실", template: "%s | INC" },
   description:
     "INC의 ATM, Heartbeat of Atoms, 강연자료, 세미나, 보고서, 공모전 자료 등을 확인할 수 있습니다.",
   openGraph: {

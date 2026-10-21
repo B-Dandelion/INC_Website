@@ -3,6 +3,12 @@ import { fetchEvents, fetchEventAssets, type EventAssetRow } from "@/lib/eventsD
 import { getLocale } from "@/lib/i18n";
 import { EmptyEvent, EventList, EventPage, EventSection, PhotoGallery, PosterPair, VideoEntryCard, WinnerCard } from "@/components/resources/events/EventParts";
 import { awardRank, bySortOrder, norm, youtubeVideoId } from "@/components/resources/events/shared";
+import { eventBoardMetadata } from "@/lib/eventPages";
+
+export async function generateMetadata({ searchParams }: { searchParams: Promise<{ event?: string }> }) {
+  return eventBoardMetadata("shortform-contest", await searchParams);
+}
+
 
 const BASE = "/resources/shortform-contest";
 

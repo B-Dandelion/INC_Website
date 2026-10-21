@@ -3,6 +3,7 @@ import { RESOURCE_BOARDS } from "@/lib/resourceBoards";
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
 import { absoluteUrl } from "@/lib/seo";
 import { fetchPublicationIssueIds, issuePath } from "@/lib/publications";
+import { eventSitemapPaths } from "@/lib/eventPages";
 
 export const revalidate = 3600;
 
@@ -69,6 +70,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Every public ATM / Heartbeat issue has its own readable page.
     for (const row of await fetchPublicationIssueIds()) {
       routes.push(entry(issuePath(row.slug, row.id), 0.6, "yearly", row.published_at ?? undefined));
+    }
+
+    // Each seminar, workshop, report and contest has its own page and title.
+    for (const row of await eventSitemapPaths()) {
+      routes.push(entry(row.path, 0.6, "yearly", row.date ?? undefined));
     }
   } catch {
     // 정적 경로만으로도 유효한 sitemap을 반환한다.

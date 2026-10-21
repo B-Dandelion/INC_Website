@@ -1,6 +1,13 @@
 import Link from "next/link";
 import PublicationIssueList from "@/components/resources/PublicationIssueList";
 import { getLocale } from "@/lib/i18n";
+import { makeMetadata } from "@/lib/seo";
+
+export const metadata = makeMetadata({
+  title: "ATM — 원자력 뉴스 요약",
+  description: "평일 매일 발행되는 INC의 ATM: 국내외 원자력 뉴스 3건 요약. 지난 호를 웹페이지와 PDF로 볼 수 있습니다.",
+  path: "/resources/atm",
+});
 
 function isYmd(s: unknown): s is string {
   return typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s);

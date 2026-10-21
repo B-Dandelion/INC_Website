@@ -1,4 +1,11 @@
 import DocumentBoardPage from "@/components/resources/DocumentBoardPage";
+import { makeMetadata } from "@/lib/seo";
+
+export const metadata = makeMetadata({
+  title: "기타 보고서",
+  description: "INC가 발간·수집한 원자력 관련 보고서 원문 모음입니다.",
+  path: "/resources/misc-reports",
+});
 
 export default async function Page({ searchParams }: { searchParams: Promise<{ page?: string; q?: string }> }) {
   const sp = await searchParams;
