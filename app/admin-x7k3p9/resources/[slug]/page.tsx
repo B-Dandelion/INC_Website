@@ -35,7 +35,7 @@ export default async function AdminBoardPage({
   // Event boards have no list of their own: open the newest event, whose page
   // keeps the full event list in the sidebar. Only an empty board stays here.
   if (rule.type === "event") {
-    const subtype = rule.subtypes?.some((s) => s.value === sp.subtype) ? sp.subtype : rule.defaultSubtype;
+    const subtype = rule.filterBySubtype ? (rule.subtypes?.some((s) => s.value === sp.subtype) ? sp.subtype : rule.defaultSubtype) : undefined;
     const events = await fetchAdminEvents(rule.category, subtype);
     if (events[0]) redirect(eventHref(slug, events[0].id));
     return (

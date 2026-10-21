@@ -4,7 +4,8 @@ import ResourcesFrame, {
 import styles from "@/components/resources/SimpleListPage.module.css";
 import { createClient } from "@supabase/supabase-js";
 import { fetchAdminEventAssets } from "@/lib/adminEventsDb";
-import AdminEventDetailClient, { type AdminEvent } from "@/components/admin/AdminEventDetailClient";
+import type { AdminEvent } from "@/components/admin/AdminEventDetailClient";
+import EventEditor from "@/components/admin/events/EventEditor";
 import { adminSlugToEventCategory } from "@/lib/eventCategoryMap";
 import { eventBoardRule } from "@/lib/boardRules";
 import { ButtonLink, PageHeader } from "@/components/admin/ui";
@@ -64,7 +65,8 @@ export default async function AdminEventDetailPage({
     slug === "seminar"
       ? `/resources/seminar?sub=${subtype === "domestic" ? "domestic" : "international"}&event=${event.id}`
       : `/resources/${slug}?event=${event.id}`;
-  const subtypeLabel = eventBoardRule(slug)?.subtypes?.find((s) => s.value === subtype)?.label;
+  const rule = eventBoardRule(slug);
+  const subtypeLabel = rule?.filterBySubtype ? rule.subtypes?.find((s) => s.value === subtype)?.label : undefined;
 
   return (
     <ResourcesFrame activeKey={slug} activeEventId={event.id} subtype={subtype}>
@@ -82,11 +84,7 @@ export default async function AdminEventDetailPage({
           }
         />
 
-        <AdminEventDetailClient
-          slug={slug}
-          event={event}
-          assets={assets}
-        />
+        {rule ? <EventEditor rule={rule} event={event} assets={assets} /> : null}
       </div>
     </ResourcesFrame>
   );
