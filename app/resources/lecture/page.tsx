@@ -49,7 +49,7 @@ export default async function LecturePage() {
     <ResourcesFrame activeKey="lecture">
       <div className={styles.content}>
         <header className={styles.hero}>
-          <div className={styles.eyebrow}>Lecture archive</div>
+          <div className={styles.eyebrow}>Lecture Materials</div>
           <h1 className={styles.h1}>{en ? "Lecture Materials" : "강연자료"}</h1>
           <div className={styles.meta}>{en ? "Browse photos and materials organized by lecture." : "강연별 사진과 자료를 한 곳에서 확인할 수 있습니다."}</div>
         </header>

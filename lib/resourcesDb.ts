@@ -288,3 +288,27 @@ export const fetchBoards = cachedPublicQuery(fetchBoardsUncached, "resourcesDb:f
 export const fetchResources = cachedPublicQuery(fetchResourcesUncached, "resourcesDb:fetchResources", [CACHE_TAGS.resources, CACHE_TAGS.boards]);
 export const fetchSourcePaths = cachedPublicQuery(fetchSourcePathsUncached, "resourcesDb:fetchSourcePaths", [CACHE_TAGS.resources, CACHE_TAGS.boards]);
 const getBoardIdBySlugAnon = cachedPublicQuery(getBoardIdBySlugAnonUncached, "resourcesDb:getBoardIdBySlugAnon", [CACHE_TAGS.boards]);
+
+// Total rows for the same filters as fetchResources, for numbered pagination.
+async function countResourcesUncached(args: FetchResourcesArgs): Promise<number> {
+  const sb = supabaseAnon();
+  const slug = (args.boardSlug ?? "").trim();
+  const isIssueBoard = slug === "atm" || slug === "heartbeat-of-atoms";
+  let q = sb.from("resources").select("id", { count: "exact", head: true }).is("deleted_at", null).eq("visibility", "public");
+  if (args.boardSlug) {
+    const boardId = await getBoardIdBySlugAnon(args.boardSlug);
+    if (!boardId) return 0;
+    q = q.eq("board_id", boardId);
+  }
+  if (args.q) q = q.or(`title.ilike.%${args.q}%,note.ilike.%${args.q}%`);
+  if (isIssueBoard) {
+    if (args.publishedFrom) q = q.gte("published_at", args.publishedFrom);
+    if (args.publishedTo) q = q.lte("published_at", args.publishedTo);
+  }
+  if (args.path) q = q.eq("source_path", args.path);
+  const { count, error } = await q;
+  if (error) throw new Error(error.message);
+  return count ?? 0;
+}
+
+export const countResources = cachedPublicQuery(countResourcesUncached, "resourcesDb:countResources", [CACHE_TAGS.resources, CACHE_TAGS.boards]);

@@ -28,7 +28,7 @@ export default async function AboutPage() {
           <div className="border-b border-slate-200 p-6 md:border-b-0 md:border-r md:p-8">
             <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#2B6CA3]">Resources</p>
             <h2 className="mt-2 text-lg font-semibold text-slate-950">
-              {pick(locale, "자료와 기록", "Resources and Archives")}
+              {pick(locale, "자료와 기록", "Resources and Records")}
             </h2>
             <p className="mt-3 text-sm leading-7 text-slate-500">
               {pick(

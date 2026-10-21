@@ -59,9 +59,8 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-a {
-  color: inherit;
-}
+/* Links inherit colour from Tailwind's preflight (in the base layer), so
+   utility classes such as text-white on a link still apply. */
 
 button,
 input,
