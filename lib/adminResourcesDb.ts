@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { ISSUE_BOARD_SLUGS, RESOURCE_KINDS, VISIBILITIES } from "@/lib/resourceFilters";
 
 const sb = createClient(
   process.env.SUPABASE_URL!,
@@ -24,17 +25,31 @@ export type AdminResourceRow = {
   deleted_at: string | null;
 };
 
+
 export type AdminFetchResourcesArgs = {
   boardSlug: string;
   page?: number;
   pageSize?: number;
+  q?: string;
+  visibility?: string;
+  kind?: string;
 };
+
+
+// PostgREST `or` filters are comma/paren separated, so strip those characters
+// (and LIKE wildcards) from the search text instead of trying to escape them.
+function searchTerm(q: string) {
+  return q.replace(/[,()%*\\]/g, " ").replace(/\s+/g, " ").trim().slice(0, 80);
+}
 
 export async function fetchAdminResources({
   boardSlug,
   page = 1,
   pageSize = 50,
-}: AdminFetchResourcesArgs) {
+  q = "",
+  visibility,
+  kind,
+}: AdminFetchResourcesArgs): Promise<{ rows: AdminResourceRow[]; total: number }> {
   const normalizedPage = Math.max(1, page);
   const normalizedPageSize = Math.min(100, Math.max(10, pageSize));
   const from = (normalizedPage - 1) * normalizedPageSize;
@@ -47,24 +62,36 @@ export async function fetchAdminResources({
     .maybeSingle();
 
   if (boardError) throw new Error(boardError.message);
-  if (!board) return [];
+  if (!board) return { rows: [], total: 0 };
 
-  const isIssue =
-    boardSlug === "atm" || boardSlug === "heartbeat-of-atoms";
-  const orderField = isIssue ? "published_at" : "posted_at";
+  const orderField = ISSUE_BOARD_SLUGS.has(boardSlug) ? "published_at" : "posted_at";
 
-  const { data, error } = await sb
+  let query = sb
     .from("resources")
     .select(
-      "id,title,kind,posted_at,published_at,r2_key,original_filename,source_path,note,views_count,created_at,visibility,mime,size_bytes,deleted_at"
+      "id,title,kind,posted_at,published_at,r2_key,original_filename,source_path,note,views_count,created_at,visibility,mime,size_bytes,deleted_at",
+      { count: "exact" },
     )
     .eq("board_id", board.id)
-    .is("deleted_at", null)
+    .is("deleted_at", null);
+
+  const term = searchTerm(q);
+  if (term) {
+    query = query.or(`title.ilike.%${term}%,original_filename.ilike.%${term}%,note.ilike.%${term}%`);
+  }
+  if (visibility && (VISIBILITIES as readonly string[]).includes(visibility)) {
+    query = query.eq("visibility", visibility);
+  }
+  if (kind && (RESOURCE_KINDS as readonly string[]).includes(kind)) {
+    query = query.eq("kind", kind);
+  }
+
+  const { data, error, count } = await query
     .order(orderField, { ascending: false, nullsFirst: false })
     .order("id", { ascending: false })
     .range(from, to)
     .returns<AdminResourceRow[]>();
 
   if (error) throw new Error(error.message);
-  return data ?? [];
+  return { rows: data ?? [], total: count ?? 0 };
 }

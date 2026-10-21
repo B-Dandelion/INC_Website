@@ -99,7 +99,7 @@ export default async function AdminEventsShell({
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <h1 className={styles.h1}>관리: {boardLabel}</h1>
-              <div className={styles.meta}>왼쪽 목록에서 행사를 선택하거나 새 행사를 추가하세요.</div>
+              <div className={styles.meta}>행사 목록에서 행사를 선택하거나 새 행사를 추가하세요.</div>
             </div>
             {/* Kept at the top of the page so it is visible without scrolling the event list. */}
             <ButtonLink href={`/admin-x7k3p9/resources/${slug}/events/new${subtypeQuery}`} variant="primary" icon={<Plus className="h-4 w-4" aria-hidden="true" />}>

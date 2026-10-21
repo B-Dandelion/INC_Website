@@ -4,3 +4,4 @@ export { EmptyState } from "./EmptyState";
 export { Field, TextArea, TextInput, Select, inputClass } from "./Field";
 export { PageHeader } from "./PageHeader";
 export { cn } from "./cn";
+export { Pagination } from "./Pagination";
