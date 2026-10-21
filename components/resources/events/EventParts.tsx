@@ -7,7 +7,7 @@ import ResourcesFrame, { type ResourceNavKey } from "../ResourcesFrame";
 import SectionTabs from "../SectionTabs";
 import YouTubeFacade from "./YouTubeFacade";
 import type { EventAssetRow, EventRow } from "@/lib/eventsDb";
-import { fileHref, fmtPeriod, isImageAsset, isPdfAsset, meaningfulCaption, youtubeVideoId } from "./shared";
+import { fileHref, fmtPeriod, mediaSrc, mediaSrcSet, isImageAsset, isPdfAsset, meaningfulCaption, youtubeVideoId } from "./shared";
 
 type Tab = { id: string; label: string };
 
@@ -195,7 +195,9 @@ export function MediaAsset({ asset, label, en, tall }: { asset: EventAssetRow; l
       className="block overflow-hidden rounded-lg border border-slate-200 bg-white p-2 transition hover:border-[#9BB9D6]"
     >
       <img
-        src={fileHref(r.id)}
+        src={mediaSrc(r.id, 1280)}
+        srcSet={mediaSrcSet(r.id, [640, 1280])}
+        sizes="(min-width: 768px) 620px, 100vw"
         alt={label}
         decoding="async"
         className={`mx-auto w-full rounded-[4px] object-contain ${tall ? "max-h-[760px]" : ""}`}
@@ -240,7 +242,7 @@ export function PhotoGallery({
       {group?.resources?.id ? (
         <figure className="overflow-hidden rounded-lg border border-slate-200 bg-white">
           <a href={fileHref(group.resources.id)} target="_blank" rel="noopener" className="block bg-slate-100">
-            <img src={fileHref(group.resources.id)} alt={en ? `${board} group photo` : `${board} 단체 사진`} loading="lazy" decoding="async" className="w-full object-cover" />
+            <img src={mediaSrc(group.resources.id, 1280)} srcSet={mediaSrcSet(group.resources.id, [640, 1280])} sizes="(min-width: 1100px) 1040px, 100vw" alt={en ? `${board} group photo` : `${board} 단체 사진`} loading="lazy" decoding="async" className="w-full object-cover" />
           </a>
           <figcaption className="px-4 py-2.5 text-[13px] font-semibold text-slate-600">{en ? "Group photo" : "단체 사진"}</figcaption>
         </figure>
@@ -256,7 +258,9 @@ export function PhotoGallery({
               <li key={p.id}>
                 <a href={fileHref(r.id)} target="_blank" rel="noopener" className="group block overflow-hidden rounded-md border border-slate-200 bg-slate-100">
                   <img
-                    src={fileHref(r.id)}
+                    src={mediaSrc(r.id, 640)}
+                    srcSet={mediaSrcSet(r.id, [320, 640])}
+                    sizes="(min-width: 1024px) 250px, (min-width: 640px) 33vw, 50vw"
                     alt={alt}
                     loading="lazy"
                     decoding="async"
@@ -372,7 +376,7 @@ export function WinnerCard({
       <div className="flex min-w-0 items-center gap-4">
         {photoId ? (
           <a href={fileHref(photoId)} target="_blank" rel="noopener" className="block h-[88px] w-[88px] shrink-0 overflow-hidden rounded-md bg-slate-100">
-            <img src={fileHref(photoId)} alt={en ? `Photo of ${person}` : `${person} 사진`} loading="lazy" decoding="async" className="h-full w-full object-cover" />
+            <img src={mediaSrc(photoId, 320)} alt={en ? `Photo of ${person}` : `${person} 사진`} loading="lazy" decoding="async" className="h-full w-full object-cover" />
           </a>
         ) : null}
         <div className="min-w-0 flex-1">

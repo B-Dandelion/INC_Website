@@ -15,7 +15,8 @@ function Thumb({
     mime: string | null;
     filename: string | null;
 }) {
-    const thumb = `/api/resources/go?id=${rid}&thumb=1`;
+    // Admin previews must not count as public views.
+    const thumb = isImageLike(mime, filename) ? `/api/resources/media?id=${rid}&w=320` : `/api/resources/media?id=${rid}`;
 
     if (isImageLike(mime, filename)) {
         return (
