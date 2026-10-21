@@ -72,10 +72,10 @@ export default async function ResourcesIndex() {
                 name="q"
                 type="search"
                 placeholder={pick(locale, "자료 검색 (예: SMR, 우라늄)", "Search (e.g. SMR, uranium)")}
-                className="h-12 w-full rounded-xl border border-slate-300 bg-white pl-10 pr-3 text-[15px] text-slate-900 outline-none transition focus:border-[#2B6CA3] focus:ring-2 focus:ring-[#2B6CA3]/10"
+                className="h-12 w-full rounded-md border border-slate-300 bg-white pl-10 pr-3 text-[15px] text-slate-900 outline-none transition focus:border-[#2B6CA3] focus:ring-2 focus:ring-[#2B6CA3]/10"
               />
             </label>
-            <button type="submit" className="h-12 shrink-0 rounded-xl bg-[#174A7E] px-5 text-sm font-bold text-white transition hover:bg-[#103A66]">
+            <button type="submit" className="h-12 shrink-0 rounded-md bg-[#174A7E] px-5 text-sm font-bold text-white transition hover:bg-[#103A66]">
               {pick(locale, "검색", "Search")}
             </button>
           </form>
@@ -109,10 +109,10 @@ export default async function ResourcesIndex() {
                     <Link
                       key={slug}
                       href={`/resources/${slug}`}
-                      className="group flex flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(15,23,42,0.08)]"
+                      className="group flex flex-col rounded-lg border border-slate-200 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:border-[#9BB9D6]"
                     >
                       <div className="flex items-center gap-3">
-                        <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#174A7E] text-white" aria-hidden="true">
+                        <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-[#174A7E] text-white" aria-hidden="true">
                           <Icon className="h-5 w-5" />
                         </span>
                         <div>
@@ -124,7 +124,7 @@ export default async function ResourcesIndex() {
                         </div>
                       </div>
                       {latest ? (
-                        <div className="mt-5 rounded-2xl bg-slate-50 p-4">
+                        <div className="mt-5 rounded-lg bg-slate-50 p-4">
                           <p className="text-[12px] font-semibold text-[#2B6CA3]">
                             {en ? "Latest" : "최신호"} {issueLabel(latest.issue.title)} · {latest.issue.published_at}
                           </p>
@@ -151,13 +151,13 @@ export default async function ResourcesIndex() {
                     <Link
                       key={slug}
                       href={`/resources/${slug}`}
-                      className="group flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:border-[#9BB9D6] hover:shadow-[0_8px_24px_rgba(15,23,42,0.08)]"
+                      className="group flex flex-col rounded-lg border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:border-[#9BB9D6] "
                     >
                       <div className="flex items-start justify-between gap-3">
-                        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#EEF4FA] text-[#174A7E]" aria-hidden="true">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-md bg-[#EEF4FA] text-[#174A7E]" aria-hidden="true">
                           <Icon className="h-4 w-4" />
                         </span>
-                        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[12px] font-semibold text-slate-700">
+                        <span className="rounded bg-slate-100 px-2 py-0.5 text-[12px] font-semibold text-slate-700">
                           {ev ? (en ? `${ev.count} events` : `행사 ${ev.count}건`) : en ? `${s?.count ?? 0} items` : `자료 ${s?.count ?? 0}건`}
                         </span>
                       </div>

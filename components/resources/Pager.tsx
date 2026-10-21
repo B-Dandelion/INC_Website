@@ -17,14 +17,14 @@ function pageWindow(page: number, pageCount: number): (number | "gap")[] {
   return out;
 }
 
-const cell = "inline-flex h-10 min-w-10 items-center justify-center rounded-lg px-3 text-sm font-semibold tabular-nums transition";
+const cell = "inline-flex h-9 min-w-9 items-center justify-center rounded-md px-2.5 text-sm font-semibold tabular-nums transition";
 
 export default function Pager({ page, pageCount, href, en }: { page: number; pageCount: number; href: (p: number) => string; en: boolean }) {
   if (pageCount <= 1) return null;
   return (
     <nav aria-label={en ? "Pages" : "페이지"} className="mt-10 flex flex-wrap items-center justify-center gap-1.5">
       {page > 1 ? (
-        <Link href={href(page - 1)} aria-label={en ? "Previous page" : "이전 페이지"} className={`${cell} text-slate-700 hover:bg-white hover:shadow-sm`}>
+        <Link href={href(page - 1)} aria-label={en ? "Previous page" : "이전 페이지"} className={`${cell} text-slate-700 hover:bg-white hover:ring-1 hover:ring-slate-200`}>
           <ChevronLeft className="h-4 w-4" />
         </Link>
       ) : null}
@@ -38,14 +38,14 @@ export default function Pager({ page, pageCount, href, en }: { page: number; pag
             key={p}
             href={href(p)}
             aria-current={p === page ? "page" : undefined}
-            className={p === page ? `${cell} bg-[#174A7E] text-white shadow-sm` : `${cell} text-slate-700 hover:bg-white hover:shadow-sm`}
+            className={p === page ? `${cell} bg-[#174A7E] text-white` : `${cell} text-slate-700 hover:bg-white hover:ring-1 hover:ring-slate-200`}
           >
             {p}
           </Link>
         ),
       )}
       {page < pageCount ? (
-        <Link href={href(page + 1)} aria-label={en ? "Next page" : "다음 페이지"} className={`${cell} text-slate-700 hover:bg-white hover:shadow-sm`}>
+        <Link href={href(page + 1)} aria-label={en ? "Next page" : "다음 페이지"} className={`${cell} text-slate-700 hover:bg-white hover:ring-1 hover:ring-slate-200`}>
           <ChevronRight className="h-4 w-4" />
         </Link>
       ) : null}

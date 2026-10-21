@@ -146,7 +146,7 @@ export default async function HomePage() {
               <Link
                 key={b.slug}
                 href={`/resources/${b.slug}`}
-                className="group flex min-h-[64px] items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 transition hover:border-[#2B6CA3] hover:bg-[#F7FAFC]"
+                className="group flex min-h-[64px] items-center justify-between gap-2 rounded-md border border-slate-200 bg-white px-4 py-3 transition hover:border-[#2B6CA3] hover:bg-[#F7FAFC]"
               >
                 <span className="text-[15px] font-semibold leading-6 text-slate-900 group-hover:text-[#174A7E]">{en ? b.labelEn : b.label}</span>
                 <ArrowRight className="h-4 w-4 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-[#174A7E]" aria-hidden="true" />
