@@ -28,7 +28,10 @@ export async function POST(req: Request) {
 
     const patch: Record<string, string | null> = { updated_at: new Date().toISOString() };
 
-    if (typeof body.title === "string") patch.title = body.title.trim();
+    if (typeof body.title === "string") {
+      if (!body.title.trim()) return NextResponse.json({ ok: false, error: "title is required" }, { status: 400 });
+      patch.title = body.title.trim();
+    }
     if (typeof body.note === "string") patch.note = body.note.trim() || null;
     if (typeof body.displayname === "string") patch.displayname = body.displayname.trim() || null;
     if (typeof body.source_path === "string") patch.source_path = body.source_path.trim() || null;
@@ -44,6 +47,13 @@ export async function POST(req: Request) {
         return NextResponse.json({ ok: false, error: "published_at must be YYYY-MM-DD" }, { status: 400 });
       }
       patch.published_at = body.published_at;
+    }
+
+    if (body.posted_at != null) {
+      if (!isYmd(body.posted_at)) {
+        return NextResponse.json({ ok: false, error: "posted_at must be YYYY-MM-DD" }, { status: 400 });
+      }
+      patch.posted_at = body.posted_at;
     }
 
     // 아무 것도 없으면 업데이트 의미 없음

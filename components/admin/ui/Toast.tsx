@@ -5,8 +5,9 @@ import { CheckCircle2, CircleAlert, Info, X } from "lucide-react";
 import { cn } from "./cn";
 
 export type ToastTone = "success" | "error" | "info";
-type ToastItem = { id: number; tone: ToastTone; message: string };
-type ToastFn = (message: string, tone?: ToastTone) => void;
+export type ToastAction = { label: string; onClick: () => void };
+type ToastItem = { id: number; tone: ToastTone; message: string; action?: ToastAction };
+type ToastFn = (message: string, tone?: ToastTone, action?: ToastAction) => void;
 
 const ToastContext = createContext<ToastFn | null>(null);
 
@@ -31,11 +32,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const toast = useCallback<ToastFn>(
-    (message, tone = "info") => {
+    (message, tone = "info", action) => {
       const id = nextId.current++;
-      setItems((current) => [...current.slice(-3), { id, tone, message }]);
-      // Errors stay until dismissed; other messages fade after a few seconds.
-      if (tone !== "error") window.setTimeout(() => dismiss(id), 4000);
+      setItems((current) => [...current.slice(-3), { id, tone, message, action }]);
+      // Errors stay until dismissed; others fade, with extra time when there is an action (undo).
+      if (tone !== "error") window.setTimeout(() => dismiss(id), action ? 8000 : 4000);
     },
     [dismiss],
   );
@@ -52,6 +53,18 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           >
             {toneIcon[item.tone]}
             <p className="min-w-0 flex-1 whitespace-pre-line leading-5">{item.message}</p>
+            {item.action ? (
+              <button
+                type="button"
+                onClick={() => {
+                  dismiss(item.id);
+                  item.action?.onClick();
+                }}
+                className="shrink-0 rounded px-1.5 text-sm font-bold underline underline-offset-2 hover:no-underline"
+              >
+                {item.action.label}
+              </button>
+            ) : null}
             <button type="button" onClick={() => dismiss(item.id)} className="rounded p-0.5 opacity-70 hover:opacity-100" aria-label="알림 닫기">
               <X className="h-4 w-4" />
             </button>
