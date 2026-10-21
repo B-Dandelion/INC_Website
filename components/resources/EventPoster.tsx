@@ -1,5 +1,7 @@
+import type { EventAssetRow } from "@/lib/eventsDb";
+
 type EventPosterProps = {
-  asset: any;
+  asset: EventAssetRow | null | undefined;
   emptyText: string;
   alt: string;
   imageClassName?: string;
@@ -10,7 +12,7 @@ function normalized(value?: string | null) {
   return (value ?? "").trim().toLowerCase();
 }
 
-function isPdf(asset: any) {
+function isPdf(asset: EventAssetRow | null | undefined) {
   const mime = normalized(asset?.resources?.mime);
   const filename = normalized(asset?.resources?.original_filename);
   return mime === "application/pdf" || filename.endsWith(".pdf");
@@ -75,5 +77,5 @@ export default function EventPoster({
     );
   }
 
-  return <img src={href} alt={title} className={imageClassName} />;
+  return <img src={href} alt={title} className={imageClassName} decoding="async" />;
 }

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { CACHE_TAGS, invalidatePublicCache } from "@/lib/publicCache";
 import { redirect } from "next/navigation";
 import { requireAdminOrThrow } from "@/lib/requireAdmin";
 import { supabaseService } from "@/lib/supabaseServer";
@@ -57,6 +58,7 @@ function readNoticeFields(formData: FormData) {
 }
 
 function refreshNoticePages() {
+  invalidatePublicCache(CACHE_TAGS.notices);
   revalidatePath("/");
   revalidatePath("/notice");
   revalidatePath("/notice/[id]", "page");

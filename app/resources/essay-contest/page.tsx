@@ -4,7 +4,7 @@ import ResourcesFrame from "@/components/resources/ResourcesFrame";
 import SectionTabs from "@/components/resources/SectionTabs";
 import EventPoster from "@/components/resources/EventPoster";
 import styles from "./essayContest.module.css";
-import { fetchEvents, fetchEventAssets } from "@/lib/eventsDb";
+import { fetchEvents, fetchEventAssets, type EventAssetRow } from "@/lib/eventsDb";
 import { getLocale } from "@/lib/i18n";
 
 const BASE = "/resources/essay-contest";
@@ -28,12 +28,12 @@ function awardRank(label?: string | null) {
   return 99;
 }
 
-function isAiStatement(a: any) {
+function isAiStatement(a: EventAssetRow) {
   const t = `${a?.item_title_en ?? ""} ${a?.resources?.title ?? ""} ${a?.resources?.original_filename ?? ""}`.toLowerCase();
   return t.includes("ai statement");
 }
 
-function pickBetter(cur: any, next: any) {
+function pickBetter(cur: EventAssetRow | undefined, next: EventAssetRow): EventAssetRow {
   if (!cur) return next;
   const curName = (cur?.resources?.original_filename ?? "").toLowerCase();
   const nextName = (next?.resources?.original_filename ?? "").toLowerCase();
@@ -60,7 +60,7 @@ export default async function EssayContestPage({ searchParams }: { searchParams:
   const posterKo = assets.find((a) => a.role === "poster_ko") ?? null;
   const posterEn = assets.find((a) => a.role === "poster_en") ?? null;
   const rawAwardDocs = assets.filter((a) => a.role === "award_doc");
-  const awardDocByPerson = new Map<string, any>();
+  const awardDocByPerson = new Map<string, EventAssetRow>();
   for (const d of rawAwardDocs) {
     const key = norm(d.person_en ?? d.person_ko);
     if (!key || isAiStatement(d)) continue;
@@ -75,7 +75,7 @@ export default async function EssayContestPage({ searchParams }: { searchParams:
   });
 
   const winnerPhotos = assets.filter((a) => a.role === "winner_photo");
-  const photoByPerson = new Map<string, any>();
+  const photoByPerson = new Map<string, EventAssetRow>();
   for (const p of winnerPhotos) {
     const key = norm(p.person_en ?? p.person_ko);
     if (key) photoByPerson.set(key, p);
@@ -91,7 +91,7 @@ export default async function EssayContestPage({ searchParams }: { searchParams:
     if (!personKey || winnerNameSet.has(personKey) || isAiStatement(a) || !a?.resources?.id) return false;
     return true;
   });
-  const bestByPerson = new Map<string, any>();
+  const bestByPerson = new Map<string, EventAssetRow>();
   for (const a of candidates) {
     const key = norm(a.person_en ?? a.person_ko);
     bestByPerson.set(key, pickBetter(bestByPerson.get(key), a));
@@ -161,7 +161,7 @@ export default async function EssayContestPage({ searchParams }: { searchParams:
                       {docUrl ? <a className={styles.winnerNameLink} href={docUrl} target="_blank" rel="noreferrer" title={en ? "Open entry (PDF)" : "응모작(PDF) 열기"}>{person}</a> : <div className={styles.winnerNameText}>{person}</div>}
                       <div className={styles.winnerSub}>{docUrl ? <a className={styles.winnerMiniLink} href={docUrl} target="_blank" rel="noreferrer">{en ? "Open entry" : "응모작 열기"} ↗</a> : <span className={styles.muted}>{en ? "No document" : "문서 없음"}</span>}</div>
                     </div>
-                    <div className={styles.winnerPhotoLarge}>{photoUrl ? <a href={photoUrl} target="_blank" rel="noreferrer" title={en ? "Open original photo" : "사진 원본 열기"}><img src={photoUrl} alt={person} /></a> : <div className={styles.winnerPhotoEmpty}>{en ? "No photo" : "사진 없음"}</div>}</div>
+                    <div className={styles.winnerPhotoLarge}>{photoUrl ? <a href={photoUrl} target="_blank" rel="noreferrer" title={en ? "Open original photo" : "사진 원본 열기"}><img src={photoUrl} alt={person} loading="lazy" decoding="async" /></a> : <div className={styles.winnerPhotoEmpty}>{en ? "No photo" : "사진 없음"}</div>}</div>
                   </div>;
                 })}
               </div>
@@ -169,8 +169,8 @@ export default async function EssayContestPage({ searchParams }: { searchParams:
 
             {hasPhotos ? <section id="photo" className={styles.section}>
               <div className={styles.sectionTitle}>{en ? "Photos" : "사진"}</div>
-              {groupPhoto?.resources?.id ? <div className={styles.photoLarge}><div className={styles.photoLabel}>{en ? "Group Photo" : "단체 사진"}</div><img src={`/api/resources/go?id=${groupPhoto.resources.id}`} alt={groupPhoto.resources.title ?? "group_photo"} /></div> : null}
-              {otherPhotos.length > 0 ? <div className={styles.photoGrid}>{otherPhotos.map((p) => { const rid = p?.resources?.id; if (!rid) return null; const title = p.resources?.title ?? p.resources?.original_filename ?? "photo"; return <a key={rid} className={styles.photoThumb} href={`/api/resources/go?id=${rid}`} target="_blank" rel="noreferrer" title={title}><img src={`/api/resources/go?id=${rid}`} alt={title} /></a>; })}</div> : null}
+              {groupPhoto?.resources?.id ? <div className={styles.photoLarge}><div className={styles.photoLabel}>{en ? "Group Photo" : "단체 사진"}</div><img src={`/api/resources/go?id=${groupPhoto.resources.id}`} alt={groupPhoto.resources.title ?? "group_photo"} loading="lazy" decoding="async" /></div> : null}
+              {otherPhotos.length > 0 ? <div className={styles.photoGrid}>{otherPhotos.map((p) => { const rid = p?.resources?.id; if (!rid) return null; const title = p.resources?.title ?? p.resources?.original_filename ?? "photo"; return <a key={rid} className={styles.photoThumb} href={`/api/resources/go?id=${rid}`} target="_blank" rel="noreferrer" title={title}><img src={`/api/resources/go?id=${rid}`} alt={title} loading="lazy" decoding="async" /></a>; })}</div> : null}
             </section> : null}
 
             {hasMaterials ? <section id="materials" className={styles.section}>

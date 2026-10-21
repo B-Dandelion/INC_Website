@@ -7,7 +7,7 @@ import AuthButton from "@/components/AuthButton";
 import LanguageToggle from "@/components/LanguageToggle";
 import { RESOURCE_BOARDS } from "@/lib/resourceBoards";
 import type { Locale } from "@/lib/i18n";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import ResourcesMegaMenu from "@/components/header/ResourcesMegaMenu";
 
@@ -16,9 +16,13 @@ export default function Header({ locale }: { locale: Locale }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const en = locale === "en";
 
-  useEffect(() => {
+  // Close the mobile menu when the route changes (adjust state during render
+  // instead of in an effect, so the page does not render twice).
+  const [menuPathname, setMenuPathname] = useState(pathname);
+  if (menuPathname !== pathname) {
+    setMenuPathname(pathname);
     setMobileOpen(false);
-  }, [pathname]);
+  }
 
   const resourceLinks = useMemo(
     () => RESOURCE_BOARDS.map((b) => ({ label: en ? b.labelEn : b.label, href: `/resources/${b.slug}` })),
@@ -44,7 +48,7 @@ export default function Header({ locale }: { locale: Locale }) {
           </nav>
 
           <form action="/search" method="get" className="relative w-[230px]" role="search">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
             <input name="q" type="search" aria-label={en ? "Site search" : "사이트 검색"} placeholder={en ? "Search site" : "사이트 검색"} className="h-9 w-full rounded-md border border-slate-300 bg-white pl-9 pr-3 text-sm text-slate-800 outline-none transition focus:border-[#2B6CA3] focus:ring-2 focus:ring-[#2B6CA3]/10" />
           </form>
 
@@ -66,7 +70,7 @@ export default function Header({ locale }: { locale: Locale }) {
         <div className="border-t border-slate-200 bg-white md:hidden">
           <div className="mx-auto max-w-7xl px-5 py-5">
             <div className="flex items-center justify-between border-b border-slate-200 pb-4">
-              <span className="text-xs font-semibold text-slate-400">{en ? "Language" : "언어"}</span>
+              <span className="text-xs font-semibold text-slate-500">{en ? "Language" : "언어"}</span>
               <LanguageToggle locale={locale} />
             </div>
 
@@ -77,7 +81,7 @@ export default function Header({ locale }: { locale: Locale }) {
             </div>
 
             <div className="mt-5">
-              <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">Categories</div>
+              <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">Categories</div>
               <div className="grid grid-cols-2 gap-x-5">
                 {resourceLinks.map((x) => (
                   <Link key={x.href} href={x.href} className="border-b border-slate-100 py-2.5 text-sm text-slate-600">{x.label}</Link>
@@ -86,7 +90,7 @@ export default function Header({ locale }: { locale: Locale }) {
             </div>
 
             <form action="/search" method="get" className="relative mt-5" role="search">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
               <input name="q" type="search" aria-label={en ? "Site search" : "사이트 검색"} placeholder={en ? "Search resources, notices, events" : "자료·공지·이벤트 검색"} className="h-10 w-full rounded-md border border-slate-300 bg-white pl-9 pr-3 text-sm outline-none" />
             </form>
           </div>

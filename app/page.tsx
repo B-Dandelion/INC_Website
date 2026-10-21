@@ -21,15 +21,20 @@ export default async function HomePage() {
   const locale = await getLocale();
   const en = locale === "en";
 
-  const allResources = await fetchPublicResources();
-  const latestResources = (allResources ?? []).slice(0, 5).map((r: any, idx: number) => ({
-    id: String(r.id ?? r.resource_id ?? r.slug ?? `res-${idx}`),
+  // The three home sections are independent, so fetch them in parallel.
+  const [resourceRows, noticeRows, promotion] = await Promise.all([
+    fetchPublicResources(5),
+    fetchNotices({ page: 1, pageSize: 5 }),
+    fetchHomepagePromotion(todayInKorea()),
+  ]);
+
+  const latestResources = resourceRows.map((r) => ({
+    id: String(r.id),
     title: r.title ?? (en ? "Untitled" : "제목 없음"),
-    date: (r.posted_at ?? r.published_at ?? r.created_at ?? "").toString().slice(0, 10),
-    href: r.id ? `/api/resources/go?id=${r.id}` : "/resources",
+    date: (r.published_at ?? r.created_at ?? "").toString().slice(0, 10),
+    href: `/api/resources/go?id=${r.id}`,
   }));
 
-  const noticeRows = await fetchNotices({ page: 1, pageSize: 5 });
   const latestNotices = noticeRows.map((n) => ({
     id: String(n.id),
     title: n.title,
@@ -37,7 +42,6 @@ export default async function HomePage() {
     href: `/notice/${n.id}`,
   }));
 
-  const promotion = await fetchHomepagePromotion(todayInKorea());
   const featuredEvent = promotion
     ? {
         id: promotion.id,

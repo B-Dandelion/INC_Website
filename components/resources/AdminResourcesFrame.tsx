@@ -23,7 +23,7 @@ export default function ResourcesFrame({
   sidebarSubmenu,
   children,
 }: {
-  activeKey: ResourceNavKey;
+  activeKey: string;
   sidebarSubmenu?: React.ReactNode;
   children: React.ReactNode;
 }) {

@@ -119,8 +119,20 @@ export async function GET(req: Request) {
     );
   }
 
-  const items = (data ?? []).map((r: any) => {
-    const vis = r.visibility as Visibility;
+  type ListRow = {
+    id: number;
+    title: string;
+    displayname: string | null;
+    kind: string;
+    published_at: string | null;
+    created_at: string | null;
+    visibility: Visibility;
+    r2_key: string | null;
+    original_filename: string | null;
+    boards: { slug: string; title: string } | null;
+  };
+  const items = ((data ?? []) as unknown as ListRow[]).map((r) => {
+    const vis = r.visibility;
 
     // NOTE: 현재 설계는 public도 다운로드는 로그인 필요(isLoggedIn)로 되어 있음.
     // 익명 다운로드를 허용하려면 vis==="public"일 때 true로 바꿔야 함.

@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      # Placeholders only: server modules create clients at import time,
+      # so the build needs these names to exist. No real secrets in CI.
+      SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      SUPABASE_ANON_KEY: ci-placeholder
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder
+      SUPABASE_SERVICE_ROLE_KEY: ci-placeholder
+      R2_ENDPOINT: https://example.r2.cloudflarestorage.com
+      R2_ACCESS_KEY_ID: ci-placeholder
+      R2_SECRET_ACCESS_KEY: ci-placeholder
+      R2_PUBLIC_BUCKET: ci-placeholder
+      R2_PRIVATE_BUCKET: ci-placeholder
+      ADMIN_SESSION_SECRET: ci-placeholder
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint --if-present
+      - run: npx tsc --noEmit
+      - run: npx next build

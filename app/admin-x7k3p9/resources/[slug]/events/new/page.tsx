@@ -49,7 +49,7 @@ export default function AdminEventNewPage() {
     setBusy(true);
 
     try {
-      const body: any = {
+      const body: Record<string, string | number> = {
         category: map.category,
         title_ko: titleKo.trim(),
         visibility: "public",

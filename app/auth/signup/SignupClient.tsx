@@ -92,7 +92,7 @@ export default function SignupClient({ locale = "ko" }: { locale?: Locale }) {
 
   const inputClass = "mt-1.5 h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-[#2B6CA3] focus:ring-2 focus:ring-[#2B6CA3]/10";
   const labelClass = "text-sm font-semibold text-slate-700";
-  const helperClass = "mt-1.5 text-xs leading-5 text-slate-400";
+  const helperClass = "mt-1.5 text-xs leading-5 text-slate-500";
 
   return (
     <main className="min-h-[calc(100vh-72px)] bg-[#F6F7F9] px-5 py-12 md:py-16">

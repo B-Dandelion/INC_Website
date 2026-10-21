@@ -59,7 +59,7 @@
 }
 
 .muted {
-  color: #7a8495;
+  color: #5f6b7c;
   font-size: 13px;
   line-height: 1.6;
 }
@@ -95,7 +95,7 @@
 
 .eventDate {
   margin-bottom: 4px;
-  color: #7a8495;
+  color: #5f6b7c;
   font-size: 11px;
   font-variant-numeric: tabular-nums;
 }

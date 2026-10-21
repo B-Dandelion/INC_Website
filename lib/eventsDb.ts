@@ -1,5 +1,6 @@
 // lib/eventsDb.ts
 import { createSupabaseServerClient } from "./supabaseServer";
+import { CACHE_TAGS, cachedPublicQuery } from "./publicCache";
 
 export type EventRow = {
   id: string;
@@ -30,7 +31,7 @@ export type EventAssetRow = {
   } | null;
 };
 
-export async function fetchEvents(params: {
+async function fetchEventsUncached(params: {
   category:
     | "seminar"
     | "essay_contest"
@@ -68,7 +69,7 @@ export async function fetchEvents(params: {
   return (data ?? []) as EventRow[];
 }
 
-export async function fetchEventAssets(
+async function fetchEventAssetsUncached(
   eventId: string
 ): Promise<EventAssetRow[]> {
   const supabase = createSupabaseServerClient();
@@ -101,3 +102,7 @@ export async function fetchEventAssets(
 
   return (data ?? []) as unknown as EventAssetRow[];
 }
+
+// Cached public queries (see lib/publicCache.ts).
+export const fetchEvents = cachedPublicQuery(fetchEventsUncached, "eventsDb:fetchEvents", [CACHE_TAGS.events]);
+export const fetchEventAssets = cachedPublicQuery(fetchEventAssetsUncached, "eventsDb:fetchEventAssets", [CACHE_TAGS.events, CACHE_TAGS.resources]);

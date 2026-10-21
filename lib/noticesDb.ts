@@ -1,5 +1,6 @@
 // lib/noticesDb.ts
 import { createSupabaseServerClient } from "./supabaseServer";
+import { CACHE_TAGS, cachedPublicQuery } from "./publicCache";
 
 export type NoticeRow = {
   id: number;
@@ -10,7 +11,7 @@ export type NoticeRow = {
   created_at: string;
 };
 
-export async function fetchNotices(args?: { page?: number; pageSize?: number }) {
+async function fetchNoticesUncached(args?: { page?: number; pageSize?: number }) {
   const supabase = createSupabaseServerClient();
   const page = Math.max(1, args?.page ?? 1);
   const pageSize = Math.min(100, Math.max(1, args?.pageSize ?? 30));
@@ -30,7 +31,7 @@ export async function fetchNotices(args?: { page?: number; pageSize?: number }) 
   return (data ?? []) as NoticeRow[];
 }
 
-export async function fetchNoticeById(id: number) {
+async function fetchNoticeByIdUncached(id: number) {
   const supabase = createSupabaseServerClient();
 
   const { data, error } = await supabase
@@ -43,3 +44,7 @@ export async function fetchNoticeById(id: number) {
   if (error) throw new Error(error.message);
   return (data ?? null) as NoticeRow | null;
 }
+
+// Cached public queries (see lib/publicCache.ts).
+export const fetchNotices = cachedPublicQuery(fetchNoticesUncached, "noticesDb:fetchNotices", [CACHE_TAGS.notices]);
+export const fetchNoticeById = cachedPublicQuery(fetchNoticeByIdUncached, "noticesDb:fetchNoticeById", [CACHE_TAGS.notices]);

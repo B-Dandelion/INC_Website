@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from "./supabaseServer";
+import { CACHE_TAGS, cachedPublicQuery } from "./publicCache";
 
 export type PromotionEventRow = {
   id: string;
@@ -24,7 +25,7 @@ export type PromotionEventRow = {
 const PROMOTION_SELECT =
   "id,title_ko,summary_ko,content_ko,topic_ko,event_date,period_end,start_time,end_time,location_ko,audience_ko,contact_name,contact_email,contact_phone,cta_label,cta_url,homepage_featured,visibility" as const;
 
-export async function fetchPromotionEvents() {
+async function fetchPromotionEventsUncached() {
   const supabase = createSupabaseServerClient();
   const { data, error } = await supabase
     .from("events")
@@ -37,7 +38,7 @@ export async function fetchPromotionEvents() {
   return (data ?? []) as unknown as PromotionEventRow[];
 }
 
-export async function fetchPromotionEventById(eventId: string) {
+async function fetchPromotionEventByIdUncached(eventId: string) {
   const supabase = createSupabaseServerClient();
   const { data, error } = await supabase
     .from("events")
@@ -51,7 +52,7 @@ export async function fetchPromotionEventById(eventId: string) {
   return (data ?? null) as unknown as PromotionEventRow | null;
 }
 
-export async function fetchHomepagePromotion(today: string) {
+async function fetchHomepagePromotionUncached(today: string) {
   const supabase = createSupabaseServerClient();
   const { data, error } = await supabase
     .from("events")
@@ -72,3 +73,8 @@ export async function fetchHomepagePromotion(today: string) {
     }) ?? null
   );
 }
+
+// Cached public queries (see lib/publicCache.ts).
+export const fetchPromotionEvents = cachedPublicQuery(fetchPromotionEventsUncached, "promotionalEventsDb:fetchPromotionEvents", [CACHE_TAGS.events]);
+export const fetchPromotionEventById = cachedPublicQuery(fetchPromotionEventByIdUncached, "promotionalEventsDb:fetchPromotionEventById", [CACHE_TAGS.events]);
+export const fetchHomepagePromotion = cachedPublicQuery(fetchHomepagePromotionUncached, "promotionalEventsDb:fetchHomepagePromotion", [CACHE_TAGS.events]);

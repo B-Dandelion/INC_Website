@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { requireAdminOrThrow } from "@/lib/requireAdmin";
+import { errorMessage, errorStatus } from "@/lib/errors";
 
 export const runtime = "nodejs";
 
@@ -77,9 +78,9 @@ export async function GET(req: Request) {
     );
 
     return NextResponse.redirect(signedUrl, 302);
-  } catch (error: any) {
-    return new NextResponse(String(error?.message ?? error), {
-      status: error?.status ?? 500,
+  } catch (error: unknown) {
+    return new NextResponse(errorMessage(error), {
+      status: errorStatus(error),
     });
   }
 }

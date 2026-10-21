@@ -124,7 +124,7 @@ export default function AdminUploadPage() {
           공개 범위
           <select
             value={visibility}
-            onChange={(e) => setVisibility(e.target.value as any)}
+            onChange={(e) => setVisibility(e.target.value as typeof visibility)}
             style={inputStyle}
           >
             <option value="public">전체 공개</option>

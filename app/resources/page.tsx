@@ -24,7 +24,7 @@ export default async function ResourcesIndex() {
 
           <form action="/search" method="get" role="search" className="mt-7 flex max-w-xl gap-2">
             <div className="relative min-w-0 flex-1">
-              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
               <input
                 name="q"
                 type="search"
@@ -51,7 +51,7 @@ export default async function ResourcesIndex() {
               {pick(locale, "자료 카테고리", "Resource Categories")}
             </h2>
           </div>
-          <span className="text-xs font-medium tabular-nums text-slate-400">{RESOURCE_BOARDS.length}</span>
+          <span className="text-xs font-medium tabular-nums text-slate-500">{RESOURCE_BOARDS.length}</span>
         </div>
 
         <div className="grid border-x border-t border-slate-200 bg-white sm:grid-cols-2 lg:grid-cols-3">
@@ -66,7 +66,7 @@ export default async function ResourcesIndex() {
                   {locale === "en" ? board.labelEn : board.label}
                 </div>
                 {locale === "en" && board.labelEn !== board.label ? (
-                  <div className="mt-1 text-xs text-slate-400">{board.label}</div>
+                  <div className="mt-1 text-xs text-slate-500">{board.label}</div>
                 ) : null}
               </div>
               <ArrowRight className="h-4 w-4 shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-[#174A7E]" />

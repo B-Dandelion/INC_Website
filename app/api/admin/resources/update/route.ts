@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { requireAdminOrThrow } from "@/lib/requireAdmin";
+import { CACHE_TAGS, invalidatePublicCache } from "@/lib/publicCache";
+import { errorMessage, errorStatus } from "@/lib/errors";
 
 export const runtime = "nodejs";
 
 const supabaseAdmin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 
-function isYmd(s: any) {
+function isYmd(s: unknown): s is string {
   return typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s);
 }
 
@@ -24,7 +26,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "invalid resourceId" }, { status: 400 });
     }
 
-    const patch: any = { updated_at: new Date().toISOString() };
+    const patch: Record<string, string | null> = { updated_at: new Date().toISOString() };
 
     if (typeof body.title === "string") patch.title = body.title.trim();
     if (typeof body.note === "string") patch.note = body.note.trim() || null;
@@ -60,9 +62,10 @@ export async function POST(req: Request) {
     if (upErr) return NextResponse.json({ ok: false, error: upErr.message }, { status: 500 });
     if (!updated) return NextResponse.json({ ok: false, error: "not found" }, { status: 404 });
 
+    invalidatePublicCache(CACHE_TAGS.resources, CACHE_TAGS.events);
     return NextResponse.json({ ok: true, resource: updated });
-  } catch (e: any) {
-    const status = e?.status ?? 500;
-    return NextResponse.json({ ok: false, error: String(e?.message ?? e) }, { status });
+  } catch (e: unknown) {
+    const status = errorStatus(e);
+    return NextResponse.json({ ok: false, error: errorMessage(e) }, { status });
   }
 }

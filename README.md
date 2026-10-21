@@ -4,6 +4,8 @@
 
 [Live Site](https://inc-kings.vercel.app/) · [Repository](https://github.com/B-Dandelion/INC_Website) · [Case Study](https://b-dandelion.github.io/portfolio/inc.html)
 
+[![CI](https://github.com/B-Dandelion/INC_Website/actions/workflows/ci.yml/badge.svg)](https://github.com/B-Dandelion/INC_Website/actions/workflows/ci.yml)
+
 ### At a glance
 
 | | |

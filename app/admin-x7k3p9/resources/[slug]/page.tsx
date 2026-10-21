@@ -32,7 +32,7 @@ export default async function AdminBoardPage({
     return (
       <AdminEventsShell
         slug={slug}
-        searchParams={searchParams as any}
+        searchParams={searchParams}
       />
     );
   }
@@ -47,12 +47,12 @@ export default async function AdminBoardPage({
   });
 
   const boardLabel =
-    NAV.find((x) => x.key === (slug as any))?.label ?? slug;
+    NAV.find((x) => x.key === slug)?.label ?? slug;
 
   const hasPrev = page > 1;
   const hasNext = rows.length === pageSize;
 
-  const items = rows.map((r: any) => {
+  const items = rows.map((r) => {
     const titleText = (
       (r.title ?? "").trim() ||
       r.original_filename ||
@@ -88,7 +88,7 @@ export default async function AdminBoardPage({
   });
 
   return (
-    <ResourcesFrame activeKey={slug as any}>
+    <ResourcesFrame activeKey={slug}>
       <div className={styles.content}>
         <div
           className={styles.hero}
@@ -127,7 +127,7 @@ export default async function AdminBoardPage({
           </div>
         ) : (
           <AdminResourceBoard
-            items={items as any}
+            items={items}
             boardSlug={slug}
           />
         )}

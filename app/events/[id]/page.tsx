@@ -75,7 +75,7 @@ export default async function EventDetailPage({
               <div className="mt-4 whitespace-pre-wrap text-[15px] leading-8 text-slate-700">{event.topic_ko}</div>
             </div>
           ) : (
-            <div className="border-t border-slate-300 pt-6 text-sm text-slate-400">
+            <div className="border-t border-slate-300 pt-6 text-sm text-slate-500">
               {en ? "Detailed information is being prepared." : "상세 안내가 준비 중입니다."}
             </div>
           )}
@@ -92,15 +92,15 @@ export default async function EventDetailPage({
               <h2 className="text-base font-semibold text-slate-900">{en ? "Contact" : "문의"}</h2>
               <div className="mt-4 grid gap-2 text-sm text-slate-600">
                 {event.contact_name ? (
-                  <div className="flex items-center gap-2"><UserRound className="h-4 w-4 text-slate-400" />{event.contact_name}</div>
+                  <div className="flex items-center gap-2"><UserRound className="h-4 w-4 text-slate-500" />{event.contact_name}</div>
                 ) : null}
                 {event.contact_email ? (
                   <a className="flex items-center gap-2 hover:text-[#174A7E]" href={`mailto:${event.contact_email}`}>
-                    <Mail className="h-4 w-4 text-slate-400" />{event.contact_email}
+                    <Mail className="h-4 w-4 text-slate-500" />{event.contact_email}
                   </a>
                 ) : null}
                 {event.contact_phone ? (
-                  <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-slate-400" />{event.contact_phone}</div>
+                  <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-slate-500" />{event.contact_phone}</div>
                 ) : null}
               </div>
             </div>
@@ -112,18 +112,18 @@ export default async function EventDetailPage({
             <h2 className="text-sm font-semibold text-slate-900">{en ? "Event Details" : "행사 정보"}</h2>
             <dl className="mt-5 grid gap-4 text-sm">
               <div>
-                <dt className="flex items-center gap-1.5 text-xs font-semibold text-slate-400"><CalendarDays className="h-3.5 w-3.5" />{en ? "Date" : "일정"}</dt>
+                <dt className="flex items-center gap-1.5 text-xs font-semibold text-slate-500"><CalendarDays className="h-3.5 w-3.5" />{en ? "Date" : "일정"}</dt>
                 <dd className="mt-1.5 leading-6 text-slate-700">{periodLabel(event.event_date, event.period_end, en)}</dd>
               </div>
               {time ? (
                 <div>
-                  <dt className="flex items-center gap-1.5 text-xs font-semibold text-slate-400"><Clock3 className="h-3.5 w-3.5" />{en ? "Time" : "시간"}</dt>
+                  <dt className="flex items-center gap-1.5 text-xs font-semibold text-slate-500"><Clock3 className="h-3.5 w-3.5" />{en ? "Time" : "시간"}</dt>
                   <dd className="mt-1.5 leading-6 text-slate-700">{time}</dd>
                 </div>
               ) : null}
               {event.location_ko ? (
                 <div>
-                  <dt className="flex items-center gap-1.5 text-xs font-semibold text-slate-400"><MapPin className="h-3.5 w-3.5" />{en ? "Location" : "장소"}</dt>
+                  <dt className="flex items-center gap-1.5 text-xs font-semibold text-slate-500"><MapPin className="h-3.5 w-3.5" />{en ? "Location" : "장소"}</dt>
                   <dd className="mt-1.5 leading-6 text-slate-700">{event.location_ko}</dd>
                 </div>
               ) : null}

@@ -33,7 +33,7 @@ export default async function NoticeFrame({
                   title={n.title}
                 >
                   <div style={{ fontWeight: 800, lineHeight: 1.2 }}>{n.title}</div>
-                  <div style={{ fontSize: 12, opacity: 0.7, marginTop: 4 }}>{n.posted_at}</div>
+                  <div style={{ fontSize: 12, color: "#5f6b7c", marginTop: 4 }}>{n.posted_at}</div>
                 </Link>
               </div>
             );

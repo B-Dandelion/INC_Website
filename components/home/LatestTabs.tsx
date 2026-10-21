@@ -41,7 +41,7 @@ export default function LatestTabs({
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#2B6CA3]">Latest updates</p>
           <h2 className="mt-1 text-2xl font-semibold tracking-[-0.025em] text-slate-950">{en ? "Latest Updates" : "최근 소식"}</h2>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-slate-600">
             {en ? "View recently posted notices and resources." : "최근 등록된 공지사항과 자료를 확인할 수 있습니다."}
           </p>
         </div>
@@ -55,7 +55,7 @@ export default function LatestTabs({
             className={`border-b-2 pb-2 text-sm font-semibold transition ${
               tab === "notice"
                 ? "border-[#174A7E] text-[#174A7E]"
-                : "border-transparent text-slate-400 hover:text-slate-700"
+                : "border-transparent text-slate-500 hover:text-slate-700"
             }`}
           >
             {en ? "Notices" : "공지사항"}
@@ -68,7 +68,7 @@ export default function LatestTabs({
             className={`border-b-2 pb-2 text-sm font-semibold transition ${
               tab === "resource"
                 ? "border-[#174A7E] text-[#174A7E]"
-                : "border-transparent text-slate-400 hover:text-slate-700"
+                : "border-transparent text-slate-500 hover:text-slate-700"
             }`}
           >
             {en ? "Resources" : "자료실"}
@@ -96,12 +96,12 @@ export default function LatestTabs({
               <li key={it.id}>
                 <Link href={it.href} className="group flex items-center justify-between gap-5 px-5 py-4 transition hover:bg-slate-50/80">
                   <span className="min-w-0 truncate text-sm font-medium text-slate-800 group-hover:text-[#174A7E]">{it.title}</span>
-                  <span className="shrink-0 text-xs tabular-nums text-slate-400">{it.date}</span>
+                  <span className="shrink-0 text-xs tabular-nums text-slate-500">{it.date}</span>
                 </Link>
               </li>
             ))}
             {visible.length === 0 ? (
-              <li className="px-5 py-10 text-sm text-slate-400">{en ? "No items to display." : "표시할 항목이 없습니다."}</li>
+              <li className="px-5 py-10 text-sm text-slate-500">{en ? "No items to display." : "표시할 항목이 없습니다."}</li>
             ) : null}
           </ul>
         </div>

@@ -2,6 +2,7 @@
 
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { isAbortError } from "@/lib/errors";
 
 const supabase = supabaseBrowser();
 
@@ -90,8 +91,8 @@ export function useMe() {
       cached = { token, at: Date.now(), data: dataMe };
       setMe(dataMe);
       return dataMe;
-    } catch (e: any) {
-      if (e?.name === "AbortError") return;
+    } catch (e: unknown) {
+      if (isAbortError(e)) return;
       throw e;
     } finally {
       setLoading(false);

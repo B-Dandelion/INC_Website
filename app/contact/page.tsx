@@ -25,13 +25,13 @@ export default async function ContactPage() {
         <div className="grid border border-slate-200 bg-white md:grid-cols-3">
           <div className="border-b border-slate-200 p-6 md:border-b-0 md:border-r">
             <MapPin className="h-5 w-5 text-[#174A7E]" />
-            <div className="mt-4 text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Address</div>
+            <div className="mt-4 text-xs font-bold uppercase tracking-[0.08em] text-slate-500">Address</div>
             <div className="mt-2 text-sm leading-7 text-slate-700">{address}</div>
           </div>
 
           <div className="border-b border-slate-200 p-6 md:border-b-0 md:border-r">
             <Phone className="h-5 w-5 text-[#174A7E]" />
-            <div className="mt-4 text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Telephone</div>
+            <div className="mt-4 text-xs font-bold uppercase tracking-[0.08em] text-slate-500">Telephone</div>
             <a href={`tel:${contactInfo.phone.replace(/[^0-9+]/g, "")}`} className="mt-2 inline-block text-sm font-semibold text-slate-800 transition hover:text-[#174A7E]">
               {contactInfo.phone}
             </a>
@@ -39,7 +39,7 @@ export default async function ContactPage() {
 
           <div className="p-6">
             <Mail className="h-5 w-5 text-[#174A7E]" />
-            <div className="mt-4 text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Email</div>
+            <div className="mt-4 text-xs font-bold uppercase tracking-[0.08em] text-slate-500">Email</div>
             <a href={`mailto:${contactInfo.email}`} className="mt-2 inline-block break-all text-sm font-semibold text-slate-800 transition hover:text-[#174A7E]">
               {contactInfo.email}
             </a>

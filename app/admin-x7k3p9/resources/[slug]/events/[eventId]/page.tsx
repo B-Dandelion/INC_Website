@@ -4,7 +4,7 @@ import ResourcesFrame, {
 import styles from "@/components/resources/SimpleListPage.module.css";
 import { createClient } from "@supabase/supabase-js";
 import { fetchEventAssets } from "@/lib/eventsDb";
-import AdminEventDetailClient from "@/components/admin/AdminEventDetailClient";
+import AdminEventDetailClient, { type AdminEvent } from "@/components/admin/AdminEventDetailClient";
 import { adminSlugToEventCategory } from "@/lib/eventCategoryMap";
 
 export const runtime = "nodejs";
@@ -24,7 +24,7 @@ export default async function AdminEventDetailPage({
   const categoryMap = adminSlugToEventCategory(slug);
 
   const boardLabel =
-    NAV.find((x) => x.key === (slug as any))?.label ?? slug;
+    NAV.find((x) => x.key === slug)?.label ?? slug;
 
   const { data: event, error } = await sb
     .from("events")
@@ -33,14 +33,14 @@ export default async function AdminEventDetailPage({
        visibility, location_ko, location_en, start_time, end_time`
     )
     .eq("id", eventId)
-    .maybeSingle();
+    .maybeSingle<AdminEvent>();
 
   const categoryMismatch =
     !categoryMap || event?.category !== categoryMap.category;
 
   if (error || !event || categoryMismatch) {
     return (
-      <ResourcesFrame activeKey={slug as any}>
+      <ResourcesFrame activeKey={slug}>
         <div className={styles.content}>
           <div className={styles.card}>
             <div className={styles.muted}>
@@ -56,7 +56,7 @@ export default async function AdminEventDetailPage({
   const assets = await fetchEventAssets(eventId);
 
   return (
-    <ResourcesFrame activeKey={slug as any}>
+    <ResourcesFrame activeKey={slug}>
       <div className={styles.content}>
         <div className={styles.hero}>
           <h1 className={styles.h1}>관리: {boardLabel}</h1>
@@ -65,8 +65,8 @@ export default async function AdminEventDetailPage({
 
         <AdminEventDetailClient
           slug={slug}
-          event={event as any}
-          assets={assets as any}
+          event={event}
+          assets={assets}
         />
       </div>
     </ResourcesFrame>
