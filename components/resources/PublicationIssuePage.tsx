@@ -135,7 +135,7 @@ export default async function PublicationIssuePage({ slug, idParam }: { slug: Pu
 
         <nav aria-label={en ? "Other issues" : "다른 호"} className="mt-10 grid gap-3 border-t border-slate-200 pt-6 sm:grid-cols-2">
           {older ? (
-            <Link href={issuePath(slug, older.id)} className="group rounded-xl border border-slate-200 bg-white p-4 transition hover:border-[#2B6CA3]">
+            <Link href={issuePath(slug, older.id)} className="group rounded-md border border-slate-200 bg-white p-4 transition hover:border-[#2B6CA3]">
               <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-600">
                 <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
                 {en ? "Previous issue" : "이전 호"}
@@ -146,7 +146,7 @@ export default async function PublicationIssuePage({ slug, idParam }: { slug: Pu
             <span />
           )}
           {newer ? (
-            <Link href={issuePath(slug, newer.id)} className="group rounded-xl border border-slate-200 bg-white p-4 text-right transition hover:border-[#2B6CA3]">
+            <Link href={issuePath(slug, newer.id)} className="group rounded-md border border-slate-200 bg-white p-4 text-right transition hover:border-[#2B6CA3]">
               <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-600">
                 {en ? "Next issue" : "다음 호"}
                 <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
@@ -162,7 +162,7 @@ export default async function PublicationIssuePage({ slug, idParam }: { slug: Pu
 
 function FallbackText({ text }: { text: string }) {
   return (
-    <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 text-[15px] leading-7 text-slate-800">
+    <div className="space-y-4 rounded-lg border border-slate-200 bg-white p-6 text-[15px] leading-7 text-slate-800">
       {text.split("\n\n").map((p, i) => (
         <p key={i}>{p}</p>
       ))}
@@ -177,7 +177,7 @@ function AtmBody({ content, en }: { content: Extract<IssueContent, { kind: "atm"
     <section aria-label={en ? "Today's three stories" : "이번 호 뉴스 3건"}>
       <ol className="grid gap-4">
         {items.map((item, i) => (
-          <li key={i} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+          <li key={i} className="rounded-lg border border-slate-200 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
             <div className="flex gap-4">
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#EEF4FA] text-sm font-bold text-[#174A7E]" aria-hidden="true">
                 {i + 1}
@@ -224,7 +224,7 @@ function HeartbeatBody({ content, en }: { content: Extract<IssueContent, { kind:
   return (
     <div className="grid gap-6">
       {column ? (
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)] md:p-8" aria-labelledby="hb-column">
+        <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)] md:p-8" aria-labelledby="hb-column">
           <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-[#2B6CA3]">{column.heading ?? (en ? "Column" : "칼럼")}</p>
           <h2 id="hb-column" className="scroll-mt-24 mt-2 text-[22px] font-semibold leading-8 tracking-[-0.02em] text-slate-950">
             {column.title ?? (en ? "Notes on this issue" : "이번 호에 덧붙입니다")}
@@ -239,7 +239,7 @@ function HeartbeatBody({ content, en }: { content: Extract<IssueContent, { kind:
       ) : null}
 
       {toc.length ? (
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)] md:p-8" aria-labelledby="hb-toc">
+        <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)] md:p-8" aria-labelledby="hb-toc">
           <h2 id="hb-toc" className="scroll-mt-24 text-[18px] font-semibold text-slate-950">
             {toc.some((s) => s.items.length) ? (en ? "In this issue" : "이번 호 목차") : en ? "Sections" : "이번 호 구성"}
           </h2>

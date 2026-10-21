@@ -1,5 +1,6 @@
 // components/resources/ResourcesFrame.tsx
 import Link from "next/link";
+import RevealActiveCategory from "./RevealActiveCategory";
 import styles from "./resourcesFrame.module.css";
 import { getLocale } from "@/lib/i18n";
 
@@ -36,7 +37,7 @@ export default async function ResourcesFrame({
       <aside className={styles.sidebar}>
         <div className={styles.sidebarHeader}>{en ? "Categories" : "카테고리"}</div>
 
-        <nav className={styles.nav}>
+        <nav aria-label={en ? "Resource categories" : "자료 카테고리"} className={styles.nav} data-category-nav>
           {NAV.map((item) => {
             const active = item.key === activeKey;
 
@@ -44,18 +45,23 @@ export default async function ResourcesFrame({
               <div key={item.key} className={styles.navGroup}>
                 <Link
                   href={item.href}
+                  aria-current={active ? "page" : undefined}
                   className={`${styles.navItem} ${active ? styles.navActive : ""}`}
                 >
                   {en ? item.labelEn : item.label}
                 </Link>
 
                 {active && sidebarSubmenu ? (
-                  <div className={styles.submenuWrap}>{sidebarSubmenu}</div>
+                  <div className={`${styles.submenuWrap} ${styles.submenuDesktop}`}>{sidebarSubmenu}</div>
                 ) : null}
               </div>
             );
           })}
         </nav>
+        {/* On phones the categories become one swipeable row; the active
+            board's sub-menu (e.g. the seminar list) then sits below it. */}
+        {sidebarSubmenu ? <div className={styles.submenuMobile}>{sidebarSubmenu}</div> : null}
+        <RevealActiveCategory />
       </aside>
 
       <main className={styles.main}>{children}</main>

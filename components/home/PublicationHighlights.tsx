@@ -31,7 +31,7 @@ export default function PublicationHighlights({ atm, heartbeat, en }: { atm: Lat
 function CardHeader({ icon, name, meta }: { icon: React.ReactNode; name: string; meta: string }) {
   return (
     <div className="flex items-center gap-3">
-      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#EEF4FA] text-[#174A7E]" aria-hidden="true">
+      <span className="flex h-9 w-9 items-center justify-center rounded-md bg-[#EEF4FA] text-[#174A7E]" aria-hidden="true">
         {icon}
       </span>
       <div className="min-w-0">
@@ -61,7 +61,7 @@ function AtmCard({ latest, en }: { latest: NonNullable<Latest>; en: boolean }) {
   const items = content.kind === "atm" ? content.atm.items : [];
   const meta = [issue.published_at, issueLabel(issue.title) || null, en ? "Daily nuclear news, 3 stories" : PUBLICATIONS.atm.taglineKo].filter(Boolean).join(" · ");
   return (
-    <article className="flex min-w-0 flex-col gap-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+    <article className="flex min-w-0 flex-col gap-5 rounded-lg border border-slate-200 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
       <CardHeader icon={<Newspaper className="h-4 w-4" />} name="ATM" meta={meta} />
       {items.length ? (
         <ol className="grid gap-4">
@@ -90,7 +90,7 @@ function HeartbeatCard({ latest, en }: { latest: NonNullable<Latest>; en: boolea
   const hb = content.kind === "heartbeat" ? content.heartbeat : null;
   const meta = [issueLabel(issue.title) || null, hb?.period ?? issue.published_at, en ? "Biweekly report" : "격주 리포트"].filter(Boolean).join(" · ");
   return (
-    <article className="flex min-w-0 flex-col gap-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+    <article className="flex min-w-0 flex-col gap-5 rounded-lg border border-slate-200 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
       <CardHeader icon={<BookOpen className="h-4 w-4" />} name="Heartbeat of Atoms" meta={meta} />
       {hb?.column ? (
         <div>
@@ -106,7 +106,7 @@ function HeartbeatCard({ latest, en }: { latest: NonNullable<Latest>; en: boolea
           <p className="text-[12px] font-bold text-slate-700">{en ? "Sections" : "다루는 분야"}</p>
           <ul className="mt-2 flex flex-wrap gap-1.5">
             {hb.toc.map((s, i) => (
-              <li key={i} className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[12px] font-medium text-slate-700">
+              <li key={i} className="rounded border border-slate-200 bg-slate-50 px-2 py-0.5 text-[12px] font-medium text-slate-700">
                 {cut(s.title, 22)}
                 {s.items.length ? <span className="ml-1 text-slate-500">{s.items.length}</span> : null}
               </li>

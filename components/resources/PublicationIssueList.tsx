@@ -89,7 +89,7 @@ export default async function PublicationIssueList({
             <span>{en ? "Publications" : "정기 간행물"}</span>
           </nav>
           <div className="mt-4 flex items-start gap-4">
-            <span className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#174A7E] text-white sm:flex" aria-hidden="true">
+            <span className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[#174A7E] text-white sm:flex" aria-hidden="true">
               <Icon className="h-6 w-6" />
             </span>
             <div className="min-w-0">
@@ -98,17 +98,17 @@ export default async function PublicationIssueList({
             </div>
           </div>
           <dl className="mt-5 flex flex-wrap gap-2 text-[13px]">
-            <div className="rounded-full bg-white px-3 py-1.5 shadow-[0_1px_2px_rgba(15,23,42,0.06)] ring-1 ring-slate-200">
+            <div className="rounded-md bg-white px-3 py-1.5 ring-1 ring-slate-200">
               <dt className="sr-only">{en ? "Issues" : "발행 호수"}</dt>
               <dd className="font-semibold text-slate-800">{en ? `${total} issues` : `총 ${total.toLocaleString()}호`}</dd>
             </div>
             {since ? (
-              <div className="rounded-full bg-white px-3 py-1.5 shadow-[0_1px_2px_rgba(15,23,42,0.06)] ring-1 ring-slate-200">
+              <div className="rounded-md bg-white px-3 py-1.5 ring-1 ring-slate-200">
                 <dt className="sr-only">{en ? "Since" : "발행 시작"}</dt>
                 <dd className="font-semibold text-slate-800">{en ? `Since ${since}` : `${since}부터 발행`}</dd>
               </div>
             ) : null}
-            <div className="rounded-full bg-white px-3 py-1.5 shadow-[0_1px_2px_rgba(15,23,42,0.06)] ring-1 ring-slate-200">
+            <div className="rounded-md bg-white px-3 py-1.5 ring-1 ring-slate-200">
               <dt className="sr-only">{en ? "Frequency" : "발행 주기"}</dt>
               <dd className="font-semibold text-slate-800">{slug === "atm" ? (en ? "Every weekday" : "평일 매일") : en ? "Every two weeks" : "격주"}</dd>
             </div>
@@ -119,7 +119,7 @@ export default async function PublicationIssueList({
         {spotlight ? <Spotlight slug={slug} item={spotlight} en={en} /> : null}
 
         {items.length === 0 ? (
-          <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-600">
+          <div className="rounded-lg border border-slate-200 bg-white p-10 text-center text-sm text-slate-600">
             {en ? "No issues match this date." : "이 날짜 조건에 맞는 호가 없습니다."}
           </div>
         ) : null}
@@ -153,10 +153,10 @@ function Spotlight({ slug, item, en }: { slug: PublicationSlug; item: Item; en: 
   return (
     <Link
       href={issuePath(slug, row.id)}
-      className="group block overflow-hidden rounded-3xl bg-gradient-to-br from-[#0f2f52] to-[#174A7E] p-6 text-white shadow-[0_12px_32px_rgba(23,74,126,0.25)] md:p-8"
+      className="group block overflow-hidden rounded-lg bg-gradient-to-br from-[#0f2f52] to-[#174A7E] p-6 text-white  md:p-8"
     >
       <div className="flex flex-wrap items-center gap-2 text-[13px] font-semibold text-white/80">
-        <span className="rounded-full bg-white/15 px-2.5 py-1 text-white">{en ? "Latest issue" : "최신호"}</span>
+        <span className="rounded bg-white/15 px-2 py-0.5 text-white">{en ? "Latest issue" : "최신호"}</span>
         {label ? <span>{label}</span> : null}
         <span>{dayLabel(row.published_at, en)}</span>
       </div>
@@ -197,10 +197,10 @@ function IssueCard({ slug, item, en }: { slug: PublicationSlug; item: Item; en: 
   return (
     <Link
       href={issuePath(slug, row.id)}
-      className="group flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:border-[#9BB9D6] hover:shadow-[0_8px_24px_rgba(15,23,42,0.08)]"
+      className="group flex h-full flex-col rounded-lg border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:border-[#9BB9D6] "
     >
       <div className="flex items-center justify-between gap-2 text-[12px] font-semibold">
-        <span className="rounded-full bg-[#EEF4FA] px-2.5 py-1 text-[#174A7E]">{label || (en ? "Issue" : "호")}</span>
+        <span className="rounded bg-[#EEF4FA] px-2 py-0.5 text-[#174A7E]">{label || (en ? "Issue" : "호")}</span>
         <span className="text-slate-600">
           {content.kind === "heartbeat" && content.heartbeat.period ? content.heartbeat.period : dayLabel(row.published_at, en)}
         </span>

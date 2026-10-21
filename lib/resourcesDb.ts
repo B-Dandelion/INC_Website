@@ -107,6 +107,7 @@ export type ResourceRow = {
   note: string | null;
   views_count: number | null;
   created_at: string;
+  size_bytes?: number | null;
   boards: BoardMini | null; // 화면에서는 단일로
 };
 
@@ -171,7 +172,7 @@ async function fetchResourcesUncached(args: FetchResourcesArgs) {
   let q = sb
     .from("resources")
     .select(
-      "id,title,kind,posted_at,published_at,r2_key,original_filename,source_path,note,views_count,created_at,boards:boards(slug,title)"
+      "id,title,kind,posted_at,published_at,r2_key,original_filename,source_path,note,views_count,created_at,size_bytes,boards:boards(slug,title)"
     )
     .is("deleted_at", null)
     .eq("visibility", "public")
