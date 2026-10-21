@@ -43,8 +43,8 @@ export default function ResourceFilters({ total, from, to }: { total: number; fr
 
   return (
     <div className="mb-3 grid gap-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="relative min-w-[220px] flex-1">
+      <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
+        <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" aria-hidden="true" />
           <input
             type="search"
@@ -61,7 +61,7 @@ export default function ResourceFilters({ total, from, to }: { total: number; fr
             className={cn(inputClass, "h-10 py-0 pl-9")}
           />
         </div>
-        <Select aria-label="공개 범위" value={visibility} onChange={(e) => apply({ visibility: e.target.value })} className="h-10 w-auto py-0">
+        <Select aria-label="공개 범위" value={visibility} onChange={(e) => apply({ visibility: e.target.value })} className="h-10 py-0">
           <option value="">공개 범위 전체</option>
           {VISIBILITIES.map((v) => (
             <option key={v} value={v}>
@@ -69,7 +69,7 @@ export default function ResourceFilters({ total, from, to }: { total: number; fr
             </option>
           ))}
         </Select>
-        <Select aria-label="파일 형식" value={kind} onChange={(e) => apply({ kind: e.target.value })} className="h-10 w-auto py-0">
+        <Select aria-label="파일 형식" value={kind} onChange={(e) => apply({ kind: e.target.value })} className="h-10 py-0">
           <option value="">형식 전체</option>
           {RESOURCE_KINDS.map((k) => (
             <option key={k} value={k}>
