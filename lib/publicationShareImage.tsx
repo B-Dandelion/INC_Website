@@ -11,11 +11,11 @@ export const shareImageSize = { width: 1200, height: 630 };
 async function loadFont(text: string): Promise<ArrayBuffer | null> {
   try {
     const css = await (
-      await fetch(`https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@700&text=${encodeURIComponent(text)}`)
+      await fetch(`https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@700&text=${encodeURIComponent(text)}`, { cache: "force-cache" })
     ).text();
     const url = css.match(/src: url\((.+?)\) format\('(opentype|truetype)'\)/)?.[1];
     if (!url) return null;
-    return await (await fetch(url)).arrayBuffer();
+    return await (await fetch(url, { cache: "force-cache" })).arrayBuffer();
   } catch {
     return null;
   }

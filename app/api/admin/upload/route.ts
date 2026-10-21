@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
+import { warmIssueContent } from "@/lib/publications";
 import {
   S3Client,
   PutObjectCommand,
@@ -310,6 +311,7 @@ export async function POST(req: Request) {
     }
 
     invalidatePublicCache(CACHE_TAGS.resources);
+    if (visibilityRaw === "public") after(() => warmIssueContent(boardSlug, inserted.r2_key));
     return NextResponse.json({
       ok: true,
       resource: inserted,
