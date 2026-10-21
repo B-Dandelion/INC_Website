@@ -3,6 +3,12 @@ import { fetchEvents, fetchEventAssets, type EventAssetRow } from "@/lib/eventsD
 import { getLocale } from "@/lib/i18n";
 import { EmptyEvent, EventList, EventPage, EventSection, MaterialGrid, PhotoGallery, PosterPair, WinnerCard } from "@/components/resources/events/EventParts";
 import { awardRank, norm } from "@/components/resources/events/shared";
+import { eventBoardMetadata } from "@/lib/eventPages";
+
+export async function generateMetadata({ searchParams }: { searchParams: Promise<{ event?: string }> }) {
+  return eventBoardMetadata("essay-contest", await searchParams);
+}
+
 
 const BASE = "/resources/essay-contest";
 

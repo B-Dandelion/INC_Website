@@ -16,6 +16,7 @@ import {
   fetchIssue,
   issueLabel,
   issuePath,
+  issueSearchTitle,
   issueSummary,
   readIssueContent,
   type IssueContent,
@@ -40,7 +41,7 @@ export async function publicationIssueMetadata(slug: PublicationSlug, idParam: s
   const data = await load(slug, idParam);
   if (!data) return { title: PUBLICATIONS[slug].name };
   const pub = PUBLICATIONS[slug];
-  const title = data.issue.title ?? pub.name;
+  const title = issueSearchTitle(slug, data.issue.title, data.content);
   const description = cut(issueSummary(data.content, `${pub.name} — ${pub.taglineKo}`), 160);
   const base = makeMetadata({ title, description, path: issuePath(slug, data.issue.id), type: "article" });
   return {

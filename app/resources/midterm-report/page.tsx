@@ -3,6 +3,12 @@ import { fetchEvents } from "@/lib/eventsDb";
 import { getLocale } from "@/lib/i18n";
 import { EventList } from "@/components/resources/events/EventParts";
 import StandardEventBoard from "@/components/resources/events/StandardEventBoard";
+import { eventBoardMetadata } from "@/lib/eventPages";
+
+export async function generateMetadata({ searchParams }: { searchParams: Promise<{ event?: string }> }) {
+  return eventBoardMetadata("midterm-report", await searchParams);
+}
+
 
 export default async function ProjectReportPage({
   searchParams,

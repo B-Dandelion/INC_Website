@@ -246,6 +246,25 @@ export function issueSummary(content: IssueContent, fallback: string) {
   return fallback;
 }
 
+// Search-result title: the publication and issue number, then what the issue
+// is about (lead ATM story or Heartbeat column), e.g.
+// "ATM No. 339 — 체코 원전 최종 계약 체결 외 4건". The uploaded title itself
+// is left as is and still shown on the page.
+export function issueSearchTitle(slug: PublicationSlug, rawTitle: string | null, content: IssueContent) {
+  const pub = PUBLICATIONS[slug];
+  const label = issueLabel(rawTitle);
+  const head = label ? `${pub.name} ${label}` : (rawTitle ?? "").trim() || pub.name;
+  let topic = "";
+  if (content.kind === "atm" && content.atm.items.length) {
+    const [first, ...rest] = content.atm.items;
+    topic = rest.length ? `${first.title} 외 ${rest.length}건` : first.title;
+  } else if (content.kind === "heartbeat") {
+    topic = content.heartbeat.column?.title ?? content.heartbeat.toc[0]?.title ?? "";
+  }
+  topic = topic.replace(/\s+/g, " ").trim();
+  return topic ? `${head} — ${cut(topic, 60)}` : head;
+}
+
 export function cut(text: string, max: number) {
   return text.length > max ? `${text.slice(0, max - 1).trimEnd()}…` : text;
 }

@@ -1,6 +1,13 @@
 import Link from "next/link";
 import PublicationIssueList from "@/components/resources/PublicationIssueList";
 import { getLocale } from "@/lib/i18n";
+import { makeMetadata } from "@/lib/seo";
+
+export const metadata = makeMetadata({
+  title: "Heartbeat of Atoms — 원자력산업 글로벌 동향",
+  description: "KINGS 원자력산업 글로벌 동향 격주 리포트 Heartbeat of Atoms. 칼럼과 목차를 웹페이지와 PDF로 볼 수 있습니다.",
+  path: "/resources/heartbeat-of-atoms",
+});
 
 function isYmd(s: unknown): s is string {
   return typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s);
