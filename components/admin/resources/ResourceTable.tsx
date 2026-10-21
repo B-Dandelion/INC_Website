@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ExternalLink, FileArchive, FileText, Film, Image as ImageIcon, Pencil, Presentation, RefreshCw, Trash2 } from "lucide-react";
 import type { AdminResourceRow } from "@/lib/adminResourcesDb";
 import { ISSUE_BOARD_SLUGS, VISIBILITIES } from "@/lib/resourceFilters";
-import { Button, Field, Select, TextArea, TextInput, cn } from "../ui";
+import { Button, EmptyState, Field, Select, TextArea, TextInput, cn } from "../ui";
 import { useConfirm } from "../ui/ConfirmDialog";
 import { useToast } from "../ui/Toast";
 import { KIND_LABEL, VISIBILITY_LABEL } from "./labels";
@@ -244,6 +244,16 @@ export default function ResourceTable({ rows: serverRows, boardSlug, query }: { 
           if (file) void replaceFile(file);
         }}
       />
+      {rows.length === 0 ? (
+        <EmptyState
+          title="이 페이지의 자료를 모두 삭제했습니다."
+          action={
+            <Button size="sm" onClick={() => router.refresh()}>
+              목록 새로 고침
+            </Button>
+          }
+        />
+      ) : null}
       <ul className="divide-y divide-slate-100">
         {rows.map((row) => {
           const title = (row.title ?? "").trim() || row.original_filename || "제목 없음";
