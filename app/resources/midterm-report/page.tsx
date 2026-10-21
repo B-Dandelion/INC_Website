@@ -1,22 +1,8 @@
-// app/resources/project-report/page.tsx
-import Link from "next/link";
-import ResourcesFrame from "@/components/resources/ResourcesFrame";
-import SectionTabs from "@/components/resources/SectionTabs";
-import EventPoster from "@/components/resources/EventPoster";
-import styles from "./projectReport.module.css";
-import { fetchEvents, fetchEventAssets } from "@/lib/eventsDb";
+// app/resources/midterm-report/page.tsx
+import { fetchEvents } from "@/lib/eventsDb";
 import { getLocale } from "@/lib/i18n";
-
-const BASE = "/resources/midterm-report";
-
-function fmtPeriod(start?: string | null, end?: string | null) {
-  if (!start) return "";
-  return end ? `${start} ~ ${end}` : start;
-}
-
-function safeName(a: { person_ko?: string | null; person_en?: string | null }) {
-  return (a.person_ko ?? a.person_en ?? "").trim();
-}
+import { EventList } from "@/components/resources/events/EventParts";
+import StandardEventBoard from "@/components/resources/events/StandardEventBoard";
 
 export default async function ProjectReportPage({
   searchParams,
@@ -27,104 +13,24 @@ export default async function ProjectReportPage({
   const en = locale === "en";
   const sp = await searchParams;
   const events = await fetchEvents({ category: "project_report" });
-
-  const selectedEventId = (sp.event && events.some((e) => e.id === sp.event) ? sp.event : events[0]?.id) ?? null;
-  const selectedEvent = events.find((e) => e.id === selectedEventId) ?? null;
-  const assets = selectedEventId ? await fetchEventAssets(selectedEventId) : [];
-
-  const poster = assets.find((a) => a.role === "poster_ko" && a.resources?.id) ?? assets.find((a) => a.role === "poster_en" && a.resources?.id) ?? null;
-  const photos = assets.filter((a) => a.role === "photo" && a.resources?.id).sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
-  const slides = assets.filter((a) => a.role === "slide" && a.resources?.id).sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
-
-  const hasPoster = Boolean(poster?.resources?.id);
-  const hasPhotos = photos.length > 0;
-  const hasMaterials = slides.length > 0;
-  const tabs = [
-    hasPoster ? { id: "poster", label: en ? "Poster" : "포스터" } : null,
-    hasPhotos ? { id: "photo", label: en ? "Photos" : "사진" } : null,
-    hasMaterials ? { id: "materials", label: en ? "Materials" : "자료" } : null,
-  ].filter((item): item is { id: string; label: string } => Boolean(item));
-
-  const sidebarSubmenu = (
-    <div className={styles.submenu}>
-      <div className={styles.eventList}>
-        {events.length === 0 ? (
-          <div className={styles.muted} style={{ padding: 10 }}>{en ? "No report events are registered." : "등록된 행사가 없습니다."}</div>
-        ) : events.map((e) => {
-          const active = e.id === selectedEventId;
-          return (
-            <Link key={e.id} href={`${BASE}?event=${e.id}`} className={`${styles.eventItem} ${active ? styles.eventActive : ""}`}>
-              <div className={styles.eventDate}>{fmtPeriod(e.event_date, e.period_end)}</div>
-              <div className={styles.eventName}>{e.title_ko ?? (en ? "Event" : "행사")}</div>
-            </Link>
-          );
-        })}
-      </div>
-    </div>
-  );
+  const selectedId = (sp.event && events.some((e) => e.id === sp.event) ? sp.event : events[0]?.id) ?? null;
 
   return (
-    <ResourcesFrame activeKey="midterm-report" sidebarSubmenu={sidebarSubmenu}>
-      <div className={styles.content}>
-        <div className={styles.hero}>
-          <div className={styles.eyebrow}>Project Reports</div>
-          <h1 className={styles.h1}>{selectedEvent?.title_ko ?? (en ? "Project Progress Reports" : "과제 보고회")}</h1>
-          {selectedEvent ? <div className={styles.meta}>{fmtPeriod(selectedEvent.event_date, selectedEvent.period_end)}</div> : null}
-          {tabs.length > 0 ? <SectionTabs items={tabs} /> : null}
-        </div>
-
-        {!selectedEventId ? (
-          <div className={styles.card}><div className={styles.muted}>{en ? "Select an event from the sidebar." : "좌측에서 행사를 선택해 주세요."}</div></div>
-        ) : (
-          <>
-            {hasPoster ? (
-              <section id="poster" className={styles.section}>
-                <div className={styles.sectionTitle}>{en ? "Poster" : "포스터"}</div>
-                <div className={styles.posterWrap}><div className={styles.posterInner}><EventPoster asset={poster} emptyText="" alt={en ? "Project report event poster" : "과제 보고회 포스터"} imageClassName={styles.posterImg} emptyClassName={styles.card} /></div></div>
-              </section>
-            ) : null}
-
-            {hasPhotos ? (
-              <section id="photo" className={styles.section}>
-                <div className={styles.sectionTitle}>{en ? "Photos" : "사진"}</div>
-                <div className={styles.photoGrid}>
-                  {photos.map((photo, index) => {
-                    const resource = photo.resources;
-                    if (!resource?.id) return null;
-                    const href = `/api/resources/go?id=${resource.id}`;
-                    const label = resource.title ?? resource.original_filename ?? `${en ? "Event photo" : "행사 사진"} ${index + 1}`;
-                    return (
-                      <a key={`${resource.id}-${index}`} className={styles.photoItem} href={href} target="_blank" rel="noreferrer" title={en ? `View ${label}` : `${label} 크게 보기`}>
-                        <img src={href} alt={label} loading="lazy" />
-                        <div className={styles.photoCaption}>{label}</div>
-                      </a>
-                    );
-                  })}
-                </div>
-              </section>
-            ) : null}
-
-            {hasMaterials ? (
-              <section id="materials" className={styles.section}>
-                <div className={styles.sectionTitle}>{en ? "Materials" : "자료"}</div>
-                <div className={styles.board}>
-                  <div className={styles.boardHeader}><div>{en ? "Presenter" : "발표자"}</div><div className={styles.boardRight}>{en ? "Material" : "자료"}</div></div>
-                  {slides.map((a, i) => {
-                    const r = a.resources!;
-                    const name = safeName(a) || r.title || (en ? "Presentation" : "발표자료");
-                    const openUrl = `/api/resources/go?id=${r.id}`;
-                    return <div key={`${r.id}-${i}`} className={styles.boardRow}><div className={styles.boardTitle}>{name}</div><div className={styles.boardRight}><a className={styles.openBtn} href={openUrl} target="_blank" rel="noreferrer">{en ? "Open" : "열기"}</a></div></div>;
-                  })}
-                </div>
-              </section>
-            ) : null}
-
-            {!hasPoster && !hasPhotos && !hasMaterials ? (
-              <div className={styles.card}><div className={styles.muted}>{en ? "No public materials are registered for this event." : "이 행사에 등록된 공개 자료가 없습니다."}</div></div>
-            ) : null}
-          </>
-        )}
-      </div>
-    </ResourcesFrame>
+    <StandardEventBoard
+      activeKey="midterm-report"
+      board={en ? "Project Progress Reports" : "과제 보고회"}
+      events={events}
+      selectedId={selectedId}
+      en={en}
+      submenu={
+        <EventList
+          events={events}
+          selectedId={selectedId}
+          href={(id) => `/resources/midterm-report?event=${id}`}
+          en={en}
+          emptyText={en ? "No report events are registered." : "등록된 행사가 없습니다."}
+        />
+      }
+    />
   );
 }
