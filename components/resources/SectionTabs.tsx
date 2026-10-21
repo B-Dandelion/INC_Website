@@ -8,9 +8,11 @@ export type SectionTabItem = { id: string; label: string };
 export default function SectionTabs({
   items,
   defaultId,
+  label = "섹션 탭",
 }: {
   items: SectionTabItem[];
   defaultId?: string;
+  label?: string;
 }) {
   const first = defaultId ?? items[0]?.id ?? "";
   const [active, setActive] = useState(first);
@@ -28,7 +30,7 @@ export default function SectionTabs({
   }, [items, first]);
 
   return (
-    <nav className={styles.tabs} aria-label="섹션 탭">
+    <nav className={styles.tabs} aria-label={label}>
       {items.map((it) => {
         const isActive = it.id === active;
         return (
@@ -36,7 +38,7 @@ export default function SectionTabs({
             key={it.id}
             href={`#${it.id}`}
             className={`${styles.tab} ${isActive ? styles.active : ""}`}
-            aria-current={isActive ? "page" : undefined}
+            aria-current={isActive ? "location" : undefined}
           >
             {it.label}
           </a>
