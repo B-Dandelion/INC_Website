@@ -37,6 +37,9 @@ export type EventBoard = BoardBase & {
   category: EventCategory;
   subtypes?: Subtype[];
   defaultSubtype?: string;
+  // Split the sidebar list by subtype. Off for project reports: the public
+  // page lists them together and stored subtypes do not separate them.
+  filterBySubtype?: boolean;
   slots: AssetSlot[];
 };
 
@@ -67,6 +70,7 @@ export const BOARD_RULES: BoardRule[] = [
     slug: "seminar", label: "세미나", type: "event", category: "seminar",
     subtypes: [{ value: "international", label: "국제" }, { value: "domestic", label: "국내" }],
     defaultSubtype: "international",
+    filterBySubtype: true,
     slots: [...POSTER, TIMETABLE, PHOTO, MATERIALS],
   },
   { slug: "expert-opinion-report", label: "전문가 의견 보고서", type: "list", dateField: "posted_at", dateRequired: false, dateLabel: "게시일", issueNumbers: false, uploadHint: "보고서 파일을 올립니다. 날짜를 비우면 오늘로 게시됩니다." },

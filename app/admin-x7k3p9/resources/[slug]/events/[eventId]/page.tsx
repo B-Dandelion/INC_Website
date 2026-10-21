@@ -64,7 +64,8 @@ export default async function AdminEventDetailPage({
     slug === "seminar"
       ? `/resources/seminar?sub=${subtype === "domestic" ? "domestic" : "international"}&event=${event.id}`
       : `/resources/${slug}?event=${event.id}`;
-  const subtypeLabel = eventBoardRule(slug)?.subtypes?.find((s) => s.value === subtype)?.label;
+  const rule = eventBoardRule(slug);
+  const subtypeLabel = rule?.filterBySubtype ? rule.subtypes?.find((s) => s.value === subtype)?.label : undefined;
 
   return (
     <ResourcesFrame activeKey={slug} activeEventId={event.id} subtype={subtype}>

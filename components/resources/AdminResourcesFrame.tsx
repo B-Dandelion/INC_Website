@@ -33,14 +33,15 @@ export function newEventHref(slug: string, subtype?: string) {
 // seminar and project reports), on the board page, an event page, and the new
 // event page alike, so the admin can move between events without going back.
 async function EventSubmenu({ rule, subtype, activeEventId }: { rule: EventBoard; subtype?: string; activeEventId?: string }) {
-  const current = rule.subtypes ? (rule.subtypes.some((s) => s.value === subtype) ? subtype : rule.defaultSubtype) : undefined;
+  const split = rule.filterBySubtype && rule.subtypes ? rule.subtypes : undefined;
+  const current = split ? (split.some((s) => s.value === subtype) ? subtype : rule.defaultSubtype) : undefined;
   const events = await fetchAdminEvents(rule.category, current);
 
   return (
     <div className={seminarStyles.sidebarSub}>
-      {rule.subtypes ? (
+      {split ? (
         <div className={seminarStyles.segment} role="group" aria-label={`${rule.label} 구분`}>
-          {rule.subtypes.map((s) => (
+          {split.map((s) => (
             <Link
               key={s.value}
               href={`/admin-x7k3p9/resources/${rule.slug}?subtype=${s.value}`}
