@@ -3,6 +3,7 @@ import ResourceBoard, { type BoardItem } from "@/components/resources/ResourceBo
 import styles from "./SimpleListPage.module.css";
 import { fetchResources } from "@/lib/resourcesDb";
 import { getLocale } from "@/lib/i18n";
+import { isPublicationSlug, issuePath } from "@/lib/publications";
 
 type Props = {
   activeKey: ResourceNavKey;
@@ -76,6 +77,7 @@ export default async function SimpleListPage({
       title: titleText,
       subtitle: subText,
       rightMeta: rightMetaFromTitle ? rightMetaFromTitle(titleText) : "",
+      ...(isPublicationSlug(prefix) ? { href: issuePath(prefix, r.id) } : {}),
     };
   });
 

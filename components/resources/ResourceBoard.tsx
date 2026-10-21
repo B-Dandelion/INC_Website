@@ -7,6 +7,8 @@ export type BoardItem = {
   title: string;
   subtitle?: string;
   rightMeta?: string;
+  // When set, the row opens this page in the same tab instead of the file.
+  href?: string;
 };
 
 export default async function ResourceBoard({ items }: { items: BoardItem[] }) {
@@ -20,14 +22,19 @@ export default async function ResourceBoard({ items }: { items: BoardItem[] }) {
   return (
     <div className={styles.board}>
       {items.map((it) => (
-        <a key={it.id} className={styles.row} href={`/api/resources/go?id=${it.id}`} target="_blank" rel="noreferrer">
+        <a
+          key={it.id}
+          className={styles.row}
+          href={it.href ?? `/api/resources/go?id=${it.id}`}
+          {...(it.href ? {} : { target: "_blank", rel: "noreferrer" })}
+        >
           <div className={styles.left}>
             <div className={styles.title}>{it.title}</div>
             {it.subtitle ? <div className={styles.sub}>{it.subtitle}</div> : null}
           </div>
           <div className={styles.right}>
             {it.rightMeta ? <span className={styles.meta}>{it.rightMeta}</span> : null}
-            <span className={styles.open}>{en ? "Open" : "열기"}</span>
+            <span className={styles.open}>{it.href ? (en ? "Read" : "읽기") : en ? "Open" : "열기"}</span>
           </div>
         </a>
       ))}
