@@ -72,7 +72,7 @@ export default function ResourcesMegaMenu({ locale = "ko" }: { locale?: Locale }
         onClick={() => setOpen((v) => !v)}
       >
         {en ? "Resources" : "자료실"}
-        <span className={`text-[10px] text-slate-400 transition-transform ${open ? "rotate-180" : ""}`}>▾</span>
+        <span className={`text-[10px] text-slate-500 transition-transform ${open ? "rotate-180" : ""}`}>▾</span>
       </button>
 
       {open ? (

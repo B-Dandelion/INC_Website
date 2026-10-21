@@ -42,7 +42,7 @@
 
 .sub {
   margin-top: 4px;
-  color: #7a8495;
+  color: #5f6b7c;
   font-size: 12px;
 }
 
@@ -54,7 +54,7 @@
 }
 
 .meta {
-  color: #7a8495;
+  color: #5f6b7c;
   font-size: 12px;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
@@ -75,7 +75,7 @@
   padding: 32px 18px;
   border: 1px solid var(--border, #dce1e8);
   background: #fff;
-  color: #7a8495;
+  color: #5f6b7c;
   font-size: 14px;
   text-align: center;
 }

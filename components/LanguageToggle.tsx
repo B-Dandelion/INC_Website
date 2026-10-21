@@ -18,7 +18,7 @@ export default function LanguageToggle({ locale }: { locale: Locale }) {
       <button
         type="button"
         onClick={() => setLocale("ko")}
-        className={locale === "ko" ? "text-[#174A7E]" : "text-slate-400 transition hover:text-slate-600"}
+        className={locale === "ko" ? "text-[#174A7E]" : "text-slate-500 transition hover:text-slate-600"}
         aria-pressed={locale === "ko"}
       >
         KOR
@@ -27,7 +27,7 @@ export default function LanguageToggle({ locale }: { locale: Locale }) {
       <button
         type="button"
         onClick={() => setLocale("en")}
-        className={locale === "en" ? "text-[#174A7E]" : "text-slate-400 transition hover:text-slate-600"}
+        className={locale === "en" ? "text-[#174A7E]" : "text-slate-500 transition hover:text-slate-600"}
         aria-pressed={locale === "en"}
       >
         ENG

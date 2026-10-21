@@ -68,7 +68,7 @@ function EventList({
               <p className="mt-1.5 line-clamp-2 text-sm leading-6 text-slate-500">{event.summary_ko}</p>
             ) : null}
             {event.location_ko ? (
-              <div className="mt-2 flex items-center gap-1.5 text-xs text-slate-400">
+              <div className="mt-2 flex items-center gap-1.5 text-xs text-slate-500">
                 <MapPin className="h-3.5 w-3.5" />
                 {event.location_ko}
               </div>
@@ -113,7 +113,7 @@ export default async function EventsPage() {
 
       <section className="mx-auto max-w-6xl px-5 py-10 md:px-6 md:py-14">
         {events.length === 0 ? (
-          <div className="border border-slate-200 bg-white px-5 py-14 text-center text-sm text-slate-400">
+          <div className="border border-slate-200 bg-white px-5 py-14 text-center text-sm text-slate-500">
             {en ? "There are no events to display." : "등록된 이벤트가 없습니다."}
           </div>
         ) : (
@@ -125,7 +125,7 @@ export default async function EventsPage() {
                     <h2 className="text-lg font-semibold text-slate-900">{en ? "Ongoing & Upcoming" : "진행 · 예정 이벤트"}</h2>
                     <p className="mt-1 text-sm text-slate-500">{en ? "Displayed by the nearest upcoming date." : "가까운 일정부터 표시합니다."}</p>
                   </div>
-                  <span className="text-xs font-medium tabular-nums text-slate-400">{upcoming.length}{en ? " items" : "건"}</span>
+                  <span className="text-xs font-medium tabular-nums text-slate-500">{upcoming.length}{en ? " items" : "건"}</span>
                 </div>
                 <EventList events={upcoming} ended={false} en={en} />
               </section>
@@ -138,7 +138,7 @@ export default async function EventsPage() {
                     <h2 className="text-lg font-semibold text-slate-900">{en ? "Past Events" : "지난 이벤트"}</h2>
                     <p className="mt-1 text-sm text-slate-500">{en ? "Most recently ended events appear first." : "최근 종료된 행사부터 표시합니다."}</p>
                   </div>
-                  <span className="text-xs font-medium tabular-nums text-slate-400">{past.length}{en ? " items" : "건"}</span>
+                  <span className="text-xs font-medium tabular-nums text-slate-500">{past.length}{en ? " items" : "건"}</span>
                 </div>
                 <EventList events={past} ended en={en} />
               </section>

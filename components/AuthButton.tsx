@@ -126,7 +126,7 @@ export default function AuthButton({ locale = "ko" }: { locale?: Locale }) {
 
   if (loading) {
     return (
-      <button className={`${controlClass} cursor-not-allowed text-slate-400`} disabled>
+      <button className={`${controlClass} cursor-not-allowed text-slate-500`} disabled>
         {en ? "Log in" : "로그인"}
       </button>
     );
@@ -154,7 +154,7 @@ export default function AuthButton({ locale = "ko" }: { locale?: Locale }) {
               {en ? "Pending" : "승인대기"}
             </span>
           ) : null}
-          <span className="text-xs text-slate-400">▾</span>
+          <span className="text-xs text-slate-500">▾</span>
         </summary>
 
         <div className="absolute right-0 z-50 mt-2 w-52 overflow-hidden rounded-md border border-slate-200 bg-white shadow-[0_12px_32px_rgba(15,23,42,0.12)]">
