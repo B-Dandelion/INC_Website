@@ -170,6 +170,36 @@ export async function warmIssueContent(boardSlug: string, r2Key: string | null |
   await readIssueContent(boardSlug, r2Key);
 }
 
+async function fetchLatestIssueRowUncached(slug: PublicationSlug) {
+  const bid = await boardId(slug);
+  if (!bid) return null;
+  const supabase = createSupabaseServerClient();
+  const { data } = await supabase
+    .from("resources")
+    .select(ISSUE_COLUMNS)
+    .eq("board_id", bid)
+    .eq("visibility", "public")
+    .is("deleted_at", null)
+    .order("published_at", { ascending: false, nullsFirst: false })
+    .order("id", { ascending: false })
+    .limit(1)
+    .maybeSingle<IssueRow>();
+  return data ?? null;
+}
+
+const fetchLatestIssueRow = unstable_cache(fetchLatestIssueRowUncached, ["publications:latest"], {
+  revalidate: 600,
+  tags: [CACHE_TAGS.resources],
+});
+
+// The newest public issue with its parsed text, for the home page.
+export async function fetchLatestIssue(slug: PublicationSlug) {
+  const issue = await fetchLatestIssueRow(slug);
+  if (!issue) return null;
+  const content: IssueContent = issue.r2_key ? await readIssueContent(slug, issue.r2_key) : { kind: "none" };
+  return { issue, content };
+}
+
 export async function fetchPublicationIssueIds() {
   const supabase = createSupabaseServerClient();
   const out: { slug: PublicationSlug; id: number; published_at: string | null }[] = [];
