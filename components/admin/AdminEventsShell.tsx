@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { Plus } from "lucide-react";
+import { ButtonLink } from "@/components/admin/ui";
 import styles from "@/components/resources/SimpleListPage.module.css";
 import ResourcesFrame, { NAV } from "@/components/resources/AdminResourcesFrame";
 import { fetchEvents } from "@/lib/eventsDb";
@@ -39,6 +41,7 @@ export default async function AdminEventsShell({
     (sp.event && events.some((e) => e.id === sp.event) ? sp.event : events[0]?.id) ?? null;
 
   const boardLabel = NAV.find((x) => x.key === slug)?.label ?? slug;
+  const subtypeQuery = slug === "seminar" && subtype ? `?subtype=${subtype}` : "";
 
   const sidebarSubmenu = (
     <div className={seminarStyles.sidebarSub}>
@@ -85,17 +88,6 @@ export default async function AdminEventsShell({
         })}
       </div>
 
-      {/* + 행사 추가 버튼: 세미나 스타일과 같은 톤으로 */}
-      <div style={{ marginTop: 10 }}>
-        <Link
-          href={`/admin-x7k3p9/resources/${slug}/events/new${slug === "seminar" && subtype ? `?subtype=${subtype}` : ""
-            }`}
-          className={seminarStyles.segBtn}
-          style={{ width: "100%", height: 40 }}
-        >
-          + 행사 추가
-        </Link>
-      </div>
     </div>
   );
 
@@ -104,13 +96,21 @@ export default async function AdminEventsShell({
       activeKey={slug} sidebarSubmenu={sidebarSubmenu}>
       <div className={styles.content}>
         <div className={styles.hero}>
-          <h1 className={styles.h1}>관리: {boardLabel}</h1>
-          <div className={styles.meta}>왼쪽에서 행사를 선택하거나 + 행사 추가를 눌러 생성하세요.</div>
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h1 className={styles.h1}>관리: {boardLabel}</h1>
+              <div className={styles.meta}>왼쪽 목록에서 행사를 선택하거나 새 행사를 추가하세요.</div>
+            </div>
+            {/* Kept at the top of the page so it is visible without scrolling the event list. */}
+            <ButtonLink href={`/admin-x7k3p9/resources/${slug}/events/new${subtypeQuery}`} variant="primary" icon={<Plus className="h-4 w-4" aria-hidden="true" />}>
+              행사 추가
+            </ButtonLink>
+          </div>
         </div>
 
         {selectedEventId ? (
           <Link
-            href={`/admin-x7k3p9/resources/${slug}/events/${selectedEventId}${slug === "seminar" && subtype ? `?subtype=${subtype}` : ""}`}
+            href={`/admin-x7k3p9/resources/${slug}/events/${selectedEventId}${subtypeQuery}`}
             className={styles.searchBtn}
             style={{ textDecoration: "none", display: "inline-flex" }}
           >
@@ -118,7 +118,7 @@ export default async function AdminEventsShell({
           </Link>
         ) : (
           <div className={styles.card}>
-            <div className={styles.muted}>행사가 없습니다. 왼쪽에서 + 행사 추가를 눌러 생성하세요.</div>
+            <div className={styles.muted}>아직 행사가 없습니다. 위의 행사 추가 버튼으로 첫 행사를 만드세요.</div>
           </div>
         )}
       </div>

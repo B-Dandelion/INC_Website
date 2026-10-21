@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { Analytics } from "@vercel/analytics/next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import HideOnAdmin from "@/components/HideOnAdmin";
 import SessionGuard from "@/components/SessionGuard";
 import SiteAnalytics from "@/components/SiteAnalytics";
 import { getLocale } from "@/lib/i18n";
@@ -34,20 +35,24 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang={en ? "en" : "ko"}>
       <body>
         <SessionGuard />
-        <Header locale={locale} />
+        <HideOnAdmin>
+          <Header locale={locale} />
+        </HideOnAdmin>
         {children}
-        <Footer
-          locale={locale}
-          policyLinks={policyLinks}
-          orgName="INC"
-          contact={{
-            addressLines: en
-              ? ["658-91 Haemaji-ro, Seosaeng-myeon", "Ulju-gun, Ulsan 45014, Republic of Korea"]
-              : ["울산광역시", "울주군 서생면 해맞이로 658-91, 45014"],
-            phone: "052-712-7345",
-            email: "inc@kings.ac.kr",
-          }}
-        />
+        <HideOnAdmin>
+          <Footer
+            locale={locale}
+            policyLinks={policyLinks}
+            orgName="INC"
+            contact={{
+              addressLines: en
+                ? ["658-91 Haemaji-ro, Seosaeng-myeon", "Ulju-gun, Ulsan 45014, Republic of Korea"]
+                : ["울산광역시", "울주군 서생면 해맞이로 658-91, 45014"],
+              phone: "052-712-7345",
+              email: "inc@kings.ac.kr",
+            }}
+          />
+        </HideOnAdmin>
         <Analytics />
         <Suspense fallback={null}>
           <SiteAnalytics />

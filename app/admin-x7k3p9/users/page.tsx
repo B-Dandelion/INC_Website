@@ -1,7 +1,6 @@
 import Link from "next/link";
 import {
   AlertTriangle,
-  ArrowLeft,
   Ban,
   CheckCircle2,
   ChevronLeft,
@@ -14,6 +13,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import FormSubmitButton from "@/components/admin/FormSubmitButton";
+import { PageHeader } from "@/components/admin/ui";
 import { supabaseService } from "@/lib/supabaseServer";
 import {
   approveMemberAction,
@@ -220,17 +220,8 @@ export default async function AdminUsersPage({
   const visible = searched.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-5 py-12 md:px-6 md:py-16">
-      <section className="border-b border-slate-300 pb-6">
-        <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#2B6CA3]">INC Administration</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-[-0.035em] text-slate-950">회원 관리</h1>
-            <p className="mt-2 text-sm leading-6 text-slate-500">가입 회원을 심사하고 승인 결과를 관리합니다. 관리자 및 관리 제외 계정은 표시되지 않습니다.</p>
-          </div>
-          <Link href="/admin-x7k3p9/resources" className={secondaryButton}><ArrowLeft className="h-4 w-4" />관리자 홈</Link>
-        </div>
-      </section>
+    <main className="mx-auto w-full max-w-7xl px-5 py-8 md:px-6 md:py-10">
+      <PageHeader title="회원 관리" description="가입 회원을 심사하고 승인 결과를 관리합니다. 관리자 및 관리 제외 계정은 표시되지 않습니다." />
 
       {banner ? (
         <div role="status" className={`mt-6 border px-4 py-3 text-sm font-semibold ${banner.warning ? "border-amber-200 bg-amber-50 text-amber-800" : "border-emerald-200 bg-emerald-50 text-emerald-800"}`}>{banner.text}</div>

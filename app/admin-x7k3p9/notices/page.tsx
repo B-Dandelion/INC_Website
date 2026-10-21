@@ -6,7 +6,8 @@ import {
   deleteNoticeAction,
   updateNoticeAction,
 } from "./actions";
-import { ArrowLeft, ExternalLink, Megaphone, Pin } from "lucide-react";
+import { ExternalLink, Megaphone, Pin } from "lucide-react";
+import { PageHeader, buttonClass, inputClass } from "@/components/admin/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -40,11 +41,9 @@ function statusMessage(status?: string) {
   return null;
 }
 
-const fieldClass =
-  "w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#2B6CA3] focus:ring-2 focus:ring-[#2B6CA3]/10";
+const fieldClass = inputClass;
 const labelClass = "grid gap-2 text-sm font-semibold text-slate-700";
-const secondaryButtonClass =
-  "inline-flex h-10 items-center gap-2 rounded-md border border-slate-300 bg-white px-3.5 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50";
+const secondaryButtonClass = buttonClass("secondary");
 
 export default async function AdminNoticesPage({
   searchParams,
@@ -74,27 +73,17 @@ export default async function AdminNoticesPage({
   }
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-5 py-12 md:px-6 md:py-16">
-      <section className="border-b border-slate-300 pb-6">
-        <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#2B6CA3]">INC Administration</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-[-0.035em] text-slate-950">공지사항 관리</h1>
-            <p className="mt-2 text-sm text-slate-500">공지 작성, 수정, 상단 고정 및 삭제를 관리합니다.</p>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <Link href="/admin-x7k3p9/resources" className={secondaryButtonClass}>
-              <ArrowLeft className="h-4 w-4" />
-              관리자 홈
-            </Link>
-            <Link href="/notice" className={secondaryButtonClass}>
-              공지 화면
-              <ExternalLink className="h-4 w-4" />
-            </Link>
-          </div>
-        </div>
-      </section>
+    <main className="mx-auto w-full max-w-7xl px-5 py-8 md:px-6 md:py-10">
+      <PageHeader
+        title="공지사항 관리"
+        description="공지를 쓰고, 고치고, 상단에 고정하거나 삭제합니다."
+        actions={
+          <Link href="/notice" target="_blank" rel="noopener noreferrer" className={secondaryButtonClass}>
+            공지 화면 보기
+            <ExternalLink className="h-4 w-4" aria-hidden="true" />
+          </Link>
+        }
+      />
 
       {message ? (
         <div role="status" className="mt-6 border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
