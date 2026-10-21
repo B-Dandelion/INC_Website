@@ -129,14 +129,14 @@ export default async function SearchPage({
           <div className="space-y-10">
             <div className="flex items-baseline justify-between border-b border-slate-300 pb-3">
               <p className="text-sm text-slate-600"><span className="font-semibold text-slate-900">“{q}”</span> {en ? "results" : "검색 결과"}</p>
-              <span className="text-xs font-semibold tabular-nums text-slate-500">{en ? `${total} total` : `총 ${total}건`}</span>
+              <span className="text-xs font-semibold tabular-nums text-slate-600">{en ? `${total} total` : `총 ${total}건`}</span>
             </div>
 
             {resourceRows.length > 0 ? (
               <section aria-labelledby="search-resources">
                 <div className="mb-3 flex items-center justify-between">
                   <div className="flex items-center gap-2"><FolderOpen className="h-4 w-4 text-[#174A7E]" /><h2 id="search-resources" className="text-lg font-semibold text-slate-900">{en ? "Resources" : "자료실"}</h2></div>
-                  <span className="text-xs font-semibold tabular-nums text-slate-500">{resourceRows.length}{en ? " items" : "건"}</span>
+                  <span className="text-xs font-semibold tabular-nums text-slate-600">{resourceRows.length}{en ? " items" : "건"}</span>
                 </div>
 
                 <div className="border border-slate-200 bg-white">
@@ -163,7 +163,7 @@ export default async function SearchPage({
 
             {notices.length > 0 ? (
               <section aria-labelledby="search-notices">
-                <div className="mb-3 flex items-center justify-between"><div className="flex items-center gap-2"><Bell className="h-4 w-4 text-[#174A7E]" /><h2 id="search-notices" className="text-lg font-semibold text-slate-900">{en ? "Notices" : "공지사항"}</h2></div><span className="text-xs font-semibold tabular-nums text-slate-500">{notices.length}{en ? " items" : "건"}</span></div>
+                <div className="mb-3 flex items-center justify-between"><div className="flex items-center gap-2"><Bell className="h-4 w-4 text-[#174A7E]" /><h2 id="search-notices" className="text-lg font-semibold text-slate-900">{en ? "Notices" : "공지사항"}</h2></div><span className="text-xs font-semibold tabular-nums text-slate-600">{notices.length}{en ? " items" : "건"}</span></div>
                 <div className="border border-slate-200 bg-white">
                   {notices.map((notice, index) => (
                     <Link key={notice.id} href={`/notice/${notice.id}`} className={`group flex items-start justify-between gap-5 px-5 py-4 transition hover:bg-slate-50 ${index !== notices.length - 1 ? "border-b border-slate-100" : ""}`}>
@@ -182,7 +182,7 @@ export default async function SearchPage({
 
             {events.length > 0 ? (
               <section aria-labelledby="search-events">
-                <div className="mb-3 flex items-center justify-between"><div className="flex items-center gap-2"><CalendarDays className="h-4 w-4 text-[#174A7E]" /><h2 id="search-events" className="text-lg font-semibold text-slate-900">{en ? "Events" : "행사 · 이벤트"}</h2></div><span className="text-xs font-semibold tabular-nums text-slate-500">{events.length}{en ? " items" : "건"}</span></div>
+                <div className="mb-3 flex items-center justify-between"><div className="flex items-center gap-2"><CalendarDays className="h-4 w-4 text-[#174A7E]" /><h2 id="search-events" className="text-lg font-semibold text-slate-900">{en ? "Events" : "행사 · 이벤트"}</h2></div><span className="text-xs font-semibold tabular-nums text-slate-600">{events.length}{en ? " items" : "건"}</span></div>
                 <div className="border border-slate-200 bg-white">
                   {events.map((event, index) => (
                     <Link key={event.id} href={`/events/${event.id}`} className={`group flex items-start justify-between gap-5 px-5 py-4 transition hover:bg-slate-50 ${index !== events.length - 1 ? "border-b border-slate-100" : ""}`}>

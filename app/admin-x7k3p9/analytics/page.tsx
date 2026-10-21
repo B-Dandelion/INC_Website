@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BarChart3, ChevronLeft, LogOut } from "lucide-react";
+import { BarChart3 } from "lucide-react";
 import AdminAnalyticsDashboard, { type AnalyticsDashboardData } from "@/components/admin/AdminAnalyticsDashboard";
 import { siteAnalyticsAdmin } from "@/lib/siteAnalyticsServer";
 
@@ -70,8 +70,8 @@ export default async function AdminAnalyticsPage({
   const totalResources = resourcesResult.count ?? 0;
 
   return (
-    <main className="min-h-screen bg-[#F6F7F9]">
-      <div className="mx-auto w-full max-w-[1440px] px-5 py-10 md:px-7 md:py-12">
+    <main>
+      <div className="mx-auto w-full max-w-7xl px-5 py-8 md:px-6 md:py-10">
         <section className="border-b border-slate-300 pb-6">
           <div className="flex flex-col justify-between gap-5 xl:flex-row xl:items-end">
             <div>
@@ -79,18 +79,10 @@ export default async function AdminAnalyticsPage({
                 <BarChart3 className="h-4 w-4" /> INC Administration
               </div>
               <h1 className="mt-2 text-3xl font-semibold tracking-[-0.035em] text-slate-950">웹 이용 분석</h1>
-              <p className="mt-2 text-sm leading-6 text-slate-500">방문, 검색, 자료 이용과 회원 활동을 실제 익명 통계로 확인합니다.</p>
-              <p className="mt-1 text-xs text-slate-400">{formatDate(since)} ~ {formatDate(now)} · KST</p>
+              <p className="mt-2 text-sm leading-6 text-slate-600">방문, 검색, 자료 이용과 회원 활동을 실제 익명 통계로 확인합니다.</p>
+              <p className="mt-1 text-xs text-slate-500">{formatDate(since)} ~ {formatDate(now)} · KST</p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <Link href="/admin-x7k3p9/resources" className="inline-flex h-10 items-center gap-2 rounded-md border border-slate-300 bg-white px-3.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
-                <ChevronLeft className="h-4 w-4" /> 콘텐츠 관리
-              </Link>
-              <form action="/api/admin/logout" method="post">
-                <button type="submit" className="inline-flex h-10 items-center gap-2 rounded-md border border-slate-300 bg-white px-3.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"><LogOut className="h-4 w-4" /> 로그아웃</button>
-              </form>
-            </div>
           </div>
 
           <div className="mt-6 flex flex-wrap gap-2">
@@ -98,6 +90,7 @@ export default async function AdminAnalyticsPage({
               <Link
                 key={item.key}
                 href={`/admin-x7k3p9/analytics?range=${item.key}`}
+                aria-current={range === item.key ? "page" : undefined}
                 className={`inline-flex h-9 min-w-[58px] items-center justify-center rounded-md border px-3 text-sm font-semibold transition ${
                   range === item.key
                     ? "border-[#174A7E] bg-[#174A7E] text-white"

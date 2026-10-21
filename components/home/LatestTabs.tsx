@@ -55,7 +55,7 @@ export default function LatestTabs({
             className={`border-b-2 pb-2 text-sm font-semibold transition ${
               tab === "notice"
                 ? "border-[#174A7E] text-[#174A7E]"
-                : "border-transparent text-slate-500 hover:text-slate-700"
+                : "border-transparent text-slate-600 hover:text-slate-800"
             }`}
           >
             {en ? "Notices" : "공지사항"}
@@ -68,7 +68,7 @@ export default function LatestTabs({
             className={`border-b-2 pb-2 text-sm font-semibold transition ${
               tab === "resource"
                 ? "border-[#174A7E] text-[#174A7E]"
-                : "border-transparent text-slate-500 hover:text-slate-700"
+                : "border-transparent text-slate-600 hover:text-slate-800"
             }`}
           >
             {en ? "Resources" : "자료실"}

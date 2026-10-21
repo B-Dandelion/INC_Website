@@ -24,8 +24,12 @@ type Asset = EventAssetRow;
 
 import AssetRow from "./eventDetail/AssetRow";
 import { EVENT_ROLE_OPTIONS, CONTEST_SLUGS, SEMINAR_SECTIONS, FALLBACK_ROLE_LABELS } from "./eventDetail/constants";
-import { trimOrNull, handleUnauthorized, canonicalYoutubeUrl, fileAcceptForRole, miniBtnStyle } from "./eventDetail/helpers";
+import { trimOrNull, handleUnauthorized, canonicalYoutubeUrl, fileAcceptForRole } from "./eventDetail/helpers";
 import { errorMessage } from "@/lib/errors";
+import { Trash2 } from "lucide-react";
+import { Button, Card } from "./ui";
+import { useConfirm } from "./ui/ConfirmDialog";
+import { useToast } from "./ui/Toast";
 
 export default function AdminEventDetailClient({
     slug,
@@ -37,6 +41,8 @@ export default function AdminEventDetailClient({
     assets: Asset[];
 }) {
     const [busy, setBusy] = useState(false);
+    const confirmDialog = useConfirm();
+    const toast = useToast();
 
     // 행사 기본 정보
     const [titleKo, setTitleKo] = useState(event.title_ko ?? "");
@@ -165,6 +171,35 @@ export default function AdminEventDetailClient({
             location.reload();
         } catch (error) {
             setErr(errorMessage(error));
+        } finally {
+            setBusy(false);
+        }
+    }
+
+    async function deleteEvent() {
+        const ok = await confirmDialog({
+            title: "이 행사를 삭제할까요?",
+            description: `"${event.title_ko}" 행사와 연결된 자료가 모두 사라집니다. 행사 정보는 되돌릴 수 없습니다.`,
+            confirmLabel: "행사 삭제",
+            tone: "danger",
+        });
+        if (!ok) return;
+
+        setBusy(true);
+        try {
+            const response = await fetch("/api/admin/events/delete", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: event.id }),
+            });
+            if (handleUnauthorized(response)) return;
+            if (!response.ok) {
+                toast(`삭제하지 못했습니다: ${await response.text()}`, "error");
+                return;
+            }
+            location.href = `/admin-x7k3p9/resources/${slug}`;
+        } catch (error) {
+            toast(`삭제하지 못했습니다: ${errorMessage(error)}`, "error");
         } finally {
             setBusy(false);
         }
@@ -395,47 +430,6 @@ export default function AdminEventDetailClient({
                         style={{ width: 140 }}
                     >
                         {busy ? "저장 중..." : "저장"}
-                    </button>
-
-                    <button
-                        type="button"
-                        onClick={async () => {
-                            const confirmed = confirm(
-                                "행사를 삭제할까요? 연결된 자료도 전부 삭제(soft delete)됩니다."
-                            );
-
-                            if (!confirmed) return;
-
-                            const response = await fetch(
-                                "/api/admin/events/delete",
-                                {
-                                    method: "POST",
-                                    headers: {
-                                        "Content-Type":
-                                            "application/json",
-                                    },
-                                    body: JSON.stringify({
-                                        id: event.id,
-                                    }),
-                                }
-                            );
-
-                            if (handleUnauthorized(response)) return;
-
-            if (!response.ok) {
-                                alert(await response.text());
-                                return;
-                            }
-
-                            location.href = `/admin-x7k3p9/resources/${slug}`;
-                        }}
-                        className={styles.pagerBtn}
-                        style={{
-                            ...miniBtnStyle,
-                            borderColor: "#ffb3b3",
-                        }}
-                    >
-                        행사 삭제
                     </button>
 
                     {err ? (
@@ -880,6 +874,18 @@ export default function AdminEventDetailClient({
                     })}
                 </>
             )}
+
+            <Card
+                tone="danger"
+                className="mt-10"
+                title="행사 삭제"
+                description="행사와 연결된 모든 자료가 공개 화면과 관리 목록에서 사라집니다."
+                actions={
+                    <Button variant="danger" onClick={deleteEvent} disabled={busy} icon={<Trash2 className="h-4 w-4" aria-hidden="true" />}>
+                        행사 삭제
+                    </Button>
+                }
+            />
         </>
     );
 }
