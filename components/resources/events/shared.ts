@@ -59,6 +59,16 @@ export function meaningfulCaption(raw?: string | null) {
   return text;
 }
 
+// Opening a file on purpose: counts as a view.
 export function fileHref(id: number) {
   return `/api/resources/go?id=${id}`;
+}
+
+// Showing an image inside the page: resized, never counted as a view.
+export function mediaSrc(id: number, w: 320 | 640 | 1280) {
+  return `/api/resources/media?id=${id}&w=${w}`;
+}
+
+export function mediaSrcSet(id: number, widths: (320 | 640 | 1280)[]) {
+  return widths.map((w) => `${mediaSrc(id, w)} ${w}w`).join(", ");
 }

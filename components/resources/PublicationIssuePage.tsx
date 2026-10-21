@@ -7,6 +7,7 @@ import type { Metadata } from "next";
 import { ArrowLeft, ArrowRight, ExternalLink, FileText } from "lucide-react";
 import styles from "./SimpleListPage.module.css";
 import ResourcesFrame from "./ResourcesFrame";
+import ViewBeacon from "./ViewBeacon";
 import { getLocale } from "@/lib/i18n";
 import { absoluteUrl, makeMetadata, SITE_NAME } from "@/lib/seo";
 import {
@@ -64,7 +65,8 @@ export default async function PublicationIssuePage({ slug, idParam }: { slug: Pu
   const en = locale === "en";
   const pub = PUBLICATIONS[slug];
   const { issue, older, newer, content } = data;
-  const pdfHref = `/api/resources/go?id=${issue.id}`;
+  // The page view is what counts; opening the PDF from here is recorded as a download only.
+  const pdfHref = `/api/resources/media?id=${issue.id}&dl=1`;
   const listHref = `/resources/${slug}`;
 
   const jsonLd = {
@@ -83,6 +85,7 @@ export default async function PublicationIssuePage({ slug, idParam }: { slug: Pu
     <ResourcesFrame activeKey={slug}>
       <article className={styles.content}>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+        <ViewBeacon id={issue.id} />
         <header className={styles.hero}>
           <nav aria-label={en ? "Breadcrumb" : "위치"} className="mb-3 text-[13px] font-semibold text-slate-600">
             <Link href="/resources" className="hover:text-[#174A7E]">

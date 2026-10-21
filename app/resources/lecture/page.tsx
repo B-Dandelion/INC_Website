@@ -106,7 +106,9 @@ export default async function LecturePage() {
                                 className="group block overflow-hidden rounded-md border border-slate-200 bg-slate-50"
                               >
                                 <img
-                                  src={`/api/resources/go?id=${img.id}`}
+                                  src={`/api/resources/media?id=${img.id}&w=640`}
+                                  srcSet={`/api/resources/media?id=${img.id}&w=320 320w, /api/resources/media?id=${img.id}&w=640 640w`}
+                                  sizes="(min-width: 1024px) 250px, (min-width: 640px) 33vw, 50vw"
                                   alt={caption ? "" : photoName}
                                   loading="lazy"
                                   decoding="async"
