@@ -8,6 +8,7 @@ import { MAX_UPLOAD_BYTES, UPLOAD_ACCEPT, inferKindFromFileName, isYmd } from "@
 import { Button, ButtonLink, Field, Select, TextInput, cn } from "../ui";
 import { useToast } from "../ui/Toast";
 import { dateFromFileName, formatBytes, titleFromFileName } from "./fileMeta";
+import { SessionExpired, uploadResource } from "./uploadClient";
 import { KIND_LABEL, VISIBILITY_LABEL } from "./labels";
 
 type Visibility = (typeof VISIBILITIES)[number];
@@ -30,34 +31,6 @@ type Item = {
 
 // How many files go up at the same time.
 const CONCURRENCY = 3;
-
-class SessionExpired extends Error {}
-
-async function postJson(url: string, body: unknown) {
-  const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-  if (res.status === 401) {
-    location.href = "/admin-x7k3p9?reason=session";
-    throw new SessionExpired();
-  }
-  const out = await res.json().catch(() => null);
-  if (!res.ok || !out?.ok) throw new Error(out?.error ?? `HTTP ${res.status}`);
-  return out;
-}
-
-// fetch() cannot report upload progress, so the file itself goes up with XHR.
-function putWithProgress(url: string, file: File, contentType: string, onProgress: (ratio: number) => void) {
-  return new Promise<void>((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("PUT", url);
-    xhr.setRequestHeader("Content-Type", contentType);
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable) onProgress(e.loaded / e.total);
-    };
-    xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`저장소 업로드 실패 (HTTP ${xhr.status})`)));
-    xhr.onerror = () => reject(new Error("네트워크 오류로 업로드하지 못했습니다."));
-    xhr.send(file);
-  });
-}
 
 function problemOf(item: Item, isIssue: boolean) {
   if (!item.kind) return "지원하지 않는 파일 형식입니다.";
@@ -131,28 +104,18 @@ export default function BulkUploader({ boardSlug, boardLabel, isIssue }: { board
   }
 
   async function uploadOne(item: Item) {
-    const contentType = item.file.type || "application/octet-stream";
     update(item.id, { status: "uploading", progress: 0, error: null });
     try {
-      const presigned = await postJson("/api/admin/resources/presign", {
+      const id = await uploadResource({
         boardSlug,
-        fileName: item.file.name,
-        contentType,
-        size: item.file.size,
-        visibility: item.visibility,
-      });
-      await putWithProgress(presigned.uploadUrl, item.file, contentType, (ratio) => update(item.id, { progress: ratio }));
-      update(item.id, { status: "saving", progress: 1 });
-      const saved = await postJson("/api/admin/resources/finalize", {
-        boardSlug,
-        key: presigned.key,
+        file: item.file,
         title: item.title.trim(),
         note: item.note,
         visibility: item.visibility,
         date: item.date,
-        originalFilename: item.file.name,
+        onProgress: (ratio) => update(item.id, ratio >= 1 ? { status: "saving", progress: 1 } : { progress: ratio }),
       });
-      update(item.id, { status: "done", resourceId: saved.id });
+      update(item.id, { status: "done", resourceId: id });
       return true;
     } catch (error) {
       if (error instanceof SessionExpired) throw error;
