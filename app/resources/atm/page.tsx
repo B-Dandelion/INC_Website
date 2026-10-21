@@ -1,3 +1,4 @@
+import Link from "next/link";
 import SimpleListPage from "@/components/resources/SimpleListPage";
 import styles from "@/components/resources/SimpleListPage.module.css";
 import { getLocale } from "@/lib/i18n";
@@ -45,9 +46,9 @@ export default async function ATMPage({
       <button className={styles.searchBtn} type="submit">{en ? "Apply" : "적용"}</button>
 
       {d ? (
-        <a href="/resources/atm" className={styles.searchBtn} style={{ textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
+        <Link href="/resources/atm" className={styles.searchBtn} style={{ textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
           {en ? "Clear" : "해제"}
-        </a>
+        </Link>
       ) : null}
     </form>
   );
@@ -57,8 +58,8 @@ export default async function ATMPage({
       activeKey="atm"
       title="ATM"
       prefix="atm"
-      hint="제목 클릭 시 파일이 새 창으로 열립니다."
-      hintEn="Click a title to open the file in a new tab."
+      hint="제목을 누르면 그날의 원자력 뉴스 3건을 바로 읽을 수 있습니다."
+      hintEn="Click a title to read the issue."
       rightMetaFromTitle={guessIssue}
       page={page}
       pageSize={50}

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import SimpleListPage from "@/components/resources/SimpleListPage";
 import styles from "@/components/resources/SimpleListPage.module.css";
 import { getLocale } from "@/lib/i18n";
@@ -45,9 +46,9 @@ export default async function HeartbeatPage({
       <button className={styles.searchBtn} type="submit">{en ? "Apply" : "적용"}</button>
 
       {d ? (
-        <a href="/resources/heartbeat-of-atoms" className={styles.searchBtn} style={{ textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
+        <Link href="/resources/heartbeat-of-atoms" className={styles.searchBtn} style={{ textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
           {en ? "Clear" : "해제"}
-        </a>
+        </Link>
       ) : null}
     </form>
   );
@@ -57,8 +58,8 @@ export default async function HeartbeatPage({
       activeKey="heartbeat-of-atoms"
       title="Heartbeat of Atoms"
       prefix="heartbeat-of-atoms"
-      hint="제목 클릭 시 파일이 새 창으로 열립니다."
-      hintEn="Click a title to open the file in a new tab."
+      hint="제목을 누르면 칼럼과 이번 호 목차를 바로 볼 수 있습니다."
+      hintEn="Click a title to read the issue."
       rightMetaFromTitle={guessIssue}
       page={page}
       pageSize={50}
