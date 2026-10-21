@@ -11,7 +11,8 @@ import { getLocale } from "@/lib/i18n";
 import { SITE_FULL_NAME, SITE_NAME, SITE_URL } from "@/lib/seo";
 
 const googleVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION;
-const naverVerification = process.env.NEXT_PUBLIC_NAVER_SITE_VERIFICATION;
+// Public by design (it is printed in every page head); the env var can still override it.
+const naverVerification = process.env.NEXT_PUBLIC_NAVER_SITE_VERIFICATION || "35c5afdd5de2d0d75f4e02948e2fa7dc710604cf";
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale();
