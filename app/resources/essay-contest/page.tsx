@@ -128,7 +128,7 @@ export default async function EssayContestPage({ searchParams }: { searchParams:
     <ResourcesFrame activeKey="essay-contest" sidebarSubmenu={sidebarSubmenu}>
       <div className={styles.content}>
         <div className={styles.hero}>
-          <div className={styles.eyebrow}>Essay Contest Archive</div>
+          <div className={styles.eyebrow}>Essay Contest</div>
           <h1 className={styles.h1}>{selectedEvent?.title_ko ?? (en ? "Essay Contest" : "에세이 경진대회")}</h1>
           {selectedEvent ? <div className={styles.meta}>{fmtPeriod(selectedEvent.event_date, selectedEvent.period_end)}</div> : null}
           {tabs.length > 0 ? <SectionTabs items={tabs} /> : null}

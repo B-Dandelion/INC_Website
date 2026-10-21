@@ -44,8 +44,24 @@ export type IssueRow = {
 };
 
 export function issueNumber(title: string | null) {
-  const m = (title ?? "").match(/\bNo\.?\s*(\d{1,4})\b/i);
-  return m ? Number(m[1]) : null;
+  return issueInfo(title).no;
+}
+
+// Titles are kept exactly as uploaded, so the issue number is read from them:
+// "ATM No 339 …", "91 Heartbeat of Atoms No 91 …", "23 KINGS INCA Newsletter …"
+// (leading number) and special editions "[호외] 24 KINGS …".
+export function issueInfo(title: string | null) {
+  const t = (title ?? "").trim();
+  const extra = /^\[호외\]/.test(t);
+  const body = t.replace(/^\[호외\]\s*/, "");
+  const m = body.match(/\bNo\.?\s*(\d{1,4})\b/i) ?? body.match(/^(\d{1,4})\s/);
+  return { no: m ? Number(m[1]) : null, extra };
+}
+
+export function issueLabel(title: string | null) {
+  const { no, extra } = issueInfo(title);
+  if (no == null) return extra ? "호외" : "";
+  return extra ? `No. ${no} 호외` : `No. ${no}`;
 }
 
 async function boardId(slug: PublicationSlug) {

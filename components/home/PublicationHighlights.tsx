@@ -4,7 +4,7 @@
 // content itself instead of a list of category buttons.
 import Link from "next/link";
 import { ArrowRight, Newspaper, BookOpen } from "lucide-react";
-import { PUBLICATIONS, cut, issueNumber, issuePath, type fetchLatestIssue } from "@/lib/publications";
+import { PUBLICATIONS, cut, issueLabel, issuePath, type fetchLatestIssue } from "@/lib/publications";
 
 type Latest = Awaited<ReturnType<typeof fetchLatestIssue>>;
 
@@ -31,7 +31,7 @@ export default function PublicationHighlights({ atm, heartbeat, en }: { atm: Lat
 function CardHeader({ icon, name, meta }: { icon: React.ReactNode; name: string; meta: string }) {
   return (
     <div className="flex items-center gap-3">
-      <span className="flex h-9 w-9 items-center justify-center rounded-md bg-[#EEF4FA] text-[#174A7E]" aria-hidden="true">
+      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#EEF4FA] text-[#174A7E]" aria-hidden="true">
         {icon}
       </span>
       <div className="min-w-0">
@@ -58,11 +58,10 @@ function CardFooter({ readHref, listHref, readLabel, en }: { readHref: string; l
 
 function AtmCard({ latest, en }: { latest: NonNullable<Latest>; en: boolean }) {
   const { issue, content } = latest;
-  const no = issueNumber(issue.title);
   const items = content.kind === "atm" ? content.atm.items : [];
-  const meta = [issue.published_at, no ? `No. ${no}` : null, en ? "Daily nuclear news, 3 stories" : PUBLICATIONS.atm.taglineKo].filter(Boolean).join(" · ");
+  const meta = [issue.published_at, issueLabel(issue.title) || null, en ? "Daily nuclear news, 3 stories" : PUBLICATIONS.atm.taglineKo].filter(Boolean).join(" · ");
   return (
-    <article className="flex min-w-0 flex-col gap-5 border border-slate-200 bg-white p-6">
+    <article className="flex min-w-0 flex-col gap-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
       <CardHeader icon={<Newspaper className="h-4 w-4" />} name="ATM" meta={meta} />
       {items.length ? (
         <ol className="grid gap-4">
@@ -88,11 +87,10 @@ function AtmCard({ latest, en }: { latest: NonNullable<Latest>; en: boolean }) {
 
 function HeartbeatCard({ latest, en }: { latest: NonNullable<Latest>; en: boolean }) {
   const { issue, content } = latest;
-  const no = issueNumber(issue.title);
   const hb = content.kind === "heartbeat" ? content.heartbeat : null;
-  const meta = [no ? `No. ${no}` : null, hb?.period ?? issue.published_at, en ? "Biweekly report" : "격주 리포트"].filter(Boolean).join(" · ");
+  const meta = [issueLabel(issue.title) || null, hb?.period ?? issue.published_at, en ? "Biweekly report" : "격주 리포트"].filter(Boolean).join(" · ");
   return (
-    <article className="flex min-w-0 flex-col gap-5 border border-slate-200 bg-white p-6">
+    <article className="flex min-w-0 flex-col gap-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
       <CardHeader icon={<BookOpen className="h-4 w-4" />} name="Heartbeat of Atoms" meta={meta} />
       {hb?.column ? (
         <div>

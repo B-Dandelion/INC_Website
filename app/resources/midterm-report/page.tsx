@@ -67,7 +67,7 @@ export default async function ProjectReportPage({
     <ResourcesFrame activeKey="midterm-report" sidebarSubmenu={sidebarSubmenu}>
       <div className={styles.content}>
         <div className={styles.hero}>
-          <div className={styles.eyebrow}>Project Report Archive</div>
+          <div className={styles.eyebrow}>Project Reports</div>
           <h1 className={styles.h1}>{selectedEvent?.title_ko ?? (en ? "Project Progress Reports" : "과제 보고회")}</h1>
           {selectedEvent ? <div className={styles.meta}>{fmtPeriod(selectedEvent.event_date, selectedEvent.period_end)}</div> : null}
           {tabs.length > 0 ? <SectionTabs items={tabs} /> : null}

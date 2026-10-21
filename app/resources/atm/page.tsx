@@ -1,18 +1,12 @@
 import Link from "next/link";
-import SimpleListPage from "@/components/resources/SimpleListPage";
-import styles from "@/components/resources/SimpleListPage.module.css";
+import PublicationIssueList from "@/components/resources/PublicationIssueList";
 import { getLocale } from "@/lib/i18n";
-
-function guessIssue(title: string) {
-  const m = title.match(/\bNo\.?\s*(\d{1,4})\b/i);
-  return m ? `No. ${m[1]}` : "";
-}
 
 function isYmd(s: unknown): s is string {
   return typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s);
 }
 
-export default async function ATMPage({
+export default async function Page({
   searchParams,
 }: {
   searchParams: Promise<{ page?: string; d?: string; dir?: string }>;
@@ -20,33 +14,45 @@ export default async function ATMPage({
   const locale = await getLocale();
   const en = locale === "en";
   const sp = await searchParams;
-
   const page = Math.max(1, Number(sp.page ?? "1") || 1);
   const d = isYmd(sp.d) ? sp.d : "";
   const dir = sp.dir === "after" ? "after" : "before";
-
   const publishedFrom = d && dir === "after" ? d : undefined;
   const publishedTo = d && dir === "before" ? d : undefined;
 
   const makePageHref = (p: number) => {
     const qs = new URLSearchParams();
-    qs.set("page", String(p));
+    if (p > 1) qs.set("page", String(p));
     if (d) qs.set("d", d);
     if (d) qs.set("dir", dir);
-    return `/resources/atm?${qs.toString()}`;
+    const s = qs.toString();
+    return `/resources/atm${s ? `?${s}` : ""}`;
   };
 
-  const heroExtra = (
-    <form method="get" action="/resources/atm" className={styles.search}>
-      <input type="date" name="d" defaultValue={d} className={styles.searchInput} aria-label={en ? "Publication date" : "발간일"} />
-      <select name="dir" defaultValue={dir} className={styles.searchInput} style={{ maxWidth: 160 }} aria-label={en ? "Date direction" : "날짜 기준"}>
-        <option value="before">{en ? "On or before" : "이전"}</option>
-        <option value="after">{en ? "On or after" : "이후"}</option>
+  // Jump to a date: issues on or before / on or after it.
+  const filter = (
+    <form method="get" action="/resources/atm" className="flex flex-wrap items-center gap-2">
+      <input
+        type="date"
+        name="d"
+        defaultValue={d}
+        aria-label={en ? "Publication date" : "발간일"}
+        className="h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none focus:border-[#2B6CA3] focus:ring-2 focus:ring-[#2B6CA3]/10"
+      />
+      <select
+        name="dir"
+        defaultValue={dir}
+        aria-label={en ? "Date direction" : "날짜 기준"}
+        className="h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none focus:border-[#2B6CA3]"
+      >
+        <option value="before">{en ? "On or before" : "이전 호"}</option>
+        <option value="after">{en ? "On or after" : "이후 호"}</option>
       </select>
-      <button className={styles.searchBtn} type="submit">{en ? "Apply" : "적용"}</button>
-
+      <button type="submit" className="h-10 rounded-lg bg-[#174A7E] px-4 text-sm font-bold text-white transition hover:bg-[#103A66]">
+        {en ? "Go" : "이동"}
+      </button>
       {d ? (
-        <Link href="/resources/atm" className={styles.searchBtn} style={{ textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
+        <Link href="/resources/atm" className="h-10 rounded-lg px-3 text-sm font-semibold leading-10 text-slate-600 hover:text-[#174A7E]">
           {en ? "Clear" : "해제"}
         </Link>
       ) : null}
@@ -54,19 +60,6 @@ export default async function ATMPage({
   );
 
   return (
-    <SimpleListPage
-      activeKey="atm"
-      title="ATM"
-      prefix="atm"
-      hint="제목을 누르면 그날의 원자력 뉴스 3건을 바로 읽을 수 있습니다."
-      hintEn="Click a title to read the issue."
-      rightMetaFromTitle={guessIssue}
-      page={page}
-      pageSize={50}
-      makePageHref={makePageHref}
-      publishedFrom={publishedFrom}
-      publishedTo={publishedTo}
-      heroExtra={heroExtra}
-    />
+    <PublicationIssueList slug="atm" page={page} publishedFrom={publishedFrom} publishedTo={publishedTo} filter={filter} makePageHref={makePageHref} />
   );
 }

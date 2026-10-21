@@ -88,7 +88,7 @@ export default async function SimpleListPage({
     <ResourcesFrame activeKey={activeKey}>
       <div className={styles.content}>
         <header className={styles.hero}>
-          <div className={styles.eyebrow}>{isIssueBoard ? "Publication archive" : "Resource archive"}</div>
+          <div className={styles.eyebrow}>{isIssueBoard ? "Publications" : "Resources"}</div>
           <h1 className={styles.h1}>{displayTitle}</h1>
           <div className={styles.meta}>{description}</div>
           {heroExtra ? <div className={styles.heroExtra}>{heroExtra}</div> : null}
@@ -102,7 +102,7 @@ export default async function SimpleListPage({
           <>
             <div className={styles.listHeader}>
               <div>
-                <div className={styles.listKicker}>Archive</div>
+                <div className={styles.listKicker}>List</div>
                 <h2 className={styles.listTitle}>{en ? "Resource List" : "자료 목록"}</h2>
               </div>
               <span className={styles.listCount}>{en ? `${boardItems.length} items on this page` : `현재 페이지 ${boardItems.length}개`}</span>

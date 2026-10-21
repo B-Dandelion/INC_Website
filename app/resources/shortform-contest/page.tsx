@@ -131,7 +131,7 @@ export default async function ShortformContestPage({ searchParams }: { searchPar
     <ResourcesFrame activeKey="shortform-contest" sidebarSubmenu={sidebarSubmenu}>
       <div className={styles.content}>
         <div className={styles.hero}>
-          <div className={styles.eyebrow}>Short-form Contest Archive</div>
+          <div className={styles.eyebrow}>Short-form Video Contest</div>
           <h1 className={styles.h1}>{selectedEvent?.title_ko ?? (en ? "Short-form Video Contest" : "숏폼영상공모전")}</h1>
           {selectedEvent ? <div className={styles.meta}>{fmtPeriod(selectedEvent.event_date, selectedEvent.period_end)}</div> : null}
           {tabs.length > 0 ? <SectionTabs items={tabs} /> : null}
