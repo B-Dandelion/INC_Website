@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { requireAdminOrThrow } from "@/lib/requireAdmin";
+import { CACHE_TAGS, invalidatePublicCache } from "@/lib/publicCache";
 
 export const runtime = "nodejs";
 
@@ -44,6 +45,7 @@ export async function POST(req: Request) {
     const { error: delEventErr } = await sb.from("events").delete().eq("id", id);
     if (delEventErr) return NextResponse.json({ ok: false, error: delEventErr.message }, { status: 500 });
 
+    invalidatePublicCache(CACHE_TAGS.events, CACHE_TAGS.resources);
     return NextResponse.json({ ok: true, deleted_resources: resourceIds.length });
   } catch (e: any) {
     return NextResponse.json(

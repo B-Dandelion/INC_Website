@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { CACHE_TAGS, invalidatePublicCache } from "@/lib/publicCache";
 import { redirect } from "next/navigation";
 import { requireAdminOrThrow } from "@/lib/requireAdmin";
 import { supabaseService } from "@/lib/supabaseServer";
@@ -107,6 +108,7 @@ function readEventFields(formData: FormData) {
 }
 
 function refreshEventPages(id?: string) {
+  invalidatePublicCache(CACHE_TAGS.events, CACHE_TAGS.resources);
   revalidatePath("/");
   revalidatePath("/events");
   revalidatePath("/events/[id]", "page");

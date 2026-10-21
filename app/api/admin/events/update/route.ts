@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { requireAdminOrThrow } from "@/lib/requireAdmin";
+import { CACHE_TAGS, invalidatePublicCache } from "@/lib/publicCache";
 
 export const runtime = "nodejs";
 
@@ -36,6 +37,7 @@ export async function POST(req: Request) {
     const { data, error } = await sb.from("events").update(update).eq("id", id).select("*").maybeSingle();
     if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
 
+    invalidatePublicCache(CACHE_TAGS.events);
     return NextResponse.json({ ok: true, event: data });
   } catch (e: any) {
     return NextResponse.json({ ok: false, error: String(e?.message ?? e) }, { status: e?.status ?? 500 });

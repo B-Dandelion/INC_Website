@@ -1,5 +1,6 @@
 // lib/resourcesDb.ts
 import { createSupabaseServerClient } from "./supabaseServer";
+import { CACHE_TAGS, cachedPublicQuery } from "./publicCache";
 import { supabaseAnon } from "./supabaseServer";
 
 export type SimpleResourceRow = {
@@ -39,7 +40,7 @@ export type DbResource = {
   boards: { slug: string; title: string } | null;
 };
 
-async function getBoardIdBySlug(slug: string) {
+async function getBoardIdBySlugUncached(slug: string) {
   const supabase = createSupabaseServerClient();
   const { data, error } = await supabase
     .from("boards")
@@ -51,7 +52,7 @@ async function getBoardIdBySlug(slug: string) {
   return data.id;
 }
 
-export async function fetchPublicResources(
+async function fetchPublicResourcesUncached(
   arg: number | { limit?: number; boardSlug?: string } = 50,
 ) {
   const supabase = createSupabaseServerClient();
@@ -123,7 +124,7 @@ export function isNestedBoard(slug: string) {
   return NESTED_BOARDS.has(slug);
 }
 
-export async function fetchBoards(): Promise<BoardRow[]> {
+async function fetchBoardsUncached(): Promise<BoardRow[]> {
   const sb = supabaseAnon();
   const { data, error } = await sb
     .from("boards")
@@ -149,7 +150,7 @@ type FetchResourcesArgs = {
 // fetchResources 수정
 // lib/resourcesDb.ts
 
-export async function fetchResources(args: FetchResourcesArgs) {
+async function fetchResourcesUncached(args: FetchResourcesArgs) {
   const sb = supabaseAnon();
   const page = Math.max(1, args.page ?? 1);
   const pageSize = Math.min(100, Math.max(10, args.pageSize ?? 30));
@@ -204,7 +205,7 @@ export async function fetchResources(args: FetchResourcesArgs) {
 }
 
 
-export async function fetchSourcePaths(boardSlug: string): Promise<string[]> {
+async function fetchSourcePathsUncached(boardSlug: string): Promise<string[]> {
   if (!isNestedBoard(boardSlug)) return [];
 
   const boardId = await getBoardIdBySlugAnon(boardSlug);
@@ -265,7 +266,7 @@ export function buildSourcePathTree(boardSlug: string, sourcePaths: string[]) {
   return root;
 }
 
-async function getBoardIdBySlugAnon(slug: string): Promise<number | null> {
+async function getBoardIdBySlugAnonUncached(slug: string): Promise<number | null> {
   const sb = supabaseAnon();
   const { data, error } = await sb
     .from("boards")
@@ -276,3 +277,11 @@ async function getBoardIdBySlugAnon(slug: string): Promise<number | null> {
   if (error || !data) return null;
   return data.id;
 }
+
+// Cached public queries (see lib/publicCache.ts).
+const getBoardIdBySlug = cachedPublicQuery(getBoardIdBySlugUncached, "resourcesDb:getBoardIdBySlug", [CACHE_TAGS.boards]);
+export const fetchPublicResources = cachedPublicQuery(fetchPublicResourcesUncached, "resourcesDb:fetchPublicResources", [CACHE_TAGS.resources, CACHE_TAGS.boards]);
+export const fetchBoards = cachedPublicQuery(fetchBoardsUncached, "resourcesDb:fetchBoards", [CACHE_TAGS.boards]);
+export const fetchResources = cachedPublicQuery(fetchResourcesUncached, "resourcesDb:fetchResources", [CACHE_TAGS.resources, CACHE_TAGS.boards]);
+export const fetchSourcePaths = cachedPublicQuery(fetchSourcePathsUncached, "resourcesDb:fetchSourcePaths", [CACHE_TAGS.resources, CACHE_TAGS.boards]);
+const getBoardIdBySlugAnon = cachedPublicQuery(getBoardIdBySlugAnonUncached, "resourcesDb:getBoardIdBySlugAnon", [CACHE_TAGS.boards]);

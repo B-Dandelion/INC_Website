@@ -6,6 +6,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { createClient } from "@supabase/supabase-js";
 import { requireAdminOrThrow } from "@/lib/requireAdmin";
+import { CACHE_TAGS, invalidatePublicCache } from "@/lib/publicCache";
 
 export const runtime = "nodejs";
 
@@ -307,6 +308,7 @@ export async function POST(req: Request) {
       );
     }
 
+    invalidatePublicCache(CACHE_TAGS.resources);
     return NextResponse.json({
       ok: true,
       resource: inserted,

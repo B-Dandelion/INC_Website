@@ -6,6 +6,7 @@ import {
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
 import { requireAdminOrThrow } from "@/lib/requireAdmin";
+import { CACHE_TAGS, invalidatePublicCache } from "@/lib/publicCache";
 
 export const runtime = "nodejs";
 
@@ -216,6 +217,7 @@ export async function POST(req: Request) {
       }
     }
 
+    invalidatePublicCache(CACHE_TAGS.resources, CACHE_TAGS.events);
     return NextResponse.json({
       ok: true,
       resource: updated,

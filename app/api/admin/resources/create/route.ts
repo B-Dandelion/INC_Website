@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdminOrThrow } from "@/lib/requireAdmin";
 import { createClient } from "@supabase/supabase-js";
+import { CACHE_TAGS, invalidatePublicCache } from "@/lib/publicCache";
 
 const supabaseAdmin = createClient(
   process.env.SUPABASE_URL!,
@@ -56,5 +57,6 @@ export async function POST(req: Request) {
 
   if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
 
+  invalidatePublicCache(CACHE_TAGS.resources);
   return NextResponse.json({ ok: true, id: data.id });
 }
