@@ -94,12 +94,3 @@ export function eventBoardRule(slug: string): EventBoard | undefined {
   const rule = boardRule(slug);
   return rule?.type === "event" ? rule : undefined;
 }
-
-export function listBoardRule(slug: string): ListBoard | undefined {
-  const rule = boardRule(slug);
-  return rule?.type === "list" ? rule : undefined;
-}
-
-export function slotFor(slug: string, role: string): AssetSlot | undefined {
-  return eventBoardRule(slug)?.slots.find((slot) => slot.role === role);
-}

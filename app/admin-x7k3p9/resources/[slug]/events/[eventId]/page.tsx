@@ -4,7 +4,7 @@ import ResourcesFrame, {
 import styles from "@/components/resources/SimpleListPage.module.css";
 import { createClient } from "@supabase/supabase-js";
 import { fetchAdminEventAssets } from "@/lib/adminEventsDb";
-import type { AdminEvent } from "@/components/admin/AdminEventDetailClient";
+import type { AdminEvent } from "@/components/admin/events/types";
 import EventEditor from "@/components/admin/events/EventEditor";
 import { adminSlugToEventCategory } from "@/lib/eventCategoryMap";
 import { eventBoardRule } from "@/lib/boardRules";
