@@ -13,9 +13,12 @@ export function siteAnalyticsAdmin() {
   return createClient(url, key, { auth: { persistSession: false } });
 }
 
+// Only the live Vercel deployment records events. A local `next start` runs with
+// NODE_ENV=production too, so that alone must not count (set
+// SITE_ANALYTICS_ENABLED=1 to record from elsewhere on purpose).
 function analyticsEnabled() {
   if (process.env.VERCEL_ENV) return process.env.VERCEL_ENV === "production";
-  return process.env.NODE_ENV === "production";
+  return process.env.SITE_ANALYTICS_ENABLED === "1";
 }
 
 function parseCookieValue(cookieHeader: string | null, name: string) {
