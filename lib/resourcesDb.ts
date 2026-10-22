@@ -3,28 +3,6 @@ import { createSupabaseServerClient } from "./supabaseServer";
 import { CACHE_TAGS, cachedPublicQuery } from "./publicCache";
 import { supabaseAnon } from "./supabaseServer";
 
-export type SimpleResourceRow = {
-  id: number;
-  title: string | null;
-  original_filename: string | null;
-  source_path: string | null;
-};
-
-export async function fetchResourcesByPrefix(prefix: string): Promise<SimpleResourceRow[]> {
-  const supabase = createSupabaseServerClient();
-
-  const like = prefix.endsWith("/") ? `${prefix}%` : `${prefix}/%`;
-
-  const { data, error } = await supabase
-    .from("resources")
-    .select("id, title, original_filename, source_path")
-    .ilike("source_path", like)
-    .order("source_path", { ascending: true });
-
-  if (error) throw error;
-  return (data ?? []) as SimpleResourceRow[];
-}
-
 export type DbResource = {
   id: number;
   board_id: number;                // 이제 null 안 쓰는 방향이면 number로 고정 권장
@@ -118,13 +96,6 @@ function normalizeBoard(
   return Array.isArray(b) ? (b[0] ?? null) : b;
 }
 
-
-const NESTED_BOARDS = new Set(["contribution", "seminar", "workshop"]);
-
-export function isNestedBoard(slug: string) {
-  return NESTED_BOARDS.has(slug);
-}
-
 async function fetchBoardsUncached(): Promise<BoardRow[]> {
   const sb = supabaseAnon();
   const { data, error } = await sb
@@ -207,69 +178,6 @@ async function fetchResourcesUncached(args: FetchResourcesArgs) {
 }
 
 
-async function fetchSourcePathsUncached(boardSlug: string): Promise<string[]> {
-  if (!isNestedBoard(boardSlug)) return [];
-
-  const boardId = await getBoardIdBySlugAnon(boardSlug);
-  if (!boardId) return [];
-
-  const sb = supabaseAnon();
-  const { data, error } = await sb
-    .from("resources")
-    .select("source_path")
-    .is("deleted_at", null)
-    .eq("visibility", "public")
-    .eq("board_id", boardId)
-    .not("source_path", "is", null);
-
-  if (error) throw new Error(error.message);
-
-  const set = new Set<string>();
-  for (const row of (data ?? []) as { source_path: string | null }[]) {
-    const sp = row.source_path;
-    if (!sp) continue;
-    set.add(sp);
-  }
-  return [...set].sort((a, b) => a.localeCompare(b));
-}
-
-export type SourcePathNode = { name: string; fullPath?: string; children: Map<string, SourcePathNode> };
-
-export function buildSourcePathTree(boardSlug: string, sourcePaths: string[]): SourcePathNode {
-  // source_path: "seminar/국내세미나/...." 형태
-  // 좌측에서는 boardSlug 다음부터 트리로 표시
-  type Node = SourcePathNode;
-
-  const root: Node = { name: boardSlug, children: new Map() };
-
-  for (const sp of sourcePaths) {
-    const normalized = sp.replaceAll("\\", "/");
-    const parts = normalized.split("/").filter(Boolean);
-    if (parts[0] !== boardSlug) continue;
-
-    // "boardSlug" 이후 폴더들만 트리 노드로
-    const rest = parts.slice(1);
-    let cur = root;
-
-    for (let i = 0; i < rest.length; i++) {
-      const seg = rest[i];
-      let child = cur.children.get(seg);
-      if (!child) {
-        child = { name: seg, children: new Map() };
-        cur.children.set(seg, child);
-      }
-      cur = child;
-
-      // “하위 카테고리”는 폴더 단위로 클릭하게(leaf가 아니라도 클릭 가능)
-      // fullPath는 여기까지의 경로
-      const full = [boardSlug, ...rest.slice(0, i + 1)].join("/");
-      cur.fullPath = full;
-    }
-  }
-
-  return root;
-}
-
 async function getBoardIdBySlugAnonUncached(slug: string): Promise<number | null> {
   const sb = supabaseAnon();
   const { data, error } = await sb
@@ -287,7 +195,6 @@ const getBoardIdBySlug = cachedPublicQuery(getBoardIdBySlugUncached, "resourcesD
 export const fetchPublicResources = cachedPublicQuery(fetchPublicResourcesUncached, "resourcesDb:fetchPublicResources", [CACHE_TAGS.resources, CACHE_TAGS.boards]);
 export const fetchBoards = cachedPublicQuery(fetchBoardsUncached, "resourcesDb:fetchBoards", [CACHE_TAGS.boards]);
 export const fetchResources = cachedPublicQuery(fetchResourcesUncached, "resourcesDb:fetchResources", [CACHE_TAGS.resources, CACHE_TAGS.boards]);
-export const fetchSourcePaths = cachedPublicQuery(fetchSourcePathsUncached, "resourcesDb:fetchSourcePaths", [CACHE_TAGS.resources, CACHE_TAGS.boards]);
 const getBoardIdBySlugAnon = cachedPublicQuery(getBoardIdBySlugAnonUncached, "resourcesDb:getBoardIdBySlugAnon", [CACHE_TAGS.boards]);
 
 // Total rows for the same filters as fetchResources, for numbered pagination.

@@ -1,21 +1,4 @@
-// Pure helpers shared by the admin event detail screen and its rows.
-import type { CSSProperties } from "react";
-import { slotFor } from "@/lib/boardRules";
-import { goToAdminLogin } from "@/lib/adminNav";
-
-export function trimOrNull(value: string) {
-    const trimmed = value.trim();
-    return trimmed || null;
-}
-
-
-export function handleUnauthorized(response: Response) {
-    if (response.status !== 401) return false;
-
-    alert("관리자 세션이 만료되었습니다. 다시 로그인해 주세요.");
-    goToAdminLogin();
-    return true;
-}
+// Pure helpers for the admin event editor's slots (YouTube links, file types).
 
 export function youtubeVideoId(value: string) {
     const input = value.trim();
@@ -58,7 +41,7 @@ export function canonicalYoutubeUrl(value: string) {
     return id ? `https://www.youtube.com/watch?v=${id}` : null;
 }
 
-export function extOf(name?: string | null) {
+function extOf(name?: string | null) {
     const value = (name ?? "").toLowerCase();
     const index = value.lastIndexOf(".");
     return index >= 0 ? value.slice(index + 1) : "";
@@ -71,22 +54,3 @@ export function isImageLike(mime?: string | null, filename?: string | null) {
         extOf(filename)
     );
 }
-
-export function isVideoLike(mime?: string | null, filename?: string | null) {
-    if (typeof mime === "string" && mime.startsWith("video/")) return true;
-
-    return ["mp4", "mov", "webm", "mkv"].includes(extOf(filename));
-}
-
-// Allowed file types per role come from lib/boardRules.ts.
-export function fileAcceptForRole(role: string, slug: string) {
-    return slotFor(slug, role)?.accept;
-}
-
-export const miniBtnStyle: CSSProperties = {
-    fontSize: 13,
-    height: 32,
-    padding: "0 10px",
-    borderRadius: 10,
-};
-

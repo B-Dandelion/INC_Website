@@ -1,37 +1,4 @@
-// Role and section definitions for the admin event detail screen.
-import { BOARD_RULES } from "@/lib/boardRules";
-
-export type RoleOption = {
-    role: string;
-    label: string;
-};
-
-/**
- * 행사 종류별로 실제 사용할 수 있는 event_assets.role만 정의합니다.
- *
- * - 공모전: 수상 작품, 수상자 사진, 응모작 사용
- * - 세미나: 시간표와 일반 자료 사용
- * - 워크숍/중간보고서: 일반 행사 자료만 사용
- *
- * DB 컬럼은 공통이지만, 관리자 UI와 저장 payload는 아래 설정에 따라
- * 행사 종류별로 필요한 값만 노출하고 저장합니다.
- */
-// Derived from lib/boardRules.ts so the allowed roles live in one place.
-export const EVENT_ROLE_OPTIONS: Record<string, RoleOption[]> = Object.fromEntries(
-    BOARD_RULES.filter((rule) => rule.type === "event").map((rule) => [
-        rule.slug,
-        rule.slots.map((slot) => ({ role: slot.role, label: slot.label })),
-    ]),
-);
-
-export const CONTEST_SLUGS = new Set(["essay-contest", "shortform-contest"]);
-
-export const SEMINAR_SECTIONS = [
-    { id: "poster", label: "포스터", roles: ["poster_ko", "poster_en"] },
-    { id: "timetable", label: "시간표", roles: ["timetable"] },
-    { id: "photo", label: "사진", roles: ["photo"] },
-    { id: "materials", label: "자료", roles: ["slide"] },
-] as const;
+// Labels for event asset roles that are not described in lib/boardRules.ts.
 
 export const FALLBACK_ROLE_LABELS: Record<string, string> = {
     poster_ko: "포스터(국문)",

@@ -43,10 +43,6 @@ export type IssueRow = {
   original_filename: string | null;
 };
 
-export function issueNumber(title: string | null) {
-  return issueInfo(title).no;
-}
-
 // Titles are kept exactly as uploaded, so the issue number is read from them:
 // "ATM No 339 …", "91 Heartbeat of Atoms No 91 …", "23 KINGS INCA Newsletter …"
 // (leading number) and special editions "[호외] 24 KINGS …".

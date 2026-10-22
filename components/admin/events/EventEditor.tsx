@@ -6,7 +6,7 @@ import { Trash2 } from "lucide-react";
 import type { AssetSlot, EventBoard } from "@/lib/boardRules";
 import type { EventAssetRow } from "@/lib/eventsDb";
 import { VISIBILITIES } from "@/lib/resourceFilters";
-import type { AdminEvent } from "../AdminEventDetailClient";
+import type { AdminEvent } from "./types";
 import { FALLBACK_ROLE_LABELS } from "../eventDetail/constants";
 import { Button, Card, Field, Select, TextInput } from "../ui";
 import { useConfirm } from "../ui/ConfirmDialog";
