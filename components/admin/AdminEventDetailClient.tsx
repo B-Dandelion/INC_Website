@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import styles from "@/components/resources/SimpleListPage.module.css";
 import type { EventAssetRow } from "@/lib/eventsDb";
 
@@ -44,6 +45,7 @@ export default function AdminEventDetailClient({
     const [busy, setBusy] = useState(false);
     const confirmDialog = useConfirm();
     const toast = useToast();
+    const router = useRouter();
 
     // 행사 기본 정보
     const [titleKo, setTitleKo] = useState(event.title_ko ?? "");
@@ -198,7 +200,7 @@ export default function AdminEventDetailClient({
                 toast(`삭제하지 못했습니다: ${await response.text()}`, "error");
                 return;
             }
-            location.href = `/admin-x7k3p9/resources/${slug}`;
+            router.replace(`/admin-x7k3p9/resources/${slug}`);
         } catch (error) {
             toast(`삭제하지 못했습니다: ${errorMessage(error)}`, "error");
         } finally {

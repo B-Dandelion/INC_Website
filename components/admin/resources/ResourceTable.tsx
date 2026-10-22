@@ -9,6 +9,7 @@ import { Button, EmptyState, Field, Select, TextArea, TextInput, cn } from "../u
 import { useConfirm } from "../ui/ConfirmDialog";
 import { useToast } from "../ui/Toast";
 import { KIND_LABEL, VISIBILITY_LABEL } from "./labels";
+import { goToAdminLogin } from "@/lib/adminNav";
 
 export type ResourceListRow = Pick<
   AdminResourceRow,
@@ -44,7 +45,7 @@ async function postJson(url: string, body: unknown) {
 
 async function readResponse(res: Response) {
   if (res.status === 401) {
-    location.href = "/admin-x7k3p9?reason=session";
+    goToAdminLogin();
     throw new SessionExpired();
   }
   const out = await res.json().catch(() => null);

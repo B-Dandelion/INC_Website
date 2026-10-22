@@ -3,6 +3,7 @@
 import type { AdminResourceRow } from "@/lib/adminResourcesDb";
 import { useState } from "react";
 import styles from "./ResourceBoard.module.css";
+import { goToAdminLogin } from "@/lib/adminNav";
 
 type AdminItem = {
   id: number;
@@ -17,7 +18,7 @@ const ISSUE_BOARDS = new Set(["atm", "heartbeat-of-atoms"]);
 function redirectIfExpired(res: Response) {
   if (res.status !== 401) return false;
   alert("관리자 세션이 만료되었습니다. 다시 로그인해 주세요.");
-  location.href = "/admin-x7k3p9?reason=session";
+  goToAdminLogin();
   return true;
 }
 

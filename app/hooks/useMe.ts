@@ -51,6 +51,14 @@ async function fetchMe(token: string | null, signal?: AbortSignal) {
   return out;
 }
 
+async function loadMe(signal: AbortSignal) {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token ?? null;
+  const dataMe = await fetchMe(token, signal);
+  cached = { token, at: Date.now(), data: dataMe };
+  return dataMe;
+}
+
 export function useMe() {
   const [me, setMe] = useState<MeResponse | null>(cached.data);
   const [loading, setLoading] = useState(true);
@@ -75,20 +83,20 @@ export function useMe() {
     };
   }, []);
 
-  const refresh = async () => {
-    if (!authReady) return;
-
+  // Fetches /api/me, cancelling any request still in flight. Sets no state, so
+  // the effect below can apply the result from promise callbacks.
+  const start = () => {
     inflight.current?.abort();
     const ac = new AbortController();
     inflight.current = ac;
+    return loadMe(ac.signal);
+  };
 
+  const refresh = async () => {
+    if (!authReady) return;
     setLoading(true);
     try {
-      const { data } = await supabase.auth.getSession();
-      const token = data.session?.access_token ?? null;
-      const dataMe = await fetchMe(token, ac.signal);
-
-      cached = { token, at: Date.now(), data: dataMe };
+      const dataMe = await start();
       setMe(dataMe);
       return dataMe;
     } catch (e: unknown) {
@@ -99,10 +107,14 @@ export function useMe() {
     }
   };
 
+  // `loading` starts true, so the first load only has to clear it.
   useEffect(() => {
     if (!authReady) return;
-    refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    start()
+      .then(setMe, (e: unknown) => {
+        if (!isAbortError(e)) throw e;
+      })
+      .finally(() => setLoading(false));
   }, [authReady]);
 
   const isAdmin = useMemo(
