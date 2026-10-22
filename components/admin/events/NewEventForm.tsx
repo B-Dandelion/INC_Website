@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import type { EventBoard } from "@/lib/boardRules";
 import { Button, ButtonLink, Field, Select, TextInput } from "../ui";
+import { goToAdminLogin } from "@/lib/adminNav";
 
 export default function NewEventForm({ rule, initialSubtype }: { rule: EventBoard; initialSubtype?: string }) {
   const router = useRouter();
@@ -35,7 +36,7 @@ export default function NewEventForm({ rule, initialSubtype }: { rule: EventBoar
         body: JSON.stringify(body),
       });
       if (res.status === 401) {
-        location.href = "/admin-x7k3p9?reason=session";
+        goToAdminLogin();
         return;
       }
       const out = await res.json().catch(() => null);

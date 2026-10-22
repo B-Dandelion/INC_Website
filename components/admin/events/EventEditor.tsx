@@ -95,6 +95,7 @@ function EventMetaCard({ rule, event }: { rule: EventBoard; event: AdminEvent })
 }
 
 export default function EventEditor({ rule, event, assets }: { rule: EventBoard; event: AdminEvent; assets: EventAssetRow[] }) {
+  const router = useRouter();
   const confirmDialog = useConfirm();
   const toast = useToast();
   const [deleting, setDeleting] = useState(false);
@@ -135,7 +136,7 @@ export default function EventEditor({ rule, event, assets }: { rule: EventBoard;
     setDeleting(true);
     try {
       await postJson("/api/admin/events/delete", { id: event.id });
-      location.href = `/admin-x7k3p9/resources/${rule.slug}`;
+      router.replace(`/admin-x7k3p9/resources/${rule.slug}`);
     } catch (error) {
       if (!(error instanceof SessionExpired)) toast(`삭제하지 못했습니다.\n${error instanceof Error ? error.message : String(error)}`, "error");
       setDeleting(false);

@@ -1,12 +1,13 @@
 // Browser side of the direct-to-R2 upload (presign → PUT → finalize), shared by
 // the board uploader and the event editor.
+import { goToAdminLogin } from "@/lib/adminNav";
 
 export class SessionExpired extends Error {}
 
 export async function postJson(url: string, body: unknown) {
   const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
   if (res.status === 401) {
-    location.href = "/admin-x7k3p9?reason=session";
+    goToAdminLogin();
     throw new SessionExpired();
   }
   const out = await res.json().catch(() => null);

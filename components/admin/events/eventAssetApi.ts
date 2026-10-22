@@ -3,6 +3,7 @@
 import type { AssetSlot } from "@/lib/boardRules";
 import { SessionExpired, postJson, uploadResource } from "../resources/uploadClient";
 import { titleFromFileName } from "../resources/fileMeta";
+import { goToAdminLogin } from "@/lib/adminNav";
 
 export { SessionExpired };
 
@@ -84,7 +85,7 @@ export async function attachYoutube(args: { boardSlug: string; eventId: string; 
   form.set("source_path", args.url);
   const res = await fetch("/api/admin/upload", { method: "POST", body: form });
   if (res.status === 401) {
-    location.href = "/admin-x7k3p9?reason=session";
+    goToAdminLogin();
     throw new SessionExpired();
   }
   const out = await res.json().catch(() => null);
